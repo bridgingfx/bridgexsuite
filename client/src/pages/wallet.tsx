@@ -25,12 +25,7 @@ import {
   Wallet as WalletIcon,
   ArrowUpRight,
   ArrowDownRight,
-  Plus,
-  Search,
-  DollarSign,
-  CreditCard,
-  Building,
-  Bitcoin,
+  Inbox,
 } from "lucide-react";
 import {
   AreaChart,
@@ -170,7 +165,7 @@ export default function WalletPage() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold tracking-tight" data-testid="text-wallet-title">Wallet</h1>
-          <p className="text-sm text-muted-foreground">Manage your funds and transactions</p>
+          <p className="text-sm text-muted-foreground">Manage your funds, deposits, and withdrawals</p>
         </div>
         <div className="flex items-center gap-2">
           <Button onClick={() => setDepositOpen(true)} data-testid="button-deposit">
@@ -186,40 +181,50 @@ export default function WalletPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-5">
             <div className="flex items-center justify-between gap-2 mb-3">
               <span className="text-sm text-muted-foreground">Available Balance</span>
-              <WalletIcon className="w-4 h-4 text-muted-foreground" />
+              <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                <WalletIcon className="w-4 h-4 text-primary" />
+              </div>
             </div>
-            <div className="text-2xl font-bold">${walletBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}</div>
+            <div className="text-2xl font-bold tracking-tight">${walletBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}</div>
+            <p className="text-xs text-muted-foreground mt-1">Available for trading</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-5">
             <div className="flex items-center justify-between gap-2 mb-3">
               <span className="text-sm text-muted-foreground">Total Deposits</span>
-              <ArrowUpRight className="w-4 h-4 text-emerald-500" />
+              <div className="w-8 h-8 rounded-md bg-emerald-500/10 flex items-center justify-center shrink-0">
+                <ArrowUpRight className="w-4 h-4 text-emerald-500" />
+              </div>
             </div>
-            <div className="text-2xl font-bold text-emerald-500">${totalDeposits.toLocaleString("en-US", { minimumFractionDigits: 2 })}</div>
+            <div className="text-2xl font-bold tracking-tight text-emerald-500">${totalDeposits.toLocaleString("en-US", { minimumFractionDigits: 2 })}</div>
+            <p className="text-xs text-muted-foreground mt-1">All-time deposits</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-5">
             <div className="flex items-center justify-between gap-2 mb-3">
               <span className="text-sm text-muted-foreground">Total Withdrawals</span>
-              <ArrowDownRight className="w-4 h-4 text-red-400" />
+              <div className="w-8 h-8 rounded-md bg-red-400/10 flex items-center justify-center shrink-0">
+                <ArrowDownRight className="w-4 h-4 text-red-400" />
+              </div>
             </div>
-            <div className="text-2xl font-bold text-red-400">${totalWithdrawals.toLocaleString("en-US", { minimumFractionDigits: 2 })}</div>
+            <div className="text-2xl font-bold tracking-tight text-red-400">${totalWithdrawals.toLocaleString("en-US", { minimumFractionDigits: 2 })}</div>
+            <p className="text-xs text-muted-foreground mt-1">All-time withdrawals</p>
           </CardContent>
         </Card>
       </div>
 
       <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base font-semibold">Balance History</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
+          <CardTitle className="text-sm font-medium">Balance History</CardTitle>
+          <Badge variant="secondary" className="text-xs">Last 7 months</Badge>
         </CardHeader>
-        <CardContent>
-          <div className="h-[200px]">
+        <CardContent className="pt-0">
+          <div className="h-[220px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={walletHistory}>
                 <defs>
@@ -286,7 +291,17 @@ function TransactionTable({ transactions, isLoading }: { transactions: Transacti
           {isLoading ? (
             <tr><td colSpan={5} className="py-12 text-center text-muted-foreground">Loading...</td></tr>
           ) : transactions.length === 0 ? (
-            <tr><td colSpan={5} className="py-12 text-center text-muted-foreground">No transactions found</td></tr>
+            <tr>
+              <td colSpan={5} className="py-16 text-center">
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center">
+                    <Inbox className="w-5 h-5 text-muted-foreground" />
+                  </div>
+                  <p className="text-sm font-medium text-muted-foreground">No transactions found</p>
+                  <p className="text-xs text-muted-foreground">Your transactions will appear here</p>
+                </div>
+              </td>
+            </tr>
           ) : (
             transactions.map((tx) => (
               <tr key={tx.id} className="border-b last:border-0">

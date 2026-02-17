@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -28,27 +28,22 @@ import {
   CheckCircle,
   Clock,
   XCircle,
-  AlertCircle,
-  Plus,
-  Eye,
 } from "lucide-react";
 import type { KycDocument } from "@shared/schema";
-import { useLocation } from "wouter";
-
 export default function KycPage() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const { toast } = useToast();
-  const [location] = useLocation();
-
-  const defaultTab = location === "/kyc/documents" ? "documents" : "verification";
 
   const { data: documents, isLoading } = useQuery<KycDocument[]>({
     queryKey: ["/api/kyc/documents"],
   });
 
-  const verified = (documents || []).filter((d) => d.status === "approved").length;
-  const pending = (documents || []).filter((d) => d.status === "pending").length;
-  const rejected = (documents || []).filter((d) => d.status === "rejected").length;
+  const allDocs = documents || [];
+  const approved = allDocs.filter((d) => d.status === "approved").length;
+  const pendingDocs = allDocs.filter((d) => d.status === "pending");
+  const total = allDocs.length;
+  const allApproved = total > 0 && approved === total;
+  const hasPending = pendingDocs.length > 0;
 
   const [docType, setDocType] = useState("passport");
   const [fileName, setFileName] = useState("");
@@ -71,12 +66,86 @@ export default function KycPage() {
     },
   });
 
+  const getStatusBadge = (status: string) => {
+    if (status === "approved") {
+      return (
+        <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs no-default-hover-elevate no-default-active-elevate">
+          <CheckCircle className="w-3 h-3 mr-1" />
+          Approved
+        </Badge>
+      );
+    }
+    if (status === "pending") {
+      return (
+        <Badge variant="secondary" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs no-default-hover-elevate no-default-active-elevate">
+          <Clock className="w-3 h-3 mr-1" />
+          Pending
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="secondary" className="bg-red-500/10 text-red-600 dark:text-red-400 text-xs no-default-hover-elevate no-default-active-elevate">
+        <XCircle className="w-3 h-3 mr-1" />
+        Rejected
+      </Badge>
+    );
+  };
+
+  const formatDocType = (type: string) => {
+    return type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  };
+
+  const renderDocumentRow = (doc: KycDocument) => (
+    <div
+      key={doc.id}
+      className="flex items-center justify-between gap-4 flex-wrap py-4 border-b last:border-0"
+      data-testid={`row-document-${doc.id}`}
+    >
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="w-9 h-9 rounded-md bg-muted flex items-center justify-center shrink-0">
+          <FileText className="w-4 h-4 text-muted-foreground" />
+        </div>
+        <div className="min-w-0">
+          <p className="font-medium text-sm">{formatDocType(doc.documentType)}</p>
+          <p className="text-xs text-muted-foreground truncate">{doc.fileName}</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-4 flex-wrap">
+        <div className="text-right">
+          <p className="text-xs text-muted-foreground">
+            {doc.createdAt ? new Date(doc.createdAt).toLocaleDateString() : "N/A"}
+          </p>
+          {doc.reviewedBy && (
+            <p className="text-xs text-muted-foreground">Reviewed by: {doc.reviewedBy}</p>
+          )}
+        </div>
+        {getStatusBadge(doc.status)}
+      </div>
+      {doc.notes && (
+        <p className="text-xs text-muted-foreground w-full pl-12">{doc.notes}</p>
+      )}
+    </div>
+  );
+
+  const emptyState = (
+    <div className="flex flex-col items-center justify-center py-16 gap-3">
+      <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center">
+        <Shield className="w-6 h-6 text-muted-foreground" />
+      </div>
+      <p className="text-sm text-muted-foreground">No documents uploaded yet</p>
+      <Button variant="outline" onClick={() => setUploadOpen(true)} data-testid="button-upload-empty">
+        <Upload className="w-4 h-4 mr-2" />
+        Upload Document
+      </Button>
+    </div>
+  );
+
   return (
     <div className="p-6 space-y-6 max-w-[1600px] mx-auto">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold tracking-tight" data-testid="text-kyc-title">KYC Verification</h1>
-          <p className="text-sm text-muted-foreground">Manage identity verification and documents</p>
+          <p className="text-sm text-muted-foreground">Upload documents and complete your identity verification</p>
         </div>
         <Button onClick={() => setUploadOpen(true)} data-testid="button-upload-document">
           <Upload className="w-4 h-4 mr-2" />
@@ -84,121 +153,60 @@ export default function KycPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center">
-              <FileText className="w-5 h-5 text-primary" />
+      <Card>
+        <CardContent className="p-5">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-md bg-amber-500/10 flex items-center justify-center shrink-0">
+                <Shield className="w-5 h-5 text-amber-500" />
+              </div>
+              <div>
+                <p className="font-medium">Verification Status</p>
+                <p className="text-sm text-muted-foreground">
+                  {approved > 0 ? `${approved} of ${total} documents verified` : "No documents submitted yet"}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Total Documents</p>
-              <p className="text-lg font-bold">{(documents || []).length}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-md bg-emerald-500/10 flex items-center justify-center">
-              <CheckCircle className="w-5 h-5 text-emerald-500" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Approved</p>
-              <p className="text-lg font-bold">{verified}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-md bg-amber-500/10 flex items-center justify-center">
-              <Clock className="w-5 h-5 text-amber-500" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Pending</p>
-              <p className="text-lg font-bold">{pending}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-md bg-red-500/10 flex items-center justify-center">
-              <XCircle className="w-5 h-5 text-red-500" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Rejected</p>
-              <p className="text-lg font-bold">{rejected}</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            <Badge variant="secondary" className="text-xs">
+              {allApproved ? "Verified" : hasPending ? "Under Review" : "Action Required"}
+            </Badge>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardContent className="p-0">
-          <Tabs defaultValue={defaultTab}>
-            <div className="border-b px-4 pt-2">
+          <Tabs defaultValue="all">
+            <div className="border-b px-4 pt-3">
               <TabsList>
-                <TabsTrigger value="verification" data-testid="tab-verification">Verification Status</TabsTrigger>
-                <TabsTrigger value="documents" data-testid="tab-documents">Documents</TabsTrigger>
+                <TabsTrigger value="all" data-testid="tab-all-documents">All Documents</TabsTrigger>
+                <TabsTrigger value="pending" data-testid="tab-pending-review">Pending Review</TabsTrigger>
               </TabsList>
             </div>
 
-            <TabsContent value="verification" className="p-6">
-              <div className="space-y-4">
-                <VerificationStep
-                  title="Identity Document"
-                  description="Passport, National ID, or Driver's License"
-                  status={(documents || []).find(d => d.documentType === "passport" || d.documentType === "national_id")?.status || "not_submitted"}
-                />
-                <VerificationStep
-                  title="Proof of Address"
-                  description="Utility bill, Bank statement (less than 3 months old)"
-                  status={(documents || []).find(d => d.documentType === "proof_of_address")?.status || "not_submitted"}
-                />
-                <VerificationStep
-                  title="Selfie Verification"
-                  description="Photo holding your ID document"
-                  status={(documents || []).find(d => d.documentType === "selfie")?.status || "not_submitted"}
-                />
-              </div>
+            <TabsContent value="all" className="px-5 pb-5" data-testid="table-kyc-documents">
+              {isLoading ? (
+                <div className="py-12 text-center text-sm text-muted-foreground">Loading documents...</div>
+              ) : allDocs.length === 0 ? (
+                emptyState
+              ) : (
+                allDocs.map(renderDocumentRow)
+              )}
             </TabsContent>
 
-            <TabsContent value="documents" className="p-4">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm" data-testid="table-kyc-documents">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-3 px-3 font-medium text-muted-foreground">Document Type</th>
-                      <th className="text-left py-3 px-3 font-medium text-muted-foreground">File Name</th>
-                      <th className="text-left py-3 px-3 font-medium text-muted-foreground">Status</th>
-                      <th className="text-left py-3 px-3 font-medium text-muted-foreground">Date</th>
-                      <th className="text-left py-3 px-3 font-medium text-muted-foreground">Notes</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {isLoading ? (
-                      <tr><td colSpan={5} className="py-12 text-center text-muted-foreground">Loading...</td></tr>
-                    ) : (documents || []).length === 0 ? (
-                      <tr><td colSpan={5} className="py-12 text-center text-muted-foreground">No documents uploaded</td></tr>
-                    ) : (
-                      (documents || []).map((doc) => (
-                        <tr key={doc.id} className="border-b last:border-0">
-                          <td className="py-3 px-3 capitalize">{doc.documentType.replace(/_/g, " ")}</td>
-                          <td className="py-3 px-3 text-muted-foreground">{doc.fileName}</td>
-                          <td className="py-3 px-3">
-                            <Badge
-                              variant={doc.status === "approved" ? "default" : doc.status === "pending" ? "secondary" : "destructive"}
-                              className={doc.status === "approved" ? "bg-emerald-500/10 text-emerald-500" : doc.status === "pending" ? "bg-amber-500/10 text-amber-500" : ""}
-                            >
-                              {doc.status}
-                            </Badge>
-                          </td>
-                          <td className="py-3 px-3 text-muted-foreground">{doc.createdAt ? new Date(doc.createdAt).toLocaleDateString() : "N/A"}</td>
-                          <td className="py-3 px-3 text-muted-foreground">{doc.notes || "—"}</td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
+            <TabsContent value="pending" className="px-5 pb-5">
+              {isLoading ? (
+                <div className="py-12 text-center text-sm text-muted-foreground">Loading documents...</div>
+              ) : pendingDocs.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 gap-3">
+                  <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center">
+                    <Clock className="w-6 h-6 text-muted-foreground" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">No documents pending review</p>
+                </div>
+              ) : (
+                pendingDocs.map(renderDocumentRow)
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>
@@ -219,13 +227,13 @@ export default function KycPage() {
                   <SelectItem value="national_id">National ID</SelectItem>
                   <SelectItem value="drivers_license">Driver's License</SelectItem>
                   <SelectItem value="proof_of_address">Proof of Address</SelectItem>
-                  <SelectItem value="selfie">Selfie with ID</SelectItem>
                   <SelectItem value="bank_statement">Bank Statement</SelectItem>
+                  <SelectItem value="utility_bill">Utility Bill</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>File Name</Label>
+              <Label>File URL</Label>
               <Input
                 placeholder="document.pdf"
                 value={fileName}
@@ -250,41 +258,5 @@ export default function KycPage() {
         </DialogContent>
       </Dialog>
     </div>
-  );
-}
-
-function VerificationStep({
-  title,
-  description,
-  status,
-}: {
-  title: string;
-  description: string;
-  status: string;
-}) {
-  const statusConfig: Record<string, { icon: React.ReactNode; label: string; color: string }> = {
-    approved: { icon: <CheckCircle className="w-5 h-5 text-emerald-500" />, label: "Verified", color: "bg-emerald-500/10 text-emerald-500" },
-    pending: { icon: <Clock className="w-5 h-5 text-amber-500" />, label: "Pending Review", color: "bg-amber-500/10 text-amber-500" },
-    rejected: { icon: <XCircle className="w-5 h-5 text-red-500" />, label: "Rejected", color: "bg-red-500/10 text-red-500" },
-    not_submitted: { icon: <AlertCircle className="w-5 h-5 text-muted-foreground" />, label: "Not Submitted", color: "bg-muted text-muted-foreground" },
-  };
-
-  const config = statusConfig[status] || statusConfig.not_submitted;
-
-  return (
-    <Card>
-      <CardContent className="p-4 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          {config.icon}
-          <div>
-            <p className="font-medium text-sm">{title}</p>
-            <p className="text-xs text-muted-foreground">{description}</p>
-          </div>
-        </div>
-        <Badge variant="secondary" className={`${config.color} text-xs`}>
-          {config.label}
-        </Badge>
-      </CardContent>
-    </Card>
   );
 }

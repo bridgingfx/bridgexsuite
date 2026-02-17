@@ -5,11 +5,10 @@ import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation, Link } from "wouter";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, TrendingUp } from "lucide-react";
+import { Loader2, TrendingUp, Clock, Lock, Zap } from "lucide-react";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -52,18 +51,19 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <div className="rounded-full bg-primary/10 p-3">
-              <TrendingUp className="w-6 h-6 text-primary" />
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
+      <div className="flex flex-col justify-center p-8 md:p-12">
+        <div className="max-w-md mx-auto w-full">
+          <div className="flex items-center gap-2 mb-8">
+            <div className="rounded-md bg-primary/10 p-2">
+              <TrendingUp className="w-5 h-5 text-primary" />
             </div>
+            <span className="text-lg font-semibold">ForexCRM</span>
           </div>
-          <CardTitle className="text-2xl">Client Portal</CardTitle>
-          <p className="text-sm text-muted-foreground mt-1">Access your trading accounts, wallet, and reports</p>
-        </CardHeader>
-        <CardContent>
+
+          <h1 className="text-2xl font-bold mb-1">Welcome Back</h1>
+          <p className="text-sm text-muted-foreground mb-8">Sign in to your trading portal</p>
+
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
@@ -122,13 +122,38 @@ export default function LoginPage() {
               </Button>
             </form>
           </Form>
-          <div className="mt-4 text-center">
+          <div className="mt-6 text-center">
             <Link href="/admin/login" className="text-sm text-muted-foreground hover:underline" data-testid="link-admin-login">
               Admin Login
             </Link>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+
+      <div className="hidden lg:flex flex-col items-center justify-center p-12 bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 dark:from-slate-950 dark:via-blue-950 dark:to-slate-950 text-white relative overflow-hidden">
+        <div className="absolute top-10 right-10 w-64 h-64 rounded-full bg-white/5" />
+        <div className="absolute bottom-10 left-10 w-48 h-48 rounded-full bg-white/5" />
+        <div className="relative z-10 text-center max-w-md">
+          <h2 className="text-3xl font-bold mb-4">Trade with Confidence</h2>
+          <p className="text-white/70 text-sm leading-relaxed mb-8">
+            Access your accounts, manage funds, and track performance all in one place
+          </p>
+          <div className="grid grid-cols-3 gap-4 mt-8">
+            <div className="rounded-md bg-white/10 p-3 text-center">
+              <Clock className="w-5 h-5 mx-auto mb-1 text-white/80" />
+              <p className="text-xs text-white/70">24/7 Trading</p>
+            </div>
+            <div className="rounded-md bg-white/10 p-3 text-center">
+              <Lock className="w-5 h-5 mx-auto mb-1 text-white/80" />
+              <p className="text-xs text-white/70">Secure Funds</p>
+            </div>
+            <div className="rounded-md bg-white/10 p-3 text-center">
+              <Zap className="w-5 h-5 mx-auto mb-1 text-white/80" />
+              <p className="text-xs text-white/70">Fast Execution</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

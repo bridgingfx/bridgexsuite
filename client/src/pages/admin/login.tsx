@@ -5,11 +5,10 @@ import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation, Link } from "wouter";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, Shield } from "lucide-react";
+import { Loader2, Shield, Users, BarChart3, Activity } from "lucide-react";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -52,18 +51,19 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <div className="rounded-full bg-blue-500/10 p-3">
-              <Shield className="w-6 h-6 text-blue-500" />
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
+      <div className="flex flex-col justify-center p-8 md:p-12">
+        <div className="max-w-md mx-auto w-full">
+          <div className="flex items-center gap-2 mb-8">
+            <div className="rounded-md bg-indigo-500/10 p-2">
+              <Shield className="w-5 h-5 text-indigo-500" />
             </div>
+            <span className="text-lg font-semibold">Admin Portal</span>
           </div>
-          <CardTitle className="text-2xl">Admin Portal</CardTitle>
-          <p className="text-sm text-muted-foreground mt-1">Broker management and operations dashboard</p>
-        </CardHeader>
-        <CardContent>
+
+          <h1 className="text-2xl font-bold mb-1">Admin Portal</h1>
+          <p className="text-sm text-muted-foreground mb-8">Broker management dashboard</p>
+
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
@@ -122,7 +122,7 @@ export default function AdminLoginPage() {
               </Button>
             </form>
           </Form>
-          <div className="mt-4 flex flex-col items-center gap-2">
+          <div className="mt-6 flex flex-col items-center gap-2">
             <Link href="/super-admin/login" className="text-sm text-muted-foreground hover:underline" data-testid="link-super-admin-login">
               Super Admin Login
             </Link>
@@ -130,8 +130,33 @@ export default function AdminLoginPage() {
               Client Portal
             </Link>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+
+      <div className="hidden lg:flex flex-col items-center justify-center p-12 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 dark:from-slate-950 dark:via-indigo-950 dark:to-slate-950 text-white relative overflow-hidden">
+        <div className="absolute top-10 right-10 w-64 h-64 rounded-full bg-white/5" />
+        <div className="absolute bottom-10 left-10 w-48 h-48 rounded-full bg-white/5" />
+        <div className="relative z-10 text-center max-w-md">
+          <h2 className="text-3xl font-bold mb-4">Manage Your Brokerage</h2>
+          <p className="text-white/70 text-sm leading-relaxed mb-8">
+            Complete control over clients, finances, and operations
+          </p>
+          <div className="grid grid-cols-3 gap-4 mt-8">
+            <div className="rounded-md bg-white/10 p-3 text-center">
+              <Users className="w-5 h-5 mx-auto mb-1 text-white/80" />
+              <p className="text-xs text-white/70">Client Management</p>
+            </div>
+            <div className="rounded-md bg-white/10 p-3 text-center">
+              <BarChart3 className="w-5 h-5 mx-auto mb-1 text-white/80" />
+              <p className="text-xs text-white/70">Financial Ops</p>
+            </div>
+            <div className="rounded-md bg-white/10 p-3 text-center">
+              <Activity className="w-5 h-5 mx-auto mb-1 text-white/80" />
+              <p className="text-xs text-white/70">Real-time Reports</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

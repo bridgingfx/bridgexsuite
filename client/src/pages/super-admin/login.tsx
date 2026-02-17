@@ -5,11 +5,10 @@ import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation, Link } from "wouter";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, Crown } from "lucide-react";
+import { Loader2, Crown, Server, Globe, Palette } from "lucide-react";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -52,18 +51,19 @@ export default function SuperAdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <div className="rounded-full bg-amber-500/10 p-3">
-              <Crown className="w-6 h-6 text-amber-500" />
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
+      <div className="flex flex-col justify-center p-8 md:p-12">
+        <div className="max-w-md mx-auto w-full">
+          <div className="flex items-center gap-2 mb-8">
+            <div className="rounded-md bg-purple-500/10 p-2">
+              <Crown className="w-5 h-5 text-purple-500" />
             </div>
+            <span className="text-lg font-semibold">Platform Administration</span>
           </div>
-          <CardTitle className="text-2xl">Platform Administration</CardTitle>
-          <p className="text-sm text-muted-foreground mt-1">SaaS platform management and oversight</p>
-        </CardHeader>
-        <CardContent>
+
+          <h1 className="text-2xl font-bold mb-1">Platform Administration</h1>
+          <p className="text-sm text-muted-foreground mb-8">SaaS platform management</p>
+
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
@@ -122,13 +122,38 @@ export default function SuperAdminLoginPage() {
               </Button>
             </form>
           </Form>
-          <div className="mt-4 text-center">
+          <div className="mt-6 text-center">
             <Link href="/admin/login" className="text-sm text-muted-foreground hover:underline" data-testid="link-admin-login">
               Admin Portal
             </Link>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+
+      <div className="hidden lg:flex flex-col items-center justify-center p-12 bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900 dark:from-slate-950 dark:via-purple-950 dark:to-slate-950 text-white relative overflow-hidden">
+        <div className="absolute top-10 right-10 w-64 h-64 rounded-full bg-white/5" />
+        <div className="absolute bottom-10 left-10 w-48 h-48 rounded-full bg-white/5" />
+        <div className="relative z-10 text-center max-w-md">
+          <h2 className="text-3xl font-bold mb-4">Platform Control Center</h2>
+          <p className="text-white/70 text-sm leading-relaxed mb-8">
+            Manage brokers, subscriptions, and platform-wide operations
+          </p>
+          <div className="grid grid-cols-3 gap-4 mt-8">
+            <div className="rounded-md bg-white/10 p-3 text-center">
+              <Server className="w-5 h-5 mx-auto mb-1 text-white/80" />
+              <p className="text-xs text-white/70">Multi-Broker</p>
+            </div>
+            <div className="rounded-md bg-white/10 p-3 text-center">
+              <Globe className="w-5 h-5 mx-auto mb-1 text-white/80" />
+              <p className="text-xs text-white/70">Revenue Analytics</p>
+            </div>
+            <div className="rounded-md bg-white/10 p-3 text-center">
+              <Palette className="w-5 h-5 mx-auto mb-1 text-white/80" />
+              <p className="text-xs text-white/70">White Label</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

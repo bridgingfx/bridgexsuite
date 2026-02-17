@@ -26,6 +26,7 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -89,7 +90,7 @@ function NavItem({ item }: { item: MenuItem }) {
       <Collapsible defaultOpen={isActive}>
         <SidebarMenuItem>
           <CollapsibleTrigger asChild>
-            <SidebarMenuButton data-testid={`nav-${item.title.toLowerCase().replace(/\s+/g, '-')}`} isActive={isActive}>
+            <SidebarMenuButton data-testid={`nav-${item.title.toLowerCase().replace(/\s+/g, '-').replace(/\//g, '')}`} isActive={isActive}>
               <item.icon className="w-4 h-4" />
               <span>{item.title}</span>
               <ChevronDown className="ml-auto w-4 h-4 transition-transform group-data-[state=open]:rotate-180" />
@@ -131,14 +132,14 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="p-4">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
-            <TrendingUp className="w-5 h-5 text-primary-foreground" />
+      <SidebarHeader className="p-4 pb-3">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center shrink-0">
+            <TrendingUp className="w-4 h-4 text-primary-foreground" />
           </div>
-          <div>
-            <h2 className="text-sm font-semibold tracking-tight">Client Portal</h2>
-            <p className="text-xs text-muted-foreground">My Trading Dashboard</p>
+          <div className="min-w-0">
+            <h2 className="text-sm font-semibold tracking-tight leading-tight">ForexCRM</h2>
+            <p className="text-xs text-muted-foreground leading-tight">Trading Platform</p>
           </div>
         </div>
       </SidebarHeader>
@@ -149,18 +150,22 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {tradingMenu.map((item) => (
-                <NavItem key={item.url} item={item} />
+                <NavItem key={item.title} item={item} />
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        <div className="px-4">
+          <Separator />
+        </div>
 
         <SidebarGroup>
           <SidebarGroupLabel>Account</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {accountMenu.map((item) => (
-                <NavItem key={item.url} item={item} />
+                <NavItem key={item.title} item={item} />
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
@@ -169,12 +174,12 @@ export function AppSidebar() {
 
       <SidebarFooter className="p-3">
         <div className="flex items-center gap-3 p-2 rounded-md">
-          <Avatar className="w-8 h-8">
-            <AvatarFallback className="bg-primary/10 text-primary text-xs">{initials}</AvatarFallback>
+          <Avatar className="w-8 h-8 shrink-0">
+            <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">{initials}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{user?.fullName || "User"}</p>
-            <p className="text-xs text-muted-foreground truncate">{user?.email || ""}</p>
+            <p className="text-sm font-medium truncate" data-testid="text-user-name">{user?.fullName || "User"}</p>
+            <p className="text-xs text-muted-foreground truncate" data-testid="text-user-email">{user?.email || ""}</p>
           </div>
         </div>
       </SidebarFooter>

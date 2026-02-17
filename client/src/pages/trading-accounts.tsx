@@ -69,7 +69,6 @@ export default function TradingAccounts() {
     type: "standard",
     leverage: "1:100",
     currency: "USD",
-    userId: "",
   });
 
   const createMutation = useMutation({
@@ -93,56 +92,60 @@ export default function TradingAccounts() {
           <h1 className="text-2xl font-bold tracking-tight" data-testid="text-trading-title">
             {isLive ? "Live Accounts" : isDemo ? "Demo Accounts" : "Trading Accounts"}
           </h1>
-          <p className="text-sm text-muted-foreground">Manage trading accounts and balances</p>
+          <p className="text-sm text-muted-foreground">Manage your MT4, MT5, and cTrader accounts</p>
         </div>
         <Button onClick={() => setAddOpen(true)} data-testid="button-add-account">
           <Plus className="w-4 h-4 mr-2" />
-          New Account
+          Open New Account
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-primary" />
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <span className="text-sm text-muted-foreground">Total Accounts</span>
+              <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                <TrendingUp className="w-4 h-4 text-primary" />
+              </div>
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Total Accounts</p>
-              <p className="text-lg font-bold">{filtered.length}</p>
+            <div className="text-2xl font-bold tracking-tight">{filtered.length}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <span className="text-sm text-muted-foreground">Active</span>
+              <div className="w-8 h-8 rounded-md bg-emerald-500/10 flex items-center justify-center shrink-0">
+                <Activity className="w-4 h-4 text-emerald-500" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold tracking-tight">{activeAccounts}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <span className="text-sm text-muted-foreground">Total Balance</span>
+              <div className="w-8 h-8 rounded-md bg-blue-500/10 flex items-center justify-center shrink-0">
+                <DollarSign className="w-4 h-4 text-blue-500" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold tracking-tight">
+              ${totalBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-md bg-emerald-500/10 flex items-center justify-center">
-              <Activity className="w-5 h-5 text-emerald-500" />
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <span className="text-sm text-muted-foreground">Total Equity</span>
+              <div className="w-8 h-8 rounded-md bg-purple-500/10 flex items-center justify-center shrink-0">
+                <BarChart3 className="w-4 h-4 text-purple-500" />
+              </div>
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Active</p>
-              <p className="text-lg font-bold">{activeAccounts}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-md bg-blue-500/10 flex items-center justify-center">
-              <DollarSign className="w-5 h-5 text-blue-500" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Total Balance</p>
-              <p className="text-lg font-bold">${totalBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-md bg-purple-500/10 flex items-center justify-center">
-              <BarChart3 className="w-5 h-5 text-purple-500" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Total Equity</p>
-              <p className="text-lg font-bold">${totalEquity.toLocaleString("en-US", { minimumFractionDigits: 2 })}</p>
+            <div className="text-2xl font-bold tracking-tight">
+              ${totalEquity.toLocaleString("en-US", { minimumFractionDigits: 2 })}
             </div>
           </CardContent>
         </Card>
@@ -166,21 +169,41 @@ export default function TradingAccounts() {
             <table className="w-full text-sm" data-testid="table-trading-accounts">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Account #</th>
-                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Platform</th>
-                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Type</th>
-                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Leverage</th>
-                  <th className="text-right py-3 px-3 font-medium text-muted-foreground">Balance</th>
-                  <th className="text-right py-3 px-3 font-medium text-muted-foreground">Equity</th>
-                  <th className="text-left py-3 px-3 font-medium text-muted-foreground">Status</th>
-                  <th className="text-right py-3 px-3 font-medium text-muted-foreground">Actions</th>
+                  <th className="text-left py-3 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Account #</th>
+                  <th className="text-left py-3 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Platform</th>
+                  <th className="text-left py-3 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Type</th>
+                  <th className="text-left py-3 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Leverage</th>
+                  <th className="text-right py-3 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Balance</th>
+                  <th className="text-right py-3 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Equity</th>
+                  <th className="text-left py-3 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
+                  <th className="text-right py-3 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
-                  <tr><td colSpan={8} className="py-12 text-center text-muted-foreground">Loading...</td></tr>
+                  <tr>
+                    <td colSpan={8} className="py-16 text-center text-muted-foreground">
+                      Loading accounts...
+                    </td>
+                  </tr>
                 ) : filtered.length === 0 ? (
-                  <tr><td colSpan={8} className="py-12 text-center text-muted-foreground">No trading accounts found</td></tr>
+                  <tr>
+                    <td colSpan={8} className="py-16 text-center">
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center">
+                          <TrendingUp className="w-6 h-6 text-muted-foreground" />
+                        </div>
+                        <div className="space-y-1">
+                          <p className="font-medium">No trading accounts found</p>
+                          <p className="text-sm text-muted-foreground">Get started by opening your first trading account.</p>
+                        </div>
+                        <Button onClick={() => setAddOpen(true)} data-testid="button-empty-add-account">
+                          <Plus className="w-4 h-4 mr-2" />
+                          Open New Account
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
                 ) : (
                   filtered.map((account) => (
                     <tr key={account.id} className="border-b last:border-0" data-testid={`row-account-${account.id}`}>
