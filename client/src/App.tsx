@@ -1,13 +1,14 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
+import { AdminSidebar } from "@/components/admin-sidebar";
 import { ThemeProvider } from "@/lib/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Bell } from "lucide-react";
+import { Bell, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 
@@ -22,9 +23,21 @@ import Reports from "@/pages/reports";
 import Support from "@/pages/support";
 import Notifications from "@/pages/notifications";
 import SettingsPage from "@/pages/settings";
+
+import AdminDashboard from "@/pages/admin/dashboard";
+import AdminClients from "@/pages/admin/clients";
+import AdminClientDetail from "@/pages/admin/client-detail";
+import AdminFinance from "@/pages/admin/finance";
+import AdminAccounts from "@/pages/admin/accounts";
+import AdminKycVerification from "@/pages/admin/kyc-verification";
+import AdminIbManagement from "@/pages/admin/ib-management";
+import AdminSupport from "@/pages/admin/support-admin";
+import AdminReports from "@/pages/admin/reports";
+import AdminSettings from "@/pages/admin/system-settings";
+
 import NotFound from "@/pages/not-found";
 
-function Router() {
+function ClientRouter() {
   return (
     <Switch>
       <Route path="/" component={Dashboard} />
@@ -54,37 +67,98 @@ function Router() {
   );
 }
 
-function App() {
+function AdminRouter() {
+  return (
+    <Switch>
+      <Route path="/admin" component={AdminDashboard} />
+      <Route path="/admin/clients" component={AdminClients} />
+      <Route path="/admin/clients/:id" component={AdminClientDetail} />
+      <Route path="/admin/finance" component={AdminFinance} />
+      <Route path="/admin/finance/pending" component={AdminFinance} />
+      <Route path="/admin/finance/deposits" component={AdminFinance} />
+      <Route path="/admin/finance/withdrawals" component={AdminFinance} />
+      <Route path="/admin/accounts" component={AdminAccounts} />
+      <Route path="/admin/kyc" component={AdminKycVerification} />
+      <Route path="/admin/ib" component={AdminIbManagement} />
+      <Route path="/admin/support" component={AdminSupport} />
+      <Route path="/admin/reports" component={AdminReports} />
+      <Route path="/admin/settings" component={AdminSettings} />
+      <Route component={NotFound} />
+    </Switch>
+  );
+}
+
+function ClientLayout() {
   const style = {
     "--sidebar-width": "16rem",
     "--sidebar-width-icon": "3rem",
   };
 
   return (
+    <SidebarProvider style={style as React.CSSProperties}>
+      <div className="flex h-screen w-full">
+        <AppSidebar />
+        <div className="flex flex-col flex-1 overflow-hidden">
+          <header className="flex items-center justify-between gap-2 px-4 py-2 border-b bg-background sticky top-0 z-50">
+            <SidebarTrigger data-testid="button-sidebar-toggle" />
+            <div className="flex items-center gap-1">
+              <Link href="/admin">
+                <Button variant="ghost" size="icon" data-testid="button-admin-panel">
+                  <Shield className="w-4 h-4" />
+                </Button>
+              </Link>
+              <Link href="/notifications">
+                <Button variant="ghost" size="icon" data-testid="button-notifications">
+                  <Bell className="w-4 h-4" />
+                </Button>
+              </Link>
+              <ThemeToggle />
+            </div>
+          </header>
+          <main className="flex-1 overflow-auto">
+            <ClientRouter />
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
+  );
+}
+
+function AdminLayout() {
+  const style = {
+    "--sidebar-width": "16rem",
+    "--sidebar-width-icon": "3rem",
+  };
+
+  return (
+    <SidebarProvider style={style as React.CSSProperties}>
+      <div className="flex h-screen w-full">
+        <AdminSidebar />
+        <div className="flex flex-col flex-1 overflow-hidden">
+          <header className="flex items-center justify-between gap-2 px-4 py-2 border-b bg-background sticky top-0 z-50">
+            <SidebarTrigger data-testid="button-admin-sidebar-toggle" />
+            <div className="flex items-center gap-1">
+              <ThemeToggle />
+            </div>
+          </header>
+          <main className="flex-1 overflow-auto">
+            <AdminRouter />
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
+  );
+}
+
+function App() {
+  const [location] = useLocation();
+  const isAdmin = location.startsWith("/admin");
+
+  return (
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <SidebarProvider style={style as React.CSSProperties}>
-            <div className="flex h-screen w-full">
-              <AppSidebar />
-              <div className="flex flex-col flex-1 overflow-hidden">
-                <header className="flex items-center justify-between gap-2 px-4 py-2 border-b bg-background sticky top-0 z-50">
-                  <SidebarTrigger data-testid="button-sidebar-toggle" />
-                  <div className="flex items-center gap-1">
-                    <Link href="/notifications">
-                      <Button variant="ghost" size="icon" data-testid="button-notifications">
-                        <Bell className="w-4 h-4" />
-                      </Button>
-                    </Link>
-                    <ThemeToggle />
-                  </div>
-                </header>
-                <main className="flex-1 overflow-auto">
-                  <Router />
-                </main>
-              </div>
-            </div>
-          </SidebarProvider>
+          {isAdmin ? <AdminLayout /> : <ClientLayout />}
           <Toaster />
         </TooltipProvider>
       </QueryClientProvider>

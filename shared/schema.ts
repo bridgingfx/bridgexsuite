@@ -43,6 +43,9 @@ export const transactions = pgTable("transactions", {
   method: text("method"),
   reference: text("reference"),
   notes: text("notes"),
+  approvedBy: varchar("approved_by"),
+  rejectionReason: text("rejection_reason"),
+  processedAt: timestamp("processed_at"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -53,6 +56,8 @@ export const kycDocuments = pgTable("kyc_documents", {
   fileName: text("file_name").notNull(),
   status: text("status").notNull().default("pending"),
   notes: text("notes"),
+  reviewedBy: varchar("reviewed_by"),
+  reviewedAt: timestamp("reviewed_at"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -74,6 +79,7 @@ export const supportTickets = pgTable("support_tickets", {
   priority: text("priority").notNull().default("medium"),
   status: text("status").notNull().default("open"),
   category: text("category").notNull().default("general"),
+  assignedTo: varchar("assigned_to"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -96,14 +102,36 @@ export const commissions = pgTable("commissions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const brokerSettings = pgTable("broker_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  settingKey: text("setting_key").notNull().unique(),
+  settingValue: text("setting_value").notNull(),
+  category: text("category").notNull().default("general"),
+  description: text("description"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const commissionTiers = pgTable("commission_tiers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  level: integer("level").notNull(),
+  commissionRate: decimal("commission_rate", { precision: 5, scale: 2 }).notNull(),
+  minVolume: decimal("min_volume", { precision: 15, scale: 2 }).notNull().default("0"),
+  maxVolume: decimal("max_volume", { precision: 15, scale: 2 }),
+  status: text("status").notNull().default("active"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const insertTradingAccountSchema = createInsertSchema(tradingAccounts).omit({ id: true, createdAt: true });
-export const insertTransactionSchema = createInsertSchema(transactions).omit({ id: true, createdAt: true });
-export const insertKycDocumentSchema = createInsertSchema(kycDocuments).omit({ id: true, createdAt: true });
+export const insertTransactionSchema = createInsertSchema(transactions).omit({ id: true, createdAt: true, approvedBy: true, rejectionReason: true, processedAt: true });
+export const insertKycDocumentSchema = createInsertSchema(kycDocuments).omit({ id: true, createdAt: true, reviewedBy: true, reviewedAt: true });
 export const insertIbReferralSchema = createInsertSchema(ibReferrals).omit({ id: true, createdAt: true });
-export const insertSupportTicketSchema = createInsertSchema(supportTickets).omit({ id: true, createdAt: true });
+export const insertSupportTicketSchema = createInsertSchema(supportTickets).omit({ id: true, createdAt: true, assignedTo: true });
 export const insertTicketReplySchema = createInsertSchema(ticketReplies).omit({ id: true, createdAt: true });
 export const insertCommissionSchema = createInsertSchema(commissions).omit({ id: true, createdAt: true });
+export const insertBrokerSettingSchema = createInsertSchema(brokerSettings).omit({ id: true, updatedAt: true });
+export const insertCommissionTierSchema = createInsertSchema(commissionTiers).omit({ id: true, createdAt: true });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -121,3 +149,7 @@ export type InsertTicketReply = z.infer<typeof insertTicketReplySchema>;
 export type TicketReply = typeof ticketReplies.$inferSelect;
 export type InsertCommission = z.infer<typeof insertCommissionSchema>;
 export type Commission = typeof commissions.$inferSelect;
+export type InsertBrokerSetting = z.infer<typeof insertBrokerSettingSchema>;
+export type BrokerSetting = typeof brokerSettings.$inferSelect;
+export type InsertCommissionTier = z.infer<typeof insertCommissionTierSchema>;
+export type CommissionTier = typeof commissionTiers.$inferSelect;

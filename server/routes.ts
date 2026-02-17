@@ -325,5 +325,310 @@ export async function registerRoutes(
     }
   });
 
+  // ==================== ADMIN API ROUTES ====================
+
+  // Admin Dashboard
+  app.get("/api/admin/dashboard/stats", async (req, res) => {
+    try {
+      const stats = await storage.getAdminDashboardStats();
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch admin dashboard stats" });
+    }
+  });
+
+  // Admin - Client Management
+  app.get("/api/admin/clients", async (req, res) => {
+    try {
+      const clients = await storage.getAllClients();
+      res.json(clients);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch clients" });
+    }
+  });
+
+  app.get("/api/admin/clients/:id", async (req, res) => {
+    try {
+      const client = await storage.getUser(req.params.id);
+      if (!client) return res.status(404).json({ error: "Client not found" });
+      const accounts = await storage.getTradingAccountsByUser(req.params.id);
+      const txns = await storage.getTransactionsByUser(req.params.id);
+      const kyc = await storage.getKycDocumentsByUser(req.params.id);
+      const tickets = await storage.getSupportTicketsByUser(req.params.id);
+      res.json({ client, accounts, transactions: txns, kycDocuments: kyc, tickets });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch client details" });
+    }
+  });
+
+  app.patch("/api/admin/clients/:id", async (req, res) => {
+    try {
+      const client = await storage.updateUser(req.params.id, req.body);
+      if (!client) return res.status(404).json({ error: "Client not found" });
+      res.json(client);
+    } catch (error) {
+      res.status(400).json({ error: "Failed to update client" });
+    }
+  });
+
+  app.patch("/api/admin/clients/:id/status", async (req, res) => {
+    try {
+      const { status } = z.object({ status: z.string() }).parse(req.body);
+      const client = await storage.updateUser(req.params.id, { status } as any);
+      if (!client) return res.status(404).json({ error: "Client not found" });
+      res.json(client);
+    } catch (error) {
+      res.status(400).json({ error: "Failed to update client status" });
+    }
+  });
+
+  app.patch("/api/admin/clients/:id/kyc-status", async (req, res) => {
+    try {
+      const { kycStatus } = z.object({ kycStatus: z.string() }).parse(req.body);
+      const client = await storage.updateUser(req.params.id, { kycStatus } as any);
+      if (!client) return res.status(404).json({ error: "Client not found" });
+      res.json(client);
+    } catch (error) {
+      res.status(400).json({ error: "Failed to update KYC status" });
+    }
+  });
+
+  // Admin - Trading Accounts
+  app.get("/api/admin/trading-accounts", async (req, res) => {
+    try {
+      const accounts = await storage.getTradingAccounts();
+      res.json(accounts);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch trading accounts" });
+    }
+  });
+
+  app.post("/api/admin/trading-accounts", async (req, res) => {
+    try {
+      const parsed = z.object({
+        userId: z.string(),
+        platform: z.string().default("MT5"),
+        type: z.string().default("standard"),
+        leverage: z.string().default("1:100"),
+        currency: z.string().default("USD"),
+        balance: z.string().default("0"),
+        equity: z.string().default("0"),
+      }).parse(req.body);
+      const account = await storage.createTradingAccount({ ...parsed, accountNumber: "" });
+      res.json(account);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors[0].message });
+      res.status(400).json({ error: error.message || "Failed to create account" });
+    }
+  });
+
+  app.patch("/api/admin/trading-accounts/:id", async (req, res) => {
+    try {
+      const account = await storage.updateTradingAccount(req.params.id, req.body);
+      if (!account) return res.status(404).json({ error: "Account not found" });
+      res.json(account);
+    } catch (error) {
+      res.status(400).json({ error: "Failed to update account" });
+    }
+  });
+
+  // Admin - Financial Operations (Transactions)
+  app.get("/api/admin/transactions", async (req, res) => {
+    try {
+      const txns = await storage.getTransactions();
+      res.json(txns);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch transactions" });
+    }
+  });
+
+  app.get("/api/admin/transactions/pending", async (req, res) => {
+    try {
+      const txns = await storage.getTransactionsByStatus("pending");
+      res.json(txns);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch pending transactions" });
+    }
+  });
+
+  app.post("/api/admin/transactions/:id/approve", async (req, res) => {
+    try {
+      const { approvedBy } = z.object({ approvedBy: z.string().default("admin") }).parse(req.body);
+      const txn = await storage.approveTransaction(req.params.id, approvedBy);
+      if (!txn) return res.status(404).json({ error: "Transaction not found" });
+      res.json(txn);
+    } catch (error) {
+      res.status(400).json({ error: "Failed to approve transaction" });
+    }
+  });
+
+  app.post("/api/admin/transactions/:id/reject", async (req, res) => {
+    try {
+      const { reason } = z.object({ reason: z.string().min(1) }).parse(req.body);
+      const txn = await storage.rejectTransaction(req.params.id, reason);
+      if (!txn) return res.status(404).json({ error: "Transaction not found" });
+      res.json(txn);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors[0].message });
+      res.status(400).json({ error: "Failed to reject transaction" });
+    }
+  });
+
+  // Admin - KYC Documents
+  app.get("/api/admin/kyc/documents", async (req, res) => {
+    try {
+      const docs = await storage.getKycDocuments();
+      res.json(docs);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch KYC documents" });
+    }
+  });
+
+  app.get("/api/admin/kyc/pending", async (req, res) => {
+    try {
+      const docs = await storage.getKycDocumentsByStatus("pending");
+      res.json(docs);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch pending KYC documents" });
+    }
+  });
+
+  app.post("/api/admin/kyc/documents/:id/review", async (req, res) => {
+    try {
+      const { status, reviewedBy, notes } = z.object({
+        status: z.enum(["approved", "rejected"]),
+        reviewedBy: z.string().default("admin"),
+        notes: z.string().optional(),
+      }).parse(req.body);
+      const doc = await storage.reviewKycDocument(req.params.id, status, reviewedBy, notes);
+      if (!doc) return res.status(404).json({ error: "Document not found" });
+      res.json(doc);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors[0].message });
+      res.status(400).json({ error: "Failed to review document" });
+    }
+  });
+
+  // Admin - IB / Affiliate
+  app.get("/api/admin/ib/referrals", async (req, res) => {
+    try {
+      const refs = await storage.getIbReferrals();
+      res.json(refs);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch referrals" });
+    }
+  });
+
+  app.get("/api/admin/commissions", async (req, res) => {
+    try {
+      const comms = await storage.getCommissions();
+      res.json(comms);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch commissions" });
+    }
+  });
+
+  app.get("/api/admin/commission-tiers", async (req, res) => {
+    try {
+      const tiers = await storage.getCommissionTiers();
+      res.json(tiers);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch commission tiers" });
+    }
+  });
+
+  app.post("/api/admin/commission-tiers", async (req, res) => {
+    try {
+      const parsed = z.object({
+        name: z.string().min(1),
+        level: z.number(),
+        commissionRate: z.string(),
+        minVolume: z.string().default("0"),
+        maxVolume: z.string().nullable().optional(),
+      }).parse(req.body);
+      const tier = await storage.createCommissionTier(parsed);
+      res.json(tier);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors[0].message });
+      res.status(400).json({ error: error.message || "Failed to create tier" });
+    }
+  });
+
+  // Admin - Support Tickets
+  app.get("/api/admin/support/tickets", async (req, res) => {
+    try {
+      const tickets = await storage.getSupportTickets();
+      res.json(tickets);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch tickets" });
+    }
+  });
+
+  app.patch("/api/admin/support/tickets/:id/status", async (req, res) => {
+    try {
+      const { status } = z.object({ status: z.string() }).parse(req.body);
+      const ticket = await storage.updateTicketStatus(req.params.id, status);
+      if (!ticket) return res.status(404).json({ error: "Ticket not found" });
+      res.json(ticket);
+    } catch (error) {
+      res.status(400).json({ error: "Failed to update ticket status" });
+    }
+  });
+
+  app.patch("/api/admin/support/tickets/:id/assign", async (req, res) => {
+    try {
+      const { assignedTo } = z.object({ assignedTo: z.string() }).parse(req.body);
+      const ticket = await storage.assignTicket(req.params.id, assignedTo);
+      if (!ticket) return res.status(404).json({ error: "Ticket not found" });
+      res.json(ticket);
+    } catch (error) {
+      res.status(400).json({ error: "Failed to assign ticket" });
+    }
+  });
+
+  app.post("/api/admin/support/tickets/:id/reply", async (req, res) => {
+    try {
+      const parsed = z.object({
+        userId: z.string(),
+        message: z.string().min(1),
+      }).parse(req.body);
+      const reply = await storage.createTicketReply({
+        ...parsed,
+        ticketId: req.params.id,
+        isAdmin: true,
+      });
+      res.json(reply);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors[0].message });
+      res.status(400).json({ error: error.message || "Failed to create reply" });
+    }
+  });
+
+  // Admin - Broker Settings
+  app.get("/api/admin/settings", async (req, res) => {
+    try {
+      const settings = await storage.getBrokerSettings();
+      res.json(settings);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch settings" });
+    }
+  });
+
+  app.post("/api/admin/settings", async (req, res) => {
+    try {
+      const parsed = z.object({
+        settingKey: z.string().min(1),
+        settingValue: z.string(),
+        category: z.string().default("general"),
+        description: z.string().optional(),
+      }).parse(req.body);
+      const setting = await storage.upsertBrokerSetting(parsed);
+      res.json(setting);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors[0].message });
+      res.status(400).json({ error: error.message || "Failed to save setting" });
+    }
+  });
+
   return httpServer;
 }
