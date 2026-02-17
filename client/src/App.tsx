@@ -26,6 +26,7 @@ import PropTradingPage from "@/pages/prop-trading";
 import InvestmentPage from "@/pages/investment";
 import CopyTradingPage from "@/pages/copy-trading";
 import PammPage from "@/pages/pamm";
+import AccountDetail from "@/pages/account-detail";
 
 import AdminDashboard from "@/pages/admin/dashboard";
 import AdminClients from "@/pages/admin/clients";
@@ -89,6 +90,7 @@ function ClientRouter() {
       <Route path="/trading" component={TradingAccounts} />
       <Route path="/trading/live" component={TradingAccounts} />
       <Route path="/trading/demo" component={TradingAccounts} />
+      <Route path="/trading/account/:id">{(params) => <AccountDetail id={params.id} />}</Route>
       <Route path="/wallet" component={WalletPage} />
       <Route path="/wallet/deposits" component={WalletPage} />
       <Route path="/wallet/withdrawals" component={WalletPage} />

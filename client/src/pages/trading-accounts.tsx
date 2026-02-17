@@ -29,8 +29,9 @@ import {
   Activity,
   MoreVertical,
   Eye,
-  Settings,
-  RefreshCw,
+  Lock,
+  Scale,
+  Wallet,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -44,8 +45,13 @@ import { useLocation } from "wouter";
 export default function TradingAccounts() {
   const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const { toast } = useToast();
+
+  const [passwordOpen, setPasswordOpen] = useState(false);
+  const [leverageOpen, setLeverageOpen] = useState(false);
+  const [depositOpen, setDepositOpen] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState<TradingAccount | null>(null);
 
   const isLive = location === "/trading/live";
   const isDemo = location === "/trading/demo";
@@ -84,6 +90,62 @@ export default function TradingAccounts() {
       toast({ title: "Failed to create account", variant: "destructive" });
     },
   });
+
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const passwordMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedAccount) throw new Error("No account selected");
+      return apiRequest("POST", `/api/trading-accounts/${selectedAccount.id}/change-password`, { newPassword });
+    },
+    onSuccess: () => {
+      toast({ title: "Password changed successfully" });
+      setPasswordOpen(false);
+      setNewPassword("");
+      setConfirmPassword("");
+    },
+    onError: () => {
+      toast({ title: "Failed to change password", variant: "destructive" });
+    },
+  });
+
+  const [newLeverage, setNewLeverage] = useState("1:100");
+  const leverageMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedAccount) throw new Error("No account selected");
+      return apiRequest("PATCH", `/api/trading-accounts/${selectedAccount.id}/leverage`, { leverage: newLeverage });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/trading-accounts"] });
+      toast({ title: "Leverage updated successfully" });
+      setLeverageOpen(false);
+    },
+    onError: () => {
+      toast({ title: "Failed to update leverage", variant: "destructive" });
+    },
+  });
+
+  const [depositAmount, setDepositAmount] = useState("");
+  const depositMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedAccount) throw new Error("No account selected");
+      return apiRequest("POST", `/api/trading-accounts/${selectedAccount.id}/deposit`, { amount: depositAmount });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/trading-accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      toast({ title: "Deposit successful", description: `$${Number(depositAmount).toLocaleString()} deposited to ${selectedAccount?.accountNumber}` });
+      setDepositOpen(false);
+      setDepositAmount("");
+    },
+    onError: () => {
+      toast({ title: "Deposit failed", variant: "destructive" });
+    },
+  });
+
+  const passwordsMatch = newPassword === confirmPassword;
+  const isPasswordValid = newPassword.length >= 6 && passwordsMatch;
 
   return (
     <div className="p-6 space-y-6 max-w-[1600px] mx-auto">
@@ -230,12 +292,35 @@ export default function TradingAccounts() {
                       <td className="py-3 px-3 text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon"><MoreVertical className="w-4 h-4" /></Button>
+                            <Button variant="ghost" size="icon" data-testid={`button-actions-${account.id}`}>
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem><Eye className="w-4 h-4 mr-2" /> View Details</DropdownMenuItem>
-                            <DropdownMenuItem><Settings className="w-4 h-4 mr-2" /> Settings</DropdownMenuItem>
-                            <DropdownMenuItem><RefreshCw className="w-4 h-4 mr-2" /> Reset Password</DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => navigate(`/trading/account/${account.id}`)}
+                              data-testid={`menu-view-${account.id}`}
+                            >
+                              <Eye className="w-4 h-4 mr-2" /> View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => { setSelectedAccount(account); setNewPassword(""); setConfirmPassword(""); setPasswordOpen(true); }}
+                              data-testid={`menu-password-${account.id}`}
+                            >
+                              <Lock className="w-4 h-4 mr-2" /> Change Password
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => { setSelectedAccount(account); setNewLeverage(account.leverage); setLeverageOpen(true); }}
+                              data-testid={`menu-leverage-${account.id}`}
+                            >
+                              <Scale className="w-4 h-4 mr-2" /> Change Leverage
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => { setSelectedAccount(account); setDepositAmount(""); setDepositOpen(true); }}
+                              data-testid={`menu-deposit-${account.id}`}
+                            >
+                              <Wallet className="w-4 h-4 mr-2" /> Deposit from Wallet
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </td>
@@ -307,6 +392,144 @@ export default function TradingAccounts() {
               data-testid="button-create-account"
             >
               {createMutation.isPending ? "Creating..." : "Create Account"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={passwordOpen} onOpenChange={setPasswordOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Change Trading Password</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Account: <span className="font-mono font-medium text-foreground">{selectedAccount?.accountNumber}</span>
+          </p>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>New Password</Label>
+              <Input
+                type="password"
+                placeholder="Enter new password (min 6 characters)"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                data-testid="input-new-password"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Confirm Password</Label>
+              <Input
+                type="password"
+                placeholder="Confirm new password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                data-testid="input-confirm-password"
+              />
+              {confirmPassword && !passwordsMatch && (
+                <p className="text-xs text-destructive">Passwords do not match</p>
+              )}
+            </div>
+            <Button
+              className="w-full"
+              onClick={() => passwordMutation.mutate()}
+              disabled={passwordMutation.isPending || !isPasswordValid}
+              data-testid="button-submit-password"
+            >
+              {passwordMutation.isPending ? "Updating..." : "Update Password"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={leverageOpen} onOpenChange={setLeverageOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Change Leverage</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Account: <span className="font-mono font-medium text-foreground">{selectedAccount?.accountNumber}</span>
+          </p>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Current Leverage</Label>
+              <div className="text-sm text-muted-foreground font-mono">{selectedAccount?.leverage}</div>
+            </div>
+            <div className="space-y-2">
+              <Label>New Leverage</Label>
+              <Select value={newLeverage} onValueChange={setNewLeverage}>
+                <SelectTrigger data-testid="select-new-leverage">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1:50">1:50</SelectItem>
+                  <SelectItem value="1:100">1:100</SelectItem>
+                  <SelectItem value="1:200">1:200</SelectItem>
+                  <SelectItem value="1:500">1:500</SelectItem>
+                  <SelectItem value="1:1000">1:1000</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Changing leverage may affect margin requirements for your open positions. Changes take effect immediately.
+            </p>
+            <Button
+              className="w-full"
+              onClick={() => leverageMutation.mutate()}
+              disabled={leverageMutation.isPending || newLeverage === selectedAccount?.leverage}
+              data-testid="button-submit-leverage"
+            >
+              {leverageMutation.isPending ? "Updating..." : "Update Leverage"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={depositOpen} onOpenChange={setDepositOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Deposit to {selectedAccount?.accountNumber}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="p-3 rounded-md bg-muted/50 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                <Wallet className="w-4 h-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Transfer Method</p>
+                <p className="text-sm font-medium">Wallet Transfer</p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Amount (USD)</Label>
+              <Input
+                type="number"
+                placeholder="Enter deposit amount"
+                value={depositAmount}
+                onChange={(e) => setDepositAmount(e.target.value)}
+                min="1"
+                data-testid="input-deposit-amount"
+              />
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {["100", "500", "1000", "5000"].map((v) => (
+                <Button
+                  key={v}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setDepositAmount(v)}
+                  data-testid={`button-deposit-preset-${v}`}
+                >
+                  ${v}
+                </Button>
+              ))}
+            </div>
+            <Button
+              className="w-full"
+              onClick={() => depositMutation.mutate()}
+              disabled={depositMutation.isPending || !depositAmount || parseFloat(depositAmount) <= 0}
+              data-testid="button-submit-deposit"
+            >
+              {depositMutation.isPending ? "Processing..." : "Deposit Now"}
             </Button>
           </div>
         </DialogContent>

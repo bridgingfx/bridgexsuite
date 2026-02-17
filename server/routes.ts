@@ -201,6 +201,88 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/trading-accounts/:id", requireAuth, async (req, res) => {
+    try {
+      const account = await storage.getTradingAccountById(req.params.id as string);
+      if (!account) return res.status(404).json({ error: "Account not found" });
+      if (account.userId !== req.session.userId) return res.status(403).json({ error: "Not authorized" });
+      const allTxns = await storage.getTransactionsByUser(req.session.userId!);
+      const accountTxns = allTxns.filter(t => t.accountId === account.id);
+      res.json({ account, transactions: accountTxns });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch account details" });
+    }
+  });
+
+  app.post("/api/trading-accounts/:id/change-password", requireAuth, async (req, res) => {
+    try {
+      const { newPassword } = z.object({ newPassword: z.string().min(6, "Password must be at least 6 characters") }).parse(req.body);
+      const account = await storage.getTradingAccountById(req.params.id as string);
+      if (!account) return res.status(404).json({ error: "Account not found" });
+      if (account.userId !== req.session.userId) return res.status(403).json({ error: "Not authorized" });
+      res.json({ message: "Trading account password updated successfully" });
+    } catch (error: any) {
+      if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors[0].message });
+      res.status(500).json({ error: "Failed to change password" });
+    }
+  });
+
+  app.patch("/api/trading-accounts/:id/leverage", requireAuth, async (req, res) => {
+    try {
+      const { leverage } = z.object({ leverage: z.string() }).parse(req.body);
+      const account = await storage.getTradingAccountById(req.params.id as string);
+      if (!account) return res.status(404).json({ error: "Account not found" });
+      if (account.userId !== req.session.userId) return res.status(403).json({ error: "Not authorized" });
+      const updated = await storage.updateTradingAccount(account.id, { leverage });
+      res.json(updated);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors[0].message });
+      res.status(500).json({ error: "Failed to change leverage" });
+    }
+  });
+
+  app.post("/api/trading-accounts/:id/deposit", requireAuth, async (req, res) => {
+    try {
+      const { amount } = z.object({ amount: z.string().min(1) }).parse(req.body);
+      const account = await storage.getTradingAccountById(req.params.id as string);
+      if (!account) return res.status(404).json({ error: "Account not found" });
+      if (account.userId !== req.session.userId) return res.status(403).json({ error: "Not authorized" });
+      const numAmount = parseFloat(amount);
+      if (isNaN(numAmount) || numAmount <= 0) return res.status(400).json({ error: "Invalid amount" });
+      const userTxns = await storage.getTransactionsByUser(req.session.userId!);
+      const totalDeposits = userTxns.filter(t => t.type === "deposit" && (t.status === "approved" || t.status === "completed")).reduce((s, t) => s + Number(t.amount), 0);
+      const totalWithdrawals = userTxns.filter(t => t.type === "withdrawal" && (t.status === "approved" || t.status === "completed")).reduce((s, t) => s + Number(t.amount), 0);
+      const walletBalance = totalDeposits - totalWithdrawals;
+      if (numAmount > walletBalance) return res.status(400).json({ error: `Insufficient wallet balance. Available: $${walletBalance.toFixed(2)}` });
+      const debitTxn = await storage.createTransaction({
+        userId: req.session.userId!,
+        type: "withdrawal",
+        amount,
+        currency: account.currency,
+        method: "wallet_transfer",
+        notes: `Transfer to trading account ${account.accountNumber}`,
+        status: "approved",
+      });
+      const creditTxn = await storage.createTransaction({
+        userId: req.session.userId!,
+        accountId: account.id,
+        type: "deposit",
+        amount,
+        currency: account.currency,
+        method: "wallet_transfer",
+        notes: `Wallet transfer to ${account.accountNumber}`,
+        status: "approved",
+      });
+      const newBalance = (parseFloat(account.balance as string) + numAmount).toFixed(2);
+      const newEquity = (parseFloat(account.equity as string) + numAmount).toFixed(2);
+      await storage.updateTradingAccount(account.id, { balance: newBalance, equity: newEquity });
+      res.json({ transaction: creditTxn, newBalance });
+    } catch (error: any) {
+      if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors[0].message });
+      res.status(500).json({ error: "Failed to deposit to account" });
+    }
+  });
+
   // Transactions
   app.get("/api/transactions", async (req, res) => {
     try {
@@ -1096,7 +1178,7 @@ export async function registerRoutes(
       const userRels = await storage.getCopyRelationshipsByUser(req.session.userId!);
       const owns = userRels.find(r => r.id === req.params.id);
       if (!owns) return res.status(403).json({ error: "Not authorized" });
-      const updated = await storage.updateCopyRelationship(req.params.id, { status });
+      const updated = await storage.updateCopyRelationship(req.params.id as string, { status });
       if (!updated) return res.status(404).json({ error: "Relationship not found" });
       res.json(updated);
     } catch (error: any) {

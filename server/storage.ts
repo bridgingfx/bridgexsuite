@@ -85,6 +85,7 @@ export interface IStorage {
   deleteUser(id: string): Promise<boolean>;
 
   getTradingAccounts(): Promise<TradingAccount[]>;
+  getTradingAccountById(id: string): Promise<TradingAccount | undefined>;
   getTradingAccountsByUser(userId: string): Promise<TradingAccount[]>;
   createTradingAccount(account: InsertTradingAccount): Promise<TradingAccount>;
   updateTradingAccount(id: string, data: Partial<InsertTradingAccount>): Promise<TradingAccount | undefined>;
@@ -242,6 +243,11 @@ export class DatabaseStorage implements IStorage {
 
   async getTradingAccounts(): Promise<TradingAccount[]> {
     return db.select().from(tradingAccounts).orderBy(desc(tradingAccounts.createdAt));
+  }
+
+  async getTradingAccountById(id: string): Promise<TradingAccount | undefined> {
+    const [account] = await db.select().from(tradingAccounts).where(eq(tradingAccounts.id, id));
+    return account;
   }
 
   async getTradingAccountsByUser(userId: string): Promise<TradingAccount[]> {

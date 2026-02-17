@@ -34,6 +34,7 @@ SaaS platform management layer for managing broker tenants, subscription plans, 
 - **Support Tickets**: Ticket creation and management system
 - **Notifications**: Activity notification feed
 - **Settings**: Profile, security, notification preferences, and appearance (dark/light mode)
+- **Account Details**: View detailed account info, transaction history, P&L, change password, change leverage, deposit from wallet
 - **Prop Trading**: Funded trading challenges (10K-100K accounts), purchase challenges, track phases (Phase 1/2/Funded), drawdown rules
 - **Investment**: Managed investment plans with different risk levels, invest/track returns, maturity dates
 - **Copy Trading**: Follow signal providers, allocate funds, view P&L, stop copying
@@ -128,6 +129,10 @@ shared/
 ### Client API
 - GET/POST /api/clients
 - GET/POST /api/trading-accounts
+- GET /api/trading-accounts/:id (account details + transactions)
+- POST /api/trading-accounts/:id/change-password
+- PATCH /api/trading-accounts/:id/leverage
+- POST /api/trading-accounts/:id/deposit (wallet transfer)
 - GET/POST /api/transactions
 - GET/POST /api/kyc/documents
 - GET/POST /api/ib/referrals
