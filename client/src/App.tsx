@@ -22,6 +22,10 @@ import KycPage from "@/pages/kyc";
 import Support from "@/pages/support";
 import Notifications from "@/pages/notifications";
 import SettingsPage from "@/pages/settings";
+import PropTradingPage from "@/pages/prop-trading";
+import InvestmentPage from "@/pages/investment";
+import CopyTradingPage from "@/pages/copy-trading";
+import PammPage from "@/pages/pamm";
 
 import AdminDashboard from "@/pages/admin/dashboard";
 import AdminClients from "@/pages/admin/clients";
@@ -94,6 +98,10 @@ function ClientRouter() {
       <Route path="/support" component={Support} />
       <Route path="/notifications" component={Notifications} />
       <Route path="/settings" component={SettingsPage} />
+      <Route path="/prop-trading" component={PropTradingPage} />
+      <Route path="/investment" component={InvestmentPage} />
+      <Route path="/copy-trading" component={CopyTradingPage} />
+      <Route path="/pamm" component={PammPage} />
       <Route component={NotFound} />
     </Switch>
   );

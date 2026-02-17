@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { users, tradingAccounts, transactions, kycDocuments, ibReferrals, supportTickets, commissions, brokers, subscriptionPlans, brokerSubscriptions, brokerAdmins, brokerBranding, platformSettings } from "@shared/schema";
+import { users, tradingAccounts, transactions, kycDocuments, ibReferrals, supportTickets, commissions, brokers, subscriptionPlans, brokerSubscriptions, brokerAdmins, brokerBranding, platformSettings, propChallenges, investmentPlans, signalProviders, pammManagers } from "@shared/schema";
 import { sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
@@ -7,6 +7,7 @@ export async function seedDatabase() {
   const existingUsers = await db.select().from(users);
   if (existingUsers.length > 0) {
     await seedSuperAdminData();
+    await seedNewModulesData();
     return;
   }
 
@@ -159,6 +160,54 @@ export async function seedDatabase() {
     { userId: admin.id, type: "referral", amount: "320.75", source: "Investment referrals", status: "paid" },
   ]);
 
+  // Prop Trading Challenges
+  try {
+    await db.insert(propChallenges).values([
+      { name: "10K Challenge", accountSize: "10000", price: "99", profitTarget: "8", maxDailyDrawdown: "5", maxTotalDrawdown: "10", minTradingDays: 5, maxTradingDays: 30, profitSplit: "80", phases: 2, leverage: "1:100" },
+      { name: "25K Challenge", accountSize: "25000", price: "199", profitTarget: "8", maxDailyDrawdown: "5", maxTotalDrawdown: "10", minTradingDays: 5, maxTradingDays: 30, profitSplit: "80", phases: 2, leverage: "1:100" },
+      { name: "50K Challenge", accountSize: "50000", price: "349", profitTarget: "8", maxDailyDrawdown: "5", maxTotalDrawdown: "10", minTradingDays: 5, maxTradingDays: 45, profitSplit: "85", phases: 2, leverage: "1:100" },
+      { name: "100K Challenge", accountSize: "100000", price: "549", profitTarget: "8", maxDailyDrawdown: "5", maxTotalDrawdown: "10", minTradingDays: 5, maxTradingDays: 60, profitSplit: "90", phases: 2, leverage: "1:100" },
+    ]);
+  } catch (e) {
+    console.log("Prop challenges seed data already exists");
+  }
+
+  // Investment Plans
+  try {
+    await db.insert(investmentPlans).values([
+      { name: "Conservative Growth", description: "Low-risk forex portfolio with stable returns", minInvestment: "500", maxInvestment: "50000", expectedReturn: "6", durationDays: 90, riskLevel: "low", category: "forex" },
+      { name: "Balanced Portfolio", description: "Mix of forex pairs with moderate risk exposure", minInvestment: "1000", maxInvestment: "100000", expectedReturn: "12", durationDays: 180, riskLevel: "medium", category: "forex" },
+      { name: "Aggressive Trading", description: "High-yield forex trading with managed risk", minInvestment: "5000", maxInvestment: "500000", expectedReturn: "24", durationDays: 365, riskLevel: "high", category: "forex" },
+      { name: "Crypto Diversified", description: "Diversified cryptocurrency investment portfolio", minInvestment: "1000", maxInvestment: "200000", expectedReturn: "18", durationDays: 180, riskLevel: "high", category: "crypto" },
+    ]);
+  } catch (e) {
+    console.log("Investment plans seed data already exists");
+  }
+
+  // Signal Providers
+  try {
+    await db.insert(signalProviders).values([
+      { displayName: "AlphaFX Signals", description: "Professional forex signals with 5+ years track record", totalReturn: "142.50", winRate: "72.30", totalTrades: 1250, followers: 342, riskScore: 4, monthlyFee: "49", strategy: "Swing Trading" },
+      { displayName: "PipMaster Pro", description: "Scalping specialist on major pairs", totalReturn: "89.20", winRate: "68.50", totalTrades: 3420, followers: 567, riskScore: 6, monthlyFee: "79", strategy: "Scalping" },
+      { displayName: "TrendFollower FX", description: "Long-term trend following on all major pairs", totalReturn: "210.80", winRate: "61.20", totalTrades: 890, followers: 234, riskScore: 3, monthlyFee: "29", strategy: "Trend Following" },
+      { displayName: "GoldTrader Elite", description: "Specialized in gold and precious metals trading", totalReturn: "175.40", winRate: "65.80", totalTrades: 1680, followers: 456, riskScore: 5, monthlyFee: "59", strategy: "Commodity Trading" },
+    ]);
+  } catch (e) {
+    console.log("Signal providers seed data already exists");
+  }
+
+  // PAMM Managers
+  try {
+    await db.insert(pammManagers).values([
+      { displayName: "Capital Growth Fund", description: "Conservative fund focused on major currency pairs", totalAum: "2450000", totalReturn: "32.50", monthlyReturn: "2.80", performanceFee: "20", managementFee: "2", minInvestment: "5000", investors: 45, riskLevel: "low", strategy: "Conservative Forex" },
+      { displayName: "Dynamic FX Fund", description: "Active trading fund with diversified forex exposure", totalAum: "5800000", totalReturn: "58.20", monthlyReturn: "4.50", performanceFee: "25", managementFee: "2", minInvestment: "10000", investors: 78, riskLevel: "medium", strategy: "Active Trading" },
+      { displayName: "Alpha Returns Fund", description: "High-performance fund targeting above-market returns", totalAum: "12500000", totalReturn: "95.40", monthlyReturn: "7.20", performanceFee: "30", managementFee: "3", minInvestment: "25000", investors: 120, riskLevel: "high", strategy: "Aggressive Growth" },
+      { displayName: "Stable Income Fund", description: "Income-generating fund with consistent monthly returns", totalAum: "8900000", totalReturn: "24.60", monthlyReturn: "2.10", performanceFee: "15", managementFee: "1.5", minInvestment: "1000", investors: 234, riskLevel: "low", strategy: "Income Generation" },
+    ]);
+  } catch (e) {
+    console.log("PAMM managers seed data already exists");
+  }
+
   await seedSuperAdminData();
 
   console.log("Database seeded successfully!");
@@ -280,5 +329,52 @@ async function seedSuperAdminData() {
       { settingKey: "default_currency", settingValue: "USD", category: "financial", description: "Default platform currency" },
       { settingKey: "maintenance_mode", settingValue: "false", category: "system", description: "Enable maintenance mode" },
     ]);
+  }
+}
+
+async function seedNewModulesData() {
+  const existingChallenges = await db.select().from(propChallenges);
+  if (existingChallenges.length === 0) {
+    try {
+      await db.insert(propChallenges).values([
+        { name: "10K Challenge", accountSize: "10000", price: "99", profitTarget: "8", maxDailyDrawdown: "5", maxTotalDrawdown: "10", minTradingDays: 5, maxTradingDays: 30, profitSplit: "80", phases: 2, leverage: "1:100" },
+        { name: "25K Challenge", accountSize: "25000", price: "199", profitTarget: "8", maxDailyDrawdown: "5", maxTotalDrawdown: "10", minTradingDays: 5, maxTradingDays: 30, profitSplit: "80", phases: 2, leverage: "1:100" },
+        { name: "50K Challenge", accountSize: "50000", price: "349", profitTarget: "8", maxDailyDrawdown: "5", maxTotalDrawdown: "10", minTradingDays: 5, maxTradingDays: 45, profitSplit: "85", phases: 2, leverage: "1:100" },
+        { name: "100K Challenge", accountSize: "100000", price: "549", profitTarget: "8", maxDailyDrawdown: "5", maxTotalDrawdown: "10", minTradingDays: 5, maxTradingDays: 60, profitSplit: "90", phases: 2, leverage: "1:100" },
+      ]);
+    } catch (e) {}
+  }
+  const existingPlans = await db.select().from(investmentPlans);
+  if (existingPlans.length === 0) {
+    try {
+      await db.insert(investmentPlans).values([
+        { name: "Conservative Growth", description: "Low-risk forex portfolio with stable returns", minInvestment: "500", maxInvestment: "50000", expectedReturn: "6", durationDays: 90, riskLevel: "low", category: "forex" },
+        { name: "Balanced Portfolio", description: "Mix of forex pairs with moderate risk exposure", minInvestment: "1000", maxInvestment: "100000", expectedReturn: "12", durationDays: 180, riskLevel: "medium", category: "forex" },
+        { name: "Aggressive Trading", description: "High-yield forex trading with managed risk", minInvestment: "5000", maxInvestment: "500000", expectedReturn: "24", durationDays: 365, riskLevel: "high", category: "forex" },
+        { name: "Crypto Diversified", description: "Diversified cryptocurrency investment portfolio", minInvestment: "1000", maxInvestment: "200000", expectedReturn: "18", durationDays: 180, riskLevel: "high", category: "crypto" },
+      ]);
+    } catch (e) {}
+  }
+  const existingProviders = await db.select().from(signalProviders);
+  if (existingProviders.length === 0) {
+    try {
+      await db.insert(signalProviders).values([
+        { displayName: "AlphaFX Signals", description: "Professional forex signals with 5+ years track record", totalReturn: "142.50", winRate: "72.30", totalTrades: 1250, followers: 342, riskScore: 4, monthlyFee: "49", strategy: "Swing Trading" },
+        { displayName: "PipMaster Pro", description: "Scalping specialist on major pairs", totalReturn: "89.20", winRate: "68.50", totalTrades: 3420, followers: 567, riskScore: 6, monthlyFee: "79", strategy: "Scalping" },
+        { displayName: "TrendFollower FX", description: "Long-term trend following on all major pairs", totalReturn: "210.80", winRate: "61.20", totalTrades: 890, followers: 234, riskScore: 3, monthlyFee: "29", strategy: "Trend Following" },
+        { displayName: "GoldTrader Elite", description: "Specialized in gold and precious metals trading", totalReturn: "175.40", winRate: "65.80", totalTrades: 1680, followers: 456, riskScore: 5, monthlyFee: "59", strategy: "Commodity Trading" },
+      ]);
+    } catch (e) {}
+  }
+  const existingManagers = await db.select().from(pammManagers);
+  if (existingManagers.length === 0) {
+    try {
+      await db.insert(pammManagers).values([
+        { displayName: "Capital Growth Fund", description: "Conservative fund focused on major currency pairs", totalAum: "2450000", totalReturn: "32.50", monthlyReturn: "2.80", performanceFee: "20", managementFee: "2", minInvestment: "5000", investors: 45, riskLevel: "low", strategy: "Conservative Forex" },
+        { displayName: "Dynamic FX Fund", description: "Active trading fund with diversified forex exposure", totalAum: "5800000", totalReturn: "58.20", monthlyReturn: "4.50", performanceFee: "25", managementFee: "2", minInvestment: "10000", investors: 78, riskLevel: "medium", strategy: "Active Trading" },
+        { displayName: "Alpha Returns Fund", description: "High-performance fund targeting above-market returns", totalAum: "12500000", totalReturn: "95.40", monthlyReturn: "7.20", performanceFee: "30", managementFee: "3", minInvestment: "25000", investors: 120, riskLevel: "high", strategy: "Aggressive Growth" },
+        { displayName: "Stable Income Fund", description: "Income-generating fund with consistent monthly returns", totalAum: "8900000", totalReturn: "24.60", monthlyReturn: "2.10", performanceFee: "15", managementFee: "1.5", minInvestment: "1000", investors: 234, riskLevel: "low", strategy: "Income Generation" },
+      ]);
+    } catch (e) {}
   }
 }

@@ -965,5 +965,186 @@ export async function registerRoutes(
     }
   });
 
+  // ==================== PROP TRADING ROUTES ====================
+
+  app.get("/api/prop/challenges", requireAuth, async (req, res) => {
+    try {
+      const challenges = await storage.getPropChallenges();
+      res.json(challenges);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch challenges" });
+    }
+  });
+
+  app.get("/api/prop/accounts", requireAuth, async (req, res) => {
+    try {
+      const accounts = await storage.getPropAccountsByUser(req.session.userId!);
+      res.json(accounts);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch prop accounts" });
+    }
+  });
+
+  app.post("/api/prop/accounts", requireAuth, async (req, res) => {
+    try {
+      const { challengeId } = z.object({ challengeId: z.string() }).parse(req.body);
+      const challenge = await storage.getPropChallenge(challengeId);
+      if (!challenge) return res.status(404).json({ error: "Challenge not found" });
+      const accountNumber = "PROP" + Math.floor(10000000 + Math.random() * 90000000).toString();
+      const account = await storage.createPropAccount({
+        userId: req.session.userId!,
+        challengeId,
+        accountNumber,
+        currentBalance: challenge.accountSize,
+        status: "active",
+      });
+      res.status(201).json(account);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors[0].message });
+      res.status(500).json({ error: "Failed to create prop account" });
+    }
+  });
+
+  // ==================== INVESTMENT ROUTES ====================
+
+  app.get("/api/investments/plans", requireAuth, async (req, res) => {
+    try {
+      const plans = await storage.getInvestmentPlans();
+      res.json(plans);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch investment plans" });
+    }
+  });
+
+  app.get("/api/investments", requireAuth, async (req, res) => {
+    try {
+      const investments = await storage.getInvestmentsByUser(req.session.userId!);
+      res.json(investments);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch investments" });
+    }
+  });
+
+  app.post("/api/investments", requireAuth, async (req, res) => {
+    try {
+      const { planId, amount } = z.object({
+        planId: z.string(),
+        amount: z.string(),
+      }).parse(req.body);
+      const plan = await storage.getInvestmentPlan(planId);
+      if (!plan) return res.status(404).json({ error: "Plan not found" });
+      const maturityDate = new Date();
+      maturityDate.setDate(maturityDate.getDate() + plan.durationDays);
+      const investment = await storage.createInvestment({
+        userId: req.session.userId!,
+        planId,
+        amount,
+        currentValue: amount,
+        startDate: new Date(),
+        maturityDate,
+      });
+      res.status(201).json(investment);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors[0].message });
+      res.status(500).json({ error: "Failed to create investment" });
+    }
+  });
+
+  // ==================== COPY TRADING ROUTES ====================
+
+  app.get("/api/copy/providers", requireAuth, async (req, res) => {
+    try {
+      const providers = await storage.getSignalProviders();
+      res.json(providers);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch signal providers" });
+    }
+  });
+
+  app.get("/api/copy/relationships", requireAuth, async (req, res) => {
+    try {
+      const rels = await storage.getCopyRelationshipsByUser(req.session.userId!);
+      res.json(rels);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch copy relationships" });
+    }
+  });
+
+  app.post("/api/copy/relationships", requireAuth, async (req, res) => {
+    try {
+      const { providerId, allocatedAmount } = z.object({
+        providerId: z.string(),
+        allocatedAmount: z.string(),
+      }).parse(req.body);
+      const provider = await storage.getSignalProvider(providerId);
+      if (!provider) return res.status(404).json({ error: "Provider not found" });
+      const rel = await storage.createCopyRelationship({
+        followerId: req.session.userId!,
+        providerId,
+        allocatedAmount,
+      });
+      res.status(201).json(rel);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors[0].message });
+      res.status(500).json({ error: "Failed to create copy relationship" });
+    }
+  });
+
+  app.patch("/api/copy/relationships/:id", requireAuth, async (req, res) => {
+    try {
+      const { status } = z.object({ status: z.string() }).parse(req.body);
+      const userRels = await storage.getCopyRelationshipsByUser(req.session.userId!);
+      const owns = userRels.find(r => r.id === req.params.id);
+      if (!owns) return res.status(403).json({ error: "Not authorized" });
+      const updated = await storage.updateCopyRelationship(req.params.id, { status });
+      if (!updated) return res.status(404).json({ error: "Relationship not found" });
+      res.json(updated);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors[0].message });
+      res.status(500).json({ error: "Failed to update relationship" });
+    }
+  });
+
+  // ==================== PAMM ROUTES ====================
+
+  app.get("/api/pamm/managers", requireAuth, async (req, res) => {
+    try {
+      const managers = await storage.getPammManagers();
+      res.json(managers);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch PAMM managers" });
+    }
+  });
+
+  app.get("/api/pamm/investments", requireAuth, async (req, res) => {
+    try {
+      const investments = await storage.getPammInvestmentsByUser(req.session.userId!);
+      res.json(investments);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch PAMM investments" });
+    }
+  });
+
+  app.post("/api/pamm/investments", requireAuth, async (req, res) => {
+    try {
+      const { managerId, amount } = z.object({
+        managerId: z.string(),
+        amount: z.string(),
+      }).parse(req.body);
+      const manager = await storage.getPammManager(managerId);
+      if (!manager) return res.status(404).json({ error: "Manager not found" });
+      const investment = await storage.createPammInvestment({
+        investorId: req.session.userId!,
+        managerId,
+        amount,
+        currentValue: amount,
+      });
+      res.status(201).json(investment);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors[0].message });
+      res.status(500).json({ error: "Failed to create PAMM investment" });
+    }
+  });
+
   return httpServer;
 }

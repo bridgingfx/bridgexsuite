@@ -194,6 +194,130 @@ export const platformSettings = pgTable("platform_settings", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// ==================== PROP TRADING MODULE ====================
+
+export const propChallenges = pgTable("prop_challenges", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  accountSize: decimal("account_size", { precision: 15, scale: 2 }).notNull(),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  profitTarget: decimal("profit_target", { precision: 5, scale: 2 }).notNull(),
+  maxDailyDrawdown: decimal("max_daily_drawdown", { precision: 5, scale: 2 }).notNull(),
+  maxTotalDrawdown: decimal("max_total_drawdown", { precision: 5, scale: 2 }).notNull(),
+  minTradingDays: integer("min_trading_days").notNull().default(5),
+  maxTradingDays: integer("max_trading_days").notNull().default(30),
+  profitSplit: decimal("profit_split", { precision: 5, scale: 2 }).notNull().default("80"),
+  phases: integer("phases").notNull().default(2),
+  leverage: text("leverage").notNull().default("1:100"),
+  status: text("status").notNull().default("active"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const propAccounts = pgTable("prop_accounts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  challengeId: varchar("challenge_id").notNull().references(() => propChallenges.id),
+  accountNumber: text("account_number").notNull(),
+  currentPhase: integer("current_phase").notNull().default(1),
+  status: text("status").notNull().default("active"),
+  currentBalance: decimal("current_balance", { precision: 15, scale: 2 }).notNull().default("0"),
+  currentProfit: decimal("current_profit", { precision: 15, scale: 2 }).notNull().default("0"),
+  tradingDays: integer("trading_days").notNull().default(0),
+  startDate: timestamp("start_date").defaultNow(),
+  endDate: timestamp("end_date"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// ==================== INVESTMENT MODULE ====================
+
+export const investmentPlans = pgTable("investment_plans", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  description: text("description"),
+  minInvestment: decimal("min_investment", { precision: 15, scale: 2 }).notNull(),
+  maxInvestment: decimal("max_investment", { precision: 15, scale: 2 }),
+  expectedReturn: decimal("expected_return", { precision: 5, scale: 2 }).notNull(),
+  durationDays: integer("duration_days").notNull(),
+  riskLevel: text("risk_level").notNull().default("medium"),
+  category: text("category").notNull().default("forex"),
+  status: text("status").notNull().default("active"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const investments = pgTable("investments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  planId: varchar("plan_id").notNull().references(() => investmentPlans.id),
+  amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
+  currentValue: decimal("current_value", { precision: 15, scale: 2 }).notNull(),
+  profit: decimal("profit", { precision: 15, scale: 2 }).notNull().default("0"),
+  status: text("status").notNull().default("active"),
+  startDate: timestamp("start_date").defaultNow(),
+  maturityDate: timestamp("maturity_date"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// ==================== COPY TRADING MODULE ====================
+
+export const signalProviders = pgTable("signal_providers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id),
+  displayName: text("display_name").notNull(),
+  description: text("description"),
+  totalReturn: decimal("total_return", { precision: 10, scale: 2 }).notNull().default("0"),
+  winRate: decimal("win_rate", { precision: 5, scale: 2 }).notNull().default("0"),
+  totalTrades: integer("total_trades").notNull().default(0),
+  followers: integer("followers").notNull().default(0),
+  riskScore: integer("risk_score").notNull().default(5),
+  monthlyFee: decimal("monthly_fee", { precision: 10, scale: 2 }).notNull().default("0"),
+  strategy: text("strategy"),
+  status: text("status").notNull().default("active"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const copyRelationships = pgTable("copy_relationships", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  followerId: varchar("follower_id").notNull().references(() => users.id),
+  providerId: varchar("provider_id").notNull().references(() => signalProviders.id),
+  allocatedAmount: decimal("allocated_amount", { precision: 15, scale: 2 }).notNull(),
+  currentPnl: decimal("current_pnl", { precision: 15, scale: 2 }).notNull().default("0"),
+  totalCopiedTrades: integer("total_copied_trades").notNull().default(0),
+  status: text("status").notNull().default("active"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// ==================== PAMM MODULE ====================
+
+export const pammManagers = pgTable("pamm_managers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id),
+  displayName: text("display_name").notNull(),
+  description: text("description"),
+  totalAum: decimal("total_aum", { precision: 15, scale: 2 }).notNull().default("0"),
+  totalReturn: decimal("total_return", { precision: 10, scale: 2 }).notNull().default("0"),
+  monthlyReturn: decimal("monthly_return", { precision: 10, scale: 2 }).notNull().default("0"),
+  performanceFee: decimal("performance_fee", { precision: 5, scale: 2 }).notNull().default("20"),
+  managementFee: decimal("management_fee", { precision: 5, scale: 2 }).notNull().default("2"),
+  minInvestment: decimal("min_investment", { precision: 15, scale: 2 }).notNull().default("1000"),
+  investors: integer("investors").notNull().default(0),
+  riskLevel: text("risk_level").notNull().default("medium"),
+  strategy: text("strategy"),
+  status: text("status").notNull().default("active"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const pammInvestments = pgTable("pamm_investments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  investorId: varchar("investor_id").notNull().references(() => users.id),
+  managerId: varchar("manager_id").notNull().references(() => pammManagers.id),
+  amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
+  currentValue: decimal("current_value", { precision: 15, scale: 2 }).notNull(),
+  profit: decimal("profit", { precision: 15, scale: 2 }).notNull().default("0"),
+  sharePercentage: decimal("share_percentage", { precision: 5, scale: 2 }).notNull().default("0"),
+  status: text("status").notNull().default("active"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertBrokerSchema = createInsertSchema(brokers).omit({ id: true, createdAt: true });
 export const insertSubscriptionPlanSchema = createInsertSchema(subscriptionPlans).omit({ id: true, createdAt: true });
 export const insertBrokerSubscriptionSchema = createInsertSchema(brokerSubscriptions).omit({ id: true, createdAt: true });
@@ -211,6 +335,14 @@ export const insertTicketReplySchema = createInsertSchema(ticketReplies).omit({ 
 export const insertCommissionSchema = createInsertSchema(commissions).omit({ id: true, createdAt: true });
 export const insertBrokerSettingSchema = createInsertSchema(brokerSettings).omit({ id: true, updatedAt: true });
 export const insertCommissionTierSchema = createInsertSchema(commissionTiers).omit({ id: true, createdAt: true });
+export const insertPropChallengeSchema = createInsertSchema(propChallenges).omit({ id: true, createdAt: true });
+export const insertPropAccountSchema = createInsertSchema(propAccounts).omit({ id: true, createdAt: true });
+export const insertInvestmentPlanSchema = createInsertSchema(investmentPlans).omit({ id: true, createdAt: true });
+export const insertInvestmentSchema = createInsertSchema(investments).omit({ id: true, createdAt: true });
+export const insertSignalProviderSchema = createInsertSchema(signalProviders).omit({ id: true, createdAt: true });
+export const insertCopyRelationshipSchema = createInsertSchema(copyRelationships).omit({ id: true, createdAt: true });
+export const insertPammManagerSchema = createInsertSchema(pammManagers).omit({ id: true, createdAt: true });
+export const insertPammInvestmentSchema = createInsertSchema(pammInvestments).omit({ id: true, createdAt: true });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -245,3 +377,20 @@ export type InsertBrokerBranding = z.infer<typeof insertBrokerBrandingSchema>;
 export type BrokerBranding = typeof brokerBranding.$inferSelect;
 export type InsertPlatformSetting = z.infer<typeof insertPlatformSettingSchema>;
 export type PlatformSetting = typeof platformSettings.$inferSelect;
+
+export type InsertPropChallenge = z.infer<typeof insertPropChallengeSchema>;
+export type PropChallenge = typeof propChallenges.$inferSelect;
+export type InsertPropAccount = z.infer<typeof insertPropAccountSchema>;
+export type PropAccount = typeof propAccounts.$inferSelect;
+export type InsertInvestmentPlan = z.infer<typeof insertInvestmentPlanSchema>;
+export type InvestmentPlan = typeof investmentPlans.$inferSelect;
+export type InsertInvestment = z.infer<typeof insertInvestmentSchema>;
+export type Investment = typeof investments.$inferSelect;
+export type InsertSignalProvider = z.infer<typeof insertSignalProviderSchema>;
+export type SignalProvider = typeof signalProviders.$inferSelect;
+export type InsertCopyRelationship = z.infer<typeof insertCopyRelationshipSchema>;
+export type CopyRelationship = typeof copyRelationships.$inferSelect;
+export type InsertPammManager = z.infer<typeof insertPammManagerSchema>;
+export type PammManager = typeof pammManagers.$inferSelect;
+export type InsertPammInvestment = z.infer<typeof insertPammInvestmentSchema>;
+export type PammInvestment = typeof pammInvestments.$inferSelect;

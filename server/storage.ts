@@ -17,6 +17,14 @@ import {
   brokerAdmins,
   brokerBranding,
   platformSettings,
+  propChallenges,
+  propAccounts,
+  investmentPlans,
+  investments,
+  signalProviders,
+  copyRelationships,
+  pammManagers,
+  pammInvestments,
   type User,
   type InsertUser,
   type TradingAccount,
@@ -49,6 +57,22 @@ import {
   type InsertBrokerBranding,
   type PlatformSetting,
   type InsertPlatformSetting,
+  type PropChallenge,
+  type InsertPropChallenge,
+  type PropAccount,
+  type InsertPropAccount,
+  type InvestmentPlan,
+  type InsertInvestmentPlan,
+  type Investment,
+  type InsertInvestment,
+  type SignalProvider,
+  type InsertSignalProvider,
+  type CopyRelationship,
+  type InsertCopyRelationship,
+  type PammManager,
+  type InsertPammManager,
+  type PammInvestment,
+  type InsertPammInvestment,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -143,6 +167,42 @@ export interface IStorage {
 
   // Super Admin - Dashboard
   getSuperAdminDashboardStats(): Promise<any>;
+
+  // Prop Trading
+  getPropChallenges(): Promise<PropChallenge[]>;
+  getPropChallenge(id: string): Promise<PropChallenge | undefined>;
+  createPropChallenge(challenge: InsertPropChallenge): Promise<PropChallenge>;
+  getPropAccountsByUser(userId: string): Promise<PropAccount[]>;
+  getPropAccounts(): Promise<PropAccount[]>;
+  createPropAccount(account: InsertPropAccount): Promise<PropAccount>;
+  updatePropAccount(id: string, data: Partial<InsertPropAccount>): Promise<PropAccount | undefined>;
+
+  // Investment
+  getInvestmentPlans(): Promise<InvestmentPlan[]>;
+  getInvestmentPlan(id: string): Promise<InvestmentPlan | undefined>;
+  createInvestmentPlan(plan: InsertInvestmentPlan): Promise<InvestmentPlan>;
+  getInvestmentsByUser(userId: string): Promise<Investment[]>;
+  getInvestments(): Promise<Investment[]>;
+  createInvestment(investment: InsertInvestment): Promise<Investment>;
+  updateInvestment(id: string, data: Partial<InsertInvestment>): Promise<Investment | undefined>;
+
+  // Copy Trading
+  getSignalProviders(): Promise<SignalProvider[]>;
+  getSignalProvider(id: string): Promise<SignalProvider | undefined>;
+  createSignalProvider(provider: InsertSignalProvider): Promise<SignalProvider>;
+  getCopyRelationshipsByUser(userId: string): Promise<CopyRelationship[]>;
+  getCopyRelationships(): Promise<CopyRelationship[]>;
+  createCopyRelationship(rel: InsertCopyRelationship): Promise<CopyRelationship>;
+  updateCopyRelationship(id: string, data: Partial<InsertCopyRelationship>): Promise<CopyRelationship | undefined>;
+
+  // PAMM
+  getPammManagers(): Promise<PammManager[]>;
+  getPammManager(id: string): Promise<PammManager | undefined>;
+  createPammManager(manager: InsertPammManager): Promise<PammManager>;
+  getPammInvestmentsByUser(userId: string): Promise<PammInvestment[]>;
+  getPammInvestments(): Promise<PammInvestment[]>;
+  createPammInvestment(investment: InsertPammInvestment): Promise<PammInvestment>;
+  updatePammInvestment(id: string, data: Partial<InsertPammInvestment>): Promise<PammInvestment | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -589,6 +649,142 @@ export class DatabaseStorage implements IStorage {
       totalTransactionVolume: totalDeposits,
       recentBrokers: allBrokers.slice(0, 5),
     };
+  }
+
+  // ==================== PROP TRADING STORAGE ====================
+
+  async getPropChallenges(): Promise<PropChallenge[]> {
+    return db.select().from(propChallenges).orderBy(desc(propChallenges.createdAt));
+  }
+
+  async getPropChallenge(id: string): Promise<PropChallenge | undefined> {
+    const [challenge] = await db.select().from(propChallenges).where(eq(propChallenges.id, id));
+    return challenge;
+  }
+
+  async createPropChallenge(challenge: InsertPropChallenge): Promise<PropChallenge> {
+    const [created] = await db.insert(propChallenges).values(challenge).returning();
+    return created;
+  }
+
+  async getPropAccountsByUser(userId: string): Promise<PropAccount[]> {
+    return db.select().from(propAccounts).where(eq(propAccounts.userId, userId)).orderBy(desc(propAccounts.createdAt));
+  }
+
+  async getPropAccounts(): Promise<PropAccount[]> {
+    return db.select().from(propAccounts).orderBy(desc(propAccounts.createdAt));
+  }
+
+  async createPropAccount(account: InsertPropAccount): Promise<PropAccount> {
+    const [created] = await db.insert(propAccounts).values(account).returning();
+    return created;
+  }
+
+  async updatePropAccount(id: string, data: Partial<InsertPropAccount>): Promise<PropAccount | undefined> {
+    const [updated] = await db.update(propAccounts).set(data).where(eq(propAccounts.id, id)).returning();
+    return updated;
+  }
+
+  // ==================== INVESTMENT STORAGE ====================
+
+  async getInvestmentPlans(): Promise<InvestmentPlan[]> {
+    return db.select().from(investmentPlans).orderBy(desc(investmentPlans.createdAt));
+  }
+
+  async getInvestmentPlan(id: string): Promise<InvestmentPlan | undefined> {
+    const [plan] = await db.select().from(investmentPlans).where(eq(investmentPlans.id, id));
+    return plan;
+  }
+
+  async createInvestmentPlan(plan: InsertInvestmentPlan): Promise<InvestmentPlan> {
+    const [created] = await db.insert(investmentPlans).values(plan).returning();
+    return created;
+  }
+
+  async getInvestmentsByUser(userId: string): Promise<Investment[]> {
+    return db.select().from(investments).where(eq(investments.userId, userId)).orderBy(desc(investments.createdAt));
+  }
+
+  async getInvestments(): Promise<Investment[]> {
+    return db.select().from(investments).orderBy(desc(investments.createdAt));
+  }
+
+  async createInvestment(investment: InsertInvestment): Promise<Investment> {
+    const [created] = await db.insert(investments).values(investment).returning();
+    return created;
+  }
+
+  async updateInvestment(id: string, data: Partial<InsertInvestment>): Promise<Investment | undefined> {
+    const [updated] = await db.update(investments).set(data).where(eq(investments.id, id)).returning();
+    return updated;
+  }
+
+  // ==================== COPY TRADING STORAGE ====================
+
+  async getSignalProviders(): Promise<SignalProvider[]> {
+    return db.select().from(signalProviders).orderBy(desc(signalProviders.createdAt));
+  }
+
+  async getSignalProvider(id: string): Promise<SignalProvider | undefined> {
+    const [provider] = await db.select().from(signalProviders).where(eq(signalProviders.id, id));
+    return provider;
+  }
+
+  async createSignalProvider(provider: InsertSignalProvider): Promise<SignalProvider> {
+    const [created] = await db.insert(signalProviders).values(provider).returning();
+    return created;
+  }
+
+  async getCopyRelationshipsByUser(userId: string): Promise<CopyRelationship[]> {
+    return db.select().from(copyRelationships).where(eq(copyRelationships.followerId, userId)).orderBy(desc(copyRelationships.createdAt));
+  }
+
+  async getCopyRelationships(): Promise<CopyRelationship[]> {
+    return db.select().from(copyRelationships).orderBy(desc(copyRelationships.createdAt));
+  }
+
+  async createCopyRelationship(rel: InsertCopyRelationship): Promise<CopyRelationship> {
+    const [created] = await db.insert(copyRelationships).values(rel).returning();
+    return created;
+  }
+
+  async updateCopyRelationship(id: string, data: Partial<InsertCopyRelationship>): Promise<CopyRelationship | undefined> {
+    const [updated] = await db.update(copyRelationships).set(data).where(eq(copyRelationships.id, id)).returning();
+    return updated;
+  }
+
+  // ==================== PAMM STORAGE ====================
+
+  async getPammManagers(): Promise<PammManager[]> {
+    return db.select().from(pammManagers).orderBy(desc(pammManagers.createdAt));
+  }
+
+  async getPammManager(id: string): Promise<PammManager | undefined> {
+    const [manager] = await db.select().from(pammManagers).where(eq(pammManagers.id, id));
+    return manager;
+  }
+
+  async createPammManager(manager: InsertPammManager): Promise<PammManager> {
+    const [created] = await db.insert(pammManagers).values(manager).returning();
+    return created;
+  }
+
+  async getPammInvestmentsByUser(userId: string): Promise<PammInvestment[]> {
+    return db.select().from(pammInvestments).where(eq(pammInvestments.investorId, userId)).orderBy(desc(pammInvestments.createdAt));
+  }
+
+  async getPammInvestments(): Promise<PammInvestment[]> {
+    return db.select().from(pammInvestments).orderBy(desc(pammInvestments.createdAt));
+  }
+
+  async createPammInvestment(investment: InsertPammInvestment): Promise<PammInvestment> {
+    const [created] = await db.insert(pammInvestments).values(investment).returning();
+    return created;
+  }
+
+  async updatePammInvestment(id: string, data: Partial<InsertPammInvestment>): Promise<PammInvestment | undefined> {
+    const [updated] = await db.update(pammInvestments).set(data).where(eq(pammInvestments.id, id)).returning();
+    return updated;
   }
 }
 

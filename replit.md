@@ -34,6 +34,10 @@ SaaS platform management layer for managing broker tenants, subscription plans, 
 - **Support Tickets**: Ticket creation and management system
 - **Notifications**: Activity notification feed
 - **Settings**: Profile, security, notification preferences, and appearance (dark/light mode)
+- **Prop Trading**: Funded trading challenges (10K-100K accounts), purchase challenges, track phases (Phase 1/2/Funded), drawdown rules
+- **Investment**: Managed investment plans with different risk levels, invest/track returns, maturity dates
+- **Copy Trading**: Follow signal providers, allocate funds, view P&L, stop copying
+- **PAMM**: Percentage Allocation Management - invest with professional money managers, track AUM/returns/fees
 
 ### Admin CRM
 - **Admin Dashboard**: Broker-wide stats (12 KPIs), recent transactions & clients tables
@@ -76,6 +80,10 @@ client/src/
     support.tsx           - Support tickets
     notifications.tsx     - Notifications
     settings.tsx          - User settings
+    prop-trading.tsx      - Prop trading challenges & funded accounts
+    investment.tsx        - Investment plans & portfolio
+    copy-trading.tsx      - Copy trading with signal providers
+    pamm.tsx              - PAMM fund manager investments
     admin/
       dashboard.tsx       - Admin dashboard with broker-wide stats
       clients.tsx         - Admin client management with CRUD
@@ -113,6 +121,7 @@ shared/
 ## Database Tables
 - users, trading_accounts, transactions, kyc_documents, ib_referrals, support_tickets, ticket_replies, commissions, broker_settings, commission_tiers
 - brokers, subscription_plans, broker_subscriptions, broker_admins, broker_branding, platform_settings
+- prop_challenges, prop_accounts, investment_plans, investments, signal_providers, copy_relationships, pamm_managers, pamm_investments
 
 ## API Endpoints
 
@@ -125,6 +134,27 @@ shared/
 - GET /api/commissions
 - GET/POST /api/support/tickets
 - GET /api/dashboard/stats
+
+### Prop Trading API
+- GET /api/prop/challenges
+- GET /api/prop/accounts
+- POST /api/prop/accounts
+
+### Investment API
+- GET /api/investments/plans
+- GET /api/investments
+- POST /api/investments
+
+### Copy Trading API
+- GET /api/copy/providers
+- GET /api/copy/relationships
+- POST /api/copy/relationships
+- PATCH /api/copy/relationships/:id
+
+### PAMM API
+- GET /api/pamm/managers
+- GET /api/pamm/investments
+- POST /api/pamm/investments
 
 ### Admin API
 - GET /api/admin/dashboard/stats
@@ -192,6 +222,7 @@ shared/
 Admin Settings has an "MT5 Server" tab with fields: MT5 Manager ID, Manager Password, Server IP, Server Port. Saved to broker_settings table with category "mt5".
 
 ## Recent Changes
+- 2026-02-17: Added Prop Trading, Investment, Copy Trading, PAMM modules with 8 new DB tables, 13 API endpoints, 4 frontend pages, sidebar navigation under "Services" section
 - 2026-02-17: Separated login pages into three distinct portals (/login, /admin/login, /super-admin/login) with role validation
 - 2026-02-17: Made client API routes user-scoped (trading accounts, transactions, dashboard stats, KYC, support tickets all filtered by session userId)
 - 2026-02-17: Refactored client sidebar to be trader-focused (removed Clients, IB/Affiliate, Reports; kept Dashboard, Trading, Wallet, Transactions, KYC, Support, Settings)

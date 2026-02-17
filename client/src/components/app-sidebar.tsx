@@ -9,6 +9,10 @@ import {
   HelpCircle,
   ChevronDown,
   Bell,
+  Trophy,
+  PiggyBank,
+  Users,
+  Landmark,
 } from "lucide-react";
 import {
   Sidebar,
@@ -64,6 +68,13 @@ const tradingMenu: MenuItem[] = [
     url: "/transactions",
     icon: ArrowUpDown,
   },
+];
+
+const servicesMenu: MenuItem[] = [
+  { title: "Prop Trading", url: "/prop-trading", icon: Trophy },
+  { title: "Investment", url: "/investment", icon: PiggyBank },
+  { title: "Copy Trading", url: "/copy-trading", icon: Users },
+  { title: "PAMM", url: "/pamm", icon: Landmark },
 ];
 
 const accountMenu: MenuItem[] = [
@@ -150,6 +161,21 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {tradingMenu.map((item) => (
+                <NavItem key={item.title} item={item} />
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <div className="px-4">
+          <Separator />
+        </div>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Services</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {servicesMenu.map((item) => (
                 <NavItem key={item.title} item={item} />
               ))}
             </SidebarMenu>
