@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Save, Settings, TrendingUp, DollarSign, Network, Monitor } from "lucide-react";
+import { Save, Settings, TrendingUp, DollarSign, Network, Monitor, Server } from "lucide-react";
 import type { BrokerSetting } from "@shared/schema";
 
 export default function AdminSystemSettings() {
@@ -60,6 +60,13 @@ export default function AdminSystemSettings() {
     payout_frequency: "monthly",
   });
 
+  const [mt5Config, setMt5Config] = useState({
+    mt5_manager_id: "",
+    mt5_manager_password: "",
+    mt5_server_ip: "",
+    mt5_server_port: "443",
+  });
+
   const [platform, setPlatform] = useState({
     maintenance_mode: false,
     registration_enabled: true,
@@ -96,6 +103,12 @@ export default function AdminSystemSettings() {
         default_ib_rate: settingsMap.get("default_ib_rate") || "2.5",
         referral_bonus: settingsMap.get("referral_bonus") || "50",
         payout_frequency: settingsMap.get("payout_frequency") || "monthly",
+      });
+      setMt5Config({
+        mt5_manager_id: settingsMap.get("mt5_manager_id") || "",
+        mt5_manager_password: settingsMap.get("mt5_manager_password") || "",
+        mt5_server_ip: settingsMap.get("mt5_server_ip") || "",
+        mt5_server_port: settingsMap.get("mt5_server_port") || "443",
       });
       setPlatform({
         maintenance_mode: settingsMap.get("maintenance_mode") === "true",
@@ -150,6 +163,7 @@ export default function AdminSystemSettings() {
                 <TabsTrigger value="general" data-testid="tab-settings-general"><Settings className="w-4 h-4 mr-2" /> General</TabsTrigger>
                 <TabsTrigger value="trading" data-testid="tab-settings-trading"><TrendingUp className="w-4 h-4 mr-2" /> Trading</TabsTrigger>
                 <TabsTrigger value="financial" data-testid="tab-settings-financial"><DollarSign className="w-4 h-4 mr-2" /> Financial</TabsTrigger>
+                <TabsTrigger value="mt5" data-testid="tab-settings-mt5"><Server className="w-4 h-4 mr-2" /> MT5 Server</TabsTrigger>
                 <TabsTrigger value="commission" data-testid="tab-settings-commission"><Network className="w-4 h-4 mr-2" /> Commission</TabsTrigger>
                 <TabsTrigger value="platform" data-testid="tab-settings-platform"><Monitor className="w-4 h-4 mr-2" /> Platform</TabsTrigger>
               </TabsList>
@@ -281,6 +295,39 @@ export default function AdminSystemSettings() {
               <Button onClick={() => saveCategory("financial", financial)} disabled={saveMutation.isPending} data-testid="button-save-financial">
                 <Save className="w-4 h-4 mr-2" />
                 Save Financial Settings
+              </Button>
+            </TabsContent>
+
+            <TabsContent value="mt5" className="p-6 space-y-6">
+              <div className="space-y-1 mb-4">
+                <h3 className="text-base font-semibold">MT5 Server Configuration</h3>
+                <p className="text-sm text-muted-foreground">Configure MetaTrader 5 Manager API connection settings for automated account management and trading operations.</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
+                <div className="space-y-2">
+                  <Label>MT5 Manager ID</Label>
+                  <Input value={mt5Config.mt5_manager_id} onChange={(e) => setMt5Config({ ...mt5Config, mt5_manager_id: e.target.value })} placeholder="e.g. 500" data-testid="input-mt5-manager-id" />
+                  <p className="text-xs text-muted-foreground">The manager login ID for MT5 Manager API</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>MT5 Manager Password</Label>
+                  <Input type="password" value={mt5Config.mt5_manager_password} onChange={(e) => setMt5Config({ ...mt5Config, mt5_manager_password: e.target.value })} placeholder="Manager password" data-testid="input-mt5-manager-password" />
+                  <p className="text-xs text-muted-foreground">The manager password for MT5 API authentication</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Server IP Address</Label>
+                  <Input value={mt5Config.mt5_server_ip} onChange={(e) => setMt5Config({ ...mt5Config, mt5_server_ip: e.target.value })} placeholder="e.g. 192.168.1.100" data-testid="input-mt5-server-ip" />
+                  <p className="text-xs text-muted-foreground">The IP address of the MT5 trade server</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Server Port</Label>
+                  <Input type="number" value={mt5Config.mt5_server_port} onChange={(e) => setMt5Config({ ...mt5Config, mt5_server_port: e.target.value })} placeholder="443" data-testid="input-mt5-server-port" />
+                  <p className="text-xs text-muted-foreground">The port number for MT5 Manager API connection (default: 443)</p>
+                </div>
+              </div>
+              <Button onClick={() => saveCategory("mt5", mt5Config)} disabled={saveMutation.isPending} data-testid="button-save-mt5">
+                <Save className="w-4 h-4 mr-2" />
+                Save MT5 Configuration
               </Button>
             </TabsContent>
 

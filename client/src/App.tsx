@@ -9,19 +9,16 @@ import { AdminSidebar } from "@/components/admin-sidebar";
 import { SuperAdminSidebar } from "@/components/super-admin-sidebar";
 import { ThemeProvider } from "@/lib/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Bell, Shield, Crown, LogOut, Loader2 } from "lucide-react";
+import { Bell, Crown, LogOut, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 
 import Dashboard from "@/pages/dashboard";
-import Clients from "@/pages/clients";
 import TradingAccounts from "@/pages/trading-accounts";
 import WalletPage from "@/pages/wallet";
 import Transactions from "@/pages/transactions";
-import IbAffiliate from "@/pages/ib-affiliate";
 import KycPage from "@/pages/kyc";
-import Reports from "@/pages/reports";
 import Support from "@/pages/support";
 import Notifications from "@/pages/notifications";
 import SettingsPage from "@/pages/settings";
@@ -46,18 +43,32 @@ import SuperAdminBranding from "@/pages/super-admin/branding";
 import SuperAdminAnalytics from "@/pages/super-admin/analytics";
 import SuperAdminPlatformConfig from "@/pages/super-admin/platform-config";
 
-import LoginPage from "@/pages/login";
+import ClientLoginPage from "@/pages/login";
+import AdminLoginPage from "@/pages/admin/login";
+import SuperAdminLoginPage from "@/pages/super-admin/login";
 import NotFound from "@/pages/not-found";
 
-function LogoutButton() {
+function RedirectTo({ path }: { path: string }) {
   const [, setLocation] = useLocation();
+  setLocation(path);
+  return null;
+}
+
+function LogoutButton() {
+  const [location, setLocation] = useLocation();
 
   async function handleLogout() {
     try {
       await apiRequest("POST", "/api/auth/logout");
     } catch (e) {}
     queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
-    setLocation("/");
+    if (location.startsWith("/super-admin")) {
+      setLocation("/super-admin/login");
+    } else if (location.startsWith("/admin")) {
+      setLocation("/admin/login");
+    } else {
+      setLocation("/login");
+    }
   }
 
   return (
@@ -71,9 +82,6 @@ function ClientRouter() {
   return (
     <Switch>
       <Route path="/" component={Dashboard} />
-      <Route path="/clients" component={Clients} />
-      <Route path="/clients/new" component={Clients} />
-      <Route path="/clients/leads" component={Clients} />
       <Route path="/trading" component={TradingAccounts} />
       <Route path="/trading/live" component={TradingAccounts} />
       <Route path="/trading/demo" component={TradingAccounts} />
@@ -81,14 +89,8 @@ function ClientRouter() {
       <Route path="/wallet/deposits" component={WalletPage} />
       <Route path="/wallet/withdrawals" component={WalletPage} />
       <Route path="/transactions" component={Transactions} />
-      <Route path="/ib" component={IbAffiliate} />
-      <Route path="/ib/referrals" component={IbAffiliate} />
-      <Route path="/ib/commissions" component={IbAffiliate} />
       <Route path="/kyc" component={KycPage} />
       <Route path="/kyc/documents" component={KycPage} />
-      <Route path="/reports" component={Reports} />
-      <Route path="/reports/trading" component={Reports} />
-      <Route path="/reports/commissions" component={Reports} />
       <Route path="/support" component={Support} />
       <Route path="/notifications" component={Notifications} />
       <Route path="/settings" component={SettingsPage} />
@@ -148,11 +150,6 @@ function ClientLayout() {
           <header className="flex items-center justify-between gap-2 px-4 py-2 border-b bg-background sticky top-0 z-50">
             <SidebarTrigger data-testid="button-sidebar-toggle" />
             <div className="flex items-center gap-1">
-              <Link href="/admin">
-                <Button variant="ghost" size="icon" data-testid="button-admin-panel">
-                  <Shield className="w-4 h-4" />
-                </Button>
-              </Link>
               <Link href="/notifications">
                 <Button variant="ghost" size="icon" data-testid="button-notifications">
                   <Bell className="w-4 h-4" />
@@ -249,7 +246,8 @@ function AuthenticatedApp() {
 }
 
 function AppContent() {
-  const { isLoading, isAuthenticated } = useAuth();
+  const [location] = useLocation();
+  const { isLoading, isAuthenticated, user } = useAuth();
 
   if (isLoading) {
     return (
@@ -259,8 +257,41 @@ function AppContent() {
     );
   }
 
+  if (location === "/login" || (location === "/" && !isAuthenticated)) {
+    if (isAuthenticated && user) {
+      if (user.role === "super_admin") {
+        return <RedirectTo path="/super-admin" />;
+      } else if (user.role === "admin") {
+        return <RedirectTo path="/admin" />;
+      } else {
+        return <RedirectTo path="/" />;
+      }
+    }
+    return <ClientLoginPage />;
+  }
+
+  if (location === "/admin/login") {
+    if (isAuthenticated && (user?.role === "admin" || user?.role === "super_admin")) {
+      return <RedirectTo path="/admin" />;
+    }
+    return <AdminLoginPage />;
+  }
+
+  if (location === "/super-admin/login") {
+    if (isAuthenticated && user?.role === "super_admin") {
+      return <RedirectTo path="/super-admin" />;
+    }
+    return <SuperAdminLoginPage />;
+  }
+
   if (!isAuthenticated) {
-    return <LoginPage />;
+    if (location.startsWith("/super-admin")) {
+      return <RedirectTo path="/super-admin/login" />;
+    }
+    if (location.startsWith("/admin")) {
+      return <RedirectTo path="/admin/login" />;
+    }
+    return <RedirectTo path="/login" />;
   }
 
   return <AuthenticatedApp />;

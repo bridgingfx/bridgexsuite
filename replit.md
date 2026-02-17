@@ -182,7 +182,21 @@ shared/
 - POST /api/auth/logout
 - GET /api/auth/me
 
+## Separate Login Portals
+- **Client Login**: `/login` - TrendingUp icon, "Client Portal" branding, only allows client/ib/lead roles
+- **Admin Login**: `/admin/login` - Shield icon, "Admin Portal" branding, only allows admin/super_admin roles  
+- **Super Admin Login**: `/super-admin/login` - Crown icon, "Platform Administration" branding, only allows super_admin role
+- Each login validates the user role after authentication and logs out + shows error if wrong portal is used
+
+## MT5 Server Configuration
+Admin Settings has an "MT5 Server" tab with fields: MT5 Manager ID, Manager Password, Server IP, Server Port. Saved to broker_settings table with category "mt5".
+
 ## Recent Changes
+- 2026-02-17: Separated login pages into three distinct portals (/login, /admin/login, /super-admin/login) with role validation
+- 2026-02-17: Made client API routes user-scoped (trading accounts, transactions, dashboard stats, KYC, support tickets all filtered by session userId)
+- 2026-02-17: Refactored client sidebar to be trader-focused (removed Clients, IB/Affiliate, Reports; kept Dashboard, Trading, Wallet, Transactions, KYC, Support, Settings)
+- 2026-02-17: Added MT5 Server Configuration tab to Admin System Settings
+- 2026-02-17: Updated client dashboard with personalized welcome message using auth user data
 - 2026-02-17: Added authentication system with bcrypt password hashing, PostgreSQL session store, role-based access control, rate limiting, helmet security headers, login page, frontend auth flow
 - 2026-02-17: Added Super Admin CRM with 8 pages, super-admin sidebar, 20+ super-admin API endpoints, 6 new database tables (brokers, subscription_plans, broker_subscriptions, broker_admins, broker_branding, platform_settings)
 - 2026-02-17: Added Admin CRM with 10 pages, admin sidebar, 20+ admin API endpoints, broker_settings and commission_tiers tables

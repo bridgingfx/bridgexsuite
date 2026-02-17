@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, TrendingUp } from "lucide-react";
+import { Loader2, Crown } from "lucide-react";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -18,7 +18,7 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
-export default function LoginPage() {
+export default function SuperAdminLoginPage() {
   const [, setLocation] = useLocation();
   const [roleError, setRoleError] = useState<string | null>(null);
 
@@ -36,13 +36,13 @@ export default function LoginPage() {
       return res.json();
     },
     onSuccess: async (user: any) => {
-      if (user.role === "admin" || user.role === "super_admin") {
+      if (user.role !== "super_admin") {
         await apiRequest("POST", "/api/auth/logout");
-        setRoleError("Please use the admin portal to sign in");
+        setRoleError("Access denied. Super admin credentials required.");
         return;
       }
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
-      setLocation("/");
+      setLocation("/super-admin");
     },
   });
 
@@ -56,12 +56,12 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="rounded-full bg-primary/10 p-3">
-              <TrendingUp className="w-6 h-6 text-primary" />
+            <div className="rounded-full bg-amber-500/10 p-3">
+              <Crown className="w-6 h-6 text-amber-500" />
             </div>
           </div>
-          <CardTitle className="text-2xl">Client Portal</CardTitle>
-          <p className="text-sm text-muted-foreground mt-1">Access your trading accounts, wallet, and reports</p>
+          <CardTitle className="text-2xl">Platform Administration</CardTitle>
+          <p className="text-sm text-muted-foreground mt-1">SaaS platform management and oversight</p>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -76,7 +76,7 @@ export default function LoginPage() {
                       <Input
                         type="email"
                         placeholder="Enter your email"
-                        data-testid="input-email"
+                        data-testid="input-sa-email"
                         {...field}
                       />
                     </FormControl>
@@ -94,7 +94,7 @@ export default function LoginPage() {
                       <Input
                         type="password"
                         placeholder="Enter your password"
-                        data-testid="input-password"
+                        data-testid="input-sa-password"
                         {...field}
                       />
                     </FormControl>
@@ -103,7 +103,7 @@ export default function LoginPage() {
                 )}
               />
               {(loginMutation.isError || roleError) && (
-                <p className="text-sm text-destructive" data-testid="text-error">
+                <p className="text-sm text-destructive" data-testid="text-sa-error">
                   {roleError
                     ? roleError
                     : loginMutation.error?.message?.includes("401")
@@ -115,7 +115,7 @@ export default function LoginPage() {
                 type="submit"
                 className="w-full"
                 disabled={loginMutation.isPending}
-                data-testid="button-login"
+                data-testid="button-sa-login"
               >
                 {loginMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Sign In
@@ -124,7 +124,7 @@ export default function LoginPage() {
           </Form>
           <div className="mt-4 text-center">
             <Link href="/admin/login" className="text-sm text-muted-foreground hover:underline" data-testid="link-admin-login">
-              Admin Login
+              Admin Portal
             </Link>
           </div>
         </CardContent>

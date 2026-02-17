@@ -98,8 +98,27 @@ export async function registerRoutes(
   // Dashboard
   app.get("/api/dashboard/stats", async (req, res) => {
     try {
-      const stats = await storage.getDashboardStats();
-      res.json(stats);
+      const userId = req.session.userId!;
+      const accounts = await storage.getTradingAccountsByUser(userId);
+      const transactions = await storage.getTransactionsByUser(userId);
+      const tickets = await storage.getSupportTicketsByUser(userId);
+
+      const deposits = transactions.filter(t => t.type === "deposit" && t.status === "completed");
+      const withdrawals = transactions.filter(t => t.type === "withdrawal" && t.status === "completed");
+      const totalDeposits = deposits.reduce((sum, d) => sum + Number(d.amount), 0);
+      const totalWithdrawals = withdrawals.reduce((sum, w) => sum + Number(w.amount), 0);
+      const walletBalance = totalDeposits - totalWithdrawals;
+      const openTickets = tickets.filter(t => t.status === "open").length;
+
+      res.json({
+        walletBalance,
+        totalDeposits,
+        totalWithdrawals,
+        totalCommissions: 0,
+        tradingAccounts: accounts.length,
+        openTickets,
+        totalReferrals: 0,
+      });
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch dashboard stats" });
     }
@@ -153,7 +172,7 @@ export async function registerRoutes(
   // Trading Accounts
   app.get("/api/trading-accounts", async (req, res) => {
     try {
-      const accounts = await storage.getTradingAccounts();
+      const accounts = await storage.getTradingAccountsByUser(req.session.userId!);
       res.json(accounts);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch trading accounts" });
@@ -171,13 +190,7 @@ export async function registerRoutes(
   app.post("/api/trading-accounts", async (req, res) => {
     try {
       const parsed = createAccountSchema.parse(req.body);
-      let userId = parsed.userId;
-      if (!userId) {
-        const clients = await storage.getAllClients();
-        const adminUser = clients.find(c => c.role === "admin") || clients[0];
-        if (!adminUser) return res.status(400).json({ error: "No user available" });
-        userId = adminUser.id;
-      }
+      const userId = req.session.userId!;
       const account = await storage.createTradingAccount({ ...parsed, userId, accountNumber: "" });
       res.json(account);
     } catch (error: any) {
@@ -191,7 +204,7 @@ export async function registerRoutes(
   // Transactions
   app.get("/api/transactions", async (req, res) => {
     try {
-      const txns = await storage.getTransactions();
+      const txns = await storage.getTransactionsByUser(req.session.userId!);
       res.json(txns);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch transactions" });
@@ -200,7 +213,8 @@ export async function registerRoutes(
 
   app.get("/api/transactions/recent", async (req, res) => {
     try {
-      const txns = await storage.getRecentTransactions(5);
+      const allTxns = await storage.getTransactionsByUser(req.session.userId!);
+      const txns = allTxns.slice(0, 5);
       res.json(txns);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch recent transactions" });
@@ -219,13 +233,7 @@ export async function registerRoutes(
   app.post("/api/transactions", async (req, res) => {
     try {
       const parsed = createTransactionSchema.parse(req.body);
-      let userId = parsed.userId;
-      if (!userId) {
-        const clients = await storage.getAllClients();
-        const adminUser = clients.find(c => c.role === "admin") || clients[0];
-        if (!adminUser) return res.status(400).json({ error: "No user available" });
-        userId = adminUser.id;
-      }
+      const userId = req.session.userId!;
       const txn = await storage.createTransaction({ ...parsed, userId });
       res.json(txn);
     } catch (error: any) {
@@ -250,7 +258,7 @@ export async function registerRoutes(
   // KYC Documents
   app.get("/api/kyc/documents", async (req, res) => {
     try {
-      const docs = await storage.getKycDocuments();
+      const docs = await storage.getKycDocumentsByUser(req.session.userId!);
       res.json(docs);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch KYC documents" });
@@ -266,13 +274,7 @@ export async function registerRoutes(
   app.post("/api/kyc/documents", async (req, res) => {
     try {
       const parsed = createKycDocSchema.parse(req.body);
-      let userId = parsed.userId;
-      if (!userId) {
-        const clients = await storage.getAllClients();
-        const adminUser = clients.find(c => c.role === "admin") || clients[0];
-        if (!adminUser) return res.status(400).json({ error: "No user available" });
-        userId = adminUser.id;
-      }
+      const userId = req.session.userId!;
       const doc = await storage.createKycDocument({ ...parsed, userId });
       res.json(doc);
     } catch (error: any) {
@@ -335,7 +337,7 @@ export async function registerRoutes(
   // Support Tickets
   app.get("/api/support/tickets", async (req, res) => {
     try {
-      const tickets = await storage.getSupportTickets();
+      const tickets = await storage.getSupportTicketsByUser(req.session.userId!);
       res.json(tickets);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch tickets" });
@@ -353,13 +355,7 @@ export async function registerRoutes(
   app.post("/api/support/tickets", async (req, res) => {
     try {
       const parsed = createTicketSchema.parse(req.body);
-      let userId = parsed.userId;
-      if (!userId) {
-        const clients = await storage.getAllClients();
-        const adminUser = clients.find(c => c.role === "admin") || clients[0];
-        if (!adminUser) return res.status(400).json({ error: "No user available" });
-        userId = adminUser.id;
-      }
+      const userId = req.session.userId!;
       const ticket = await storage.createSupportTicket({ ...parsed, userId });
       res.json(ticket);
     } catch (error: any) {

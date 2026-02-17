@@ -1,27 +1,14 @@
 import { useLocation, Link } from "wouter";
 import {
   LayoutDashboard,
-  Users,
   TrendingUp,
   Wallet,
   ArrowUpDown,
-  FileText,
   Shield,
-  Network,
-  BarChart3,
   Settings,
   HelpCircle,
   ChevronDown,
-  LogOut,
-  UserCircle,
-  DollarSign,
-  CreditCard,
-  Receipt,
-  UserPlus,
-  FileCheck,
-  PieChart,
   Bell,
-  Briefcase,
 } from "lucide-react";
 import {
   Sidebar,
@@ -40,6 +27,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useAuth } from "@/hooks/use-auth";
 
 interface MenuItem {
   title: string;
@@ -48,18 +36,8 @@ interface MenuItem {
   children?: { title: string; url: string }[];
 }
 
-const mainMenu: MenuItem[] = [
+const tradingMenu: MenuItem[] = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  {
-    title: "Clients",
-    url: "/clients",
-    icon: Users,
-    children: [
-      { title: "All Clients", url: "/clients" },
-      { title: "Add Client", url: "/clients/new" },
-      { title: "Leads", url: "/clients/leads" },
-    ],
-  },
   {
     title: "Trading Accounts",
     url: "/trading",
@@ -87,17 +65,7 @@ const mainMenu: MenuItem[] = [
   },
 ];
 
-const managementMenu: MenuItem[] = [
-  {
-    title: "IB / Affiliate",
-    url: "/ib",
-    icon: Network,
-    children: [
-      { title: "IB Dashboard", url: "/ib" },
-      { title: "Referrals", url: "/ib/referrals" },
-      { title: "Commissions", url: "/ib/commissions" },
-    ],
-  },
+const accountMenu: MenuItem[] = [
   {
     title: "KYC / Documents",
     url: "/kyc",
@@ -107,19 +75,6 @@ const managementMenu: MenuItem[] = [
       { title: "Documents", url: "/kyc/documents" },
     ],
   },
-  {
-    title: "Reports",
-    url: "/reports",
-    icon: BarChart3,
-    children: [
-      { title: "Financial Reports", url: "/reports" },
-      { title: "Trading Reports", url: "/reports/trading" },
-      { title: "Commission Reports", url: "/reports/commissions" },
-    ],
-  },
-];
-
-const supportMenu: MenuItem[] = [
   { title: "Support Tickets", url: "/support", icon: HelpCircle },
   { title: "Notifications", url: "/notifications", icon: Bell },
   { title: "Settings", url: "/settings", icon: Settings },
@@ -171,6 +126,9 @@ function NavItem({ item }: { item: MenuItem }) {
 }
 
 export function AppSidebar() {
+  const { user } = useAuth();
+  const initials = user?.fullName?.split(" ").map((n: string) => n[0]).join("").toUpperCase() || "U";
+
   return (
     <Sidebar>
       <SidebarHeader className="p-4">
@@ -179,18 +137,18 @@ export function AppSidebar() {
             <TrendingUp className="w-5 h-5 text-primary-foreground" />
           </div>
           <div>
-            <h2 className="text-sm font-semibold tracking-tight">ForexCRM</h2>
-            <p className="text-xs text-muted-foreground">Trading Platform</p>
+            <h2 className="text-sm font-semibold tracking-tight">Client Portal</h2>
+            <p className="text-xs text-muted-foreground">My Trading Dashboard</p>
           </div>
         </div>
       </SidebarHeader>
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Main Menu</SidebarGroupLabel>
+          <SidebarGroupLabel>Trading</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainMenu.map((item) => (
+              {tradingMenu.map((item) => (
                 <NavItem key={item.url} item={item} />
               ))}
             </SidebarMenu>
@@ -198,21 +156,10 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Management</SidebarGroupLabel>
+          <SidebarGroupLabel>Account</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {managementMenu.map((item) => (
-                <NavItem key={item.url} item={item} />
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Support</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {supportMenu.map((item) => (
+              {accountMenu.map((item) => (
                 <NavItem key={item.url} item={item} />
               ))}
             </SidebarMenu>
@@ -223,11 +170,11 @@ export function AppSidebar() {
       <SidebarFooter className="p-3">
         <div className="flex items-center gap-3 p-2 rounded-md">
           <Avatar className="w-8 h-8">
-            <AvatarFallback className="bg-primary/10 text-primary text-xs">AD</AvatarFallback>
+            <AvatarFallback className="bg-primary/10 text-primary text-xs">{initials}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">Admin User</p>
-            <p className="text-xs text-muted-foreground truncate">admin@forexcrm.com</p>
+            <p className="text-sm font-medium truncate">{user?.fullName || "User"}</p>
+            <p className="text-xs text-muted-foreground truncate">{user?.email || ""}</p>
           </div>
         </div>
       </SidebarFooter>
