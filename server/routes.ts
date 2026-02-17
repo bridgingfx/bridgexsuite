@@ -630,5 +630,257 @@ export async function registerRoutes(
     }
   });
 
+  // ==================== SUPER ADMIN API ROUTES ====================
+
+  // Super Admin Dashboard
+  app.get("/api/super-admin/dashboard/stats", async (req, res) => {
+    try {
+      const stats = await storage.getSuperAdminDashboardStats();
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch super admin stats" });
+    }
+  });
+
+  // Super Admin - Brokers
+  app.get("/api/super-admin/brokers", async (req, res) => {
+    try {
+      const allBrokers = await storage.getAllBrokers();
+      res.json(allBrokers);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch brokers" });
+    }
+  });
+
+  app.get("/api/super-admin/brokers/:id", async (req, res) => {
+    try {
+      const broker = await storage.getBroker(req.params.id);
+      if (!broker) return res.status(404).json({ error: "Broker not found" });
+      const admins = await storage.getBrokerAdminsByBroker(req.params.id);
+      const subs = await storage.getBrokerSubscriptionsByBroker(req.params.id);
+      const branding = await storage.getBrokerBrandingByBroker(req.params.id);
+      res.json({ broker, admins, subscriptions: subs, branding });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch broker details" });
+    }
+  });
+
+  app.post("/api/super-admin/brokers", async (req, res) => {
+    try {
+      const parsed = z.object({
+        name: z.string().min(1),
+        slug: z.string().min(1),
+        email: z.string().email(),
+        phone: z.string().optional(),
+        companyName: z.string().optional(),
+        country: z.string().optional(),
+        status: z.string().default("active"),
+        maxClients: z.number().default(100),
+        maxAccounts: z.number().default(500),
+      }).parse(req.body);
+      const broker = await storage.createBroker(parsed);
+      res.json(broker);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors[0].message });
+      res.status(400).json({ error: error.message || "Failed to create broker" });
+    }
+  });
+
+  app.patch("/api/super-admin/brokers/:id", async (req, res) => {
+    try {
+      const broker = await storage.updateBroker(req.params.id, req.body);
+      if (!broker) return res.status(404).json({ error: "Broker not found" });
+      res.json(broker);
+    } catch (error) {
+      res.status(400).json({ error: "Failed to update broker" });
+    }
+  });
+
+  app.post("/api/super-admin/brokers/:id/suspend", async (req, res) => {
+    try {
+      const broker = await storage.updateBroker(req.params.id, { status: "suspended" } as any);
+      if (!broker) return res.status(404).json({ error: "Broker not found" });
+      res.json(broker);
+    } catch (error) {
+      res.status(400).json({ error: "Failed to suspend broker" });
+    }
+  });
+
+  app.post("/api/super-admin/brokers/:id/activate", async (req, res) => {
+    try {
+      const broker = await storage.updateBroker(req.params.id, { status: "active" } as any);
+      if (!broker) return res.status(404).json({ error: "Broker not found" });
+      res.json(broker);
+    } catch (error) {
+      res.status(400).json({ error: "Failed to activate broker" });
+    }
+  });
+
+  // Super Admin - Subscription Plans
+  app.get("/api/super-admin/plans", async (req, res) => {
+    try {
+      const plans = await storage.getSubscriptionPlans();
+      res.json(plans);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch plans" });
+    }
+  });
+
+  app.post("/api/super-admin/plans", async (req, res) => {
+    try {
+      const parsed = z.object({
+        name: z.string().min(1),
+        price: z.string(),
+        billingCycle: z.string().default("monthly"),
+        maxClients: z.number().default(100),
+        maxAccounts: z.number().default(500),
+        maxIBs: z.number().default(50),
+        features: z.string().optional(),
+        status: z.string().default("active"),
+      }).parse(req.body);
+      const plan = await storage.createSubscriptionPlan(parsed);
+      res.json(plan);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors[0].message });
+      res.status(400).json({ error: error.message || "Failed to create plan" });
+    }
+  });
+
+  app.patch("/api/super-admin/plans/:id", async (req, res) => {
+    try {
+      const plan = await storage.updateSubscriptionPlan(req.params.id, req.body);
+      if (!plan) return res.status(404).json({ error: "Plan not found" });
+      res.json(plan);
+    } catch (error) {
+      res.status(400).json({ error: "Failed to update plan" });
+    }
+  });
+
+  // Super Admin - Subscriptions
+  app.get("/api/super-admin/subscriptions", async (req, res) => {
+    try {
+      const subs = await storage.getBrokerSubscriptions();
+      res.json(subs);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch subscriptions" });
+    }
+  });
+
+  app.post("/api/super-admin/subscriptions", async (req, res) => {
+    try {
+      const parsed = z.object({
+        brokerId: z.string(),
+        planId: z.string(),
+        status: z.string().default("active"),
+      }).parse(req.body);
+      const sub = await storage.createBrokerSubscription(parsed);
+      res.json(sub);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors[0].message });
+      res.status(400).json({ error: error.message || "Failed to create subscription" });
+    }
+  });
+
+  app.patch("/api/super-admin/subscriptions/:id", async (req, res) => {
+    try {
+      const sub = await storage.updateBrokerSubscription(req.params.id, req.body);
+      if (!sub) return res.status(404).json({ error: "Subscription not found" });
+      res.json(sub);
+    } catch (error) {
+      res.status(400).json({ error: "Failed to update subscription" });
+    }
+  });
+
+  // Super Admin - Broker Admins
+  app.get("/api/super-admin/admins", async (req, res) => {
+    try {
+      const admins = await storage.getBrokerAdmins();
+      res.json(admins);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch admins" });
+    }
+  });
+
+  app.get("/api/super-admin/brokers/:id/admins", async (req, res) => {
+    try {
+      const admins = await storage.getBrokerAdminsByBroker(req.params.id);
+      res.json(admins);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch broker admins" });
+    }
+  });
+
+  app.post("/api/super-admin/admins", async (req, res) => {
+    try {
+      const parsed = z.object({
+        brokerId: z.string(),
+        fullName: z.string().min(1),
+        email: z.string().email(),
+        role: z.string().default("admin"),
+        status: z.string().default("active"),
+      }).parse(req.body);
+      const admin = await storage.createBrokerAdmin(parsed);
+      res.json(admin);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors[0].message });
+      res.status(400).json({ error: error.message || "Failed to create admin" });
+    }
+  });
+
+  app.patch("/api/super-admin/admins/:id", async (req, res) => {
+    try {
+      const admin = await storage.updateBrokerAdmin(req.params.id, req.body);
+      if (!admin) return res.status(404).json({ error: "Admin not found" });
+      res.json(admin);
+    } catch (error) {
+      res.status(400).json({ error: "Failed to update admin" });
+    }
+  });
+
+  // Super Admin - Broker Branding
+  app.get("/api/super-admin/brokers/:id/branding", async (req, res) => {
+    try {
+      const branding = await storage.getBrokerBrandingByBroker(req.params.id);
+      res.json(branding || {});
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch branding" });
+    }
+  });
+
+  app.patch("/api/super-admin/brokers/:id/branding", async (req, res) => {
+    try {
+      const branding = await storage.upsertBrokerBranding(req.params.id, req.body);
+      res.json(branding);
+    } catch (error) {
+      res.status(400).json({ error: "Failed to update branding" });
+    }
+  });
+
+  // Super Admin - Platform Settings
+  app.get("/api/super-admin/platform-settings", async (req, res) => {
+    try {
+      const settings = await storage.getPlatformSettings();
+      res.json(settings);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch platform settings" });
+    }
+  });
+
+  app.post("/api/super-admin/platform-settings", async (req, res) => {
+    try {
+      const parsed = z.object({
+        settingKey: z.string().min(1),
+        settingValue: z.string(),
+        category: z.string().default("general"),
+        description: z.string().optional(),
+      }).parse(req.body);
+      const setting = await storage.upsertPlatformSetting(parsed);
+      res.json(setting);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors[0].message });
+      res.status(400).json({ error: error.message || "Failed to save setting" });
+    }
+  });
+
   return httpServer;
 }

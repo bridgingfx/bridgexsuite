@@ -11,6 +11,12 @@ import {
   commissions,
   brokerSettings,
   commissionTiers,
+  brokers,
+  subscriptionPlans,
+  brokerSubscriptions,
+  brokerAdmins,
+  brokerBranding,
+  platformSettings,
   type User,
   type InsertUser,
   type TradingAccount,
@@ -31,6 +37,18 @@ import {
   type InsertBrokerSetting,
   type CommissionTier,
   type InsertCommissionTier,
+  type Broker,
+  type InsertBroker,
+  type SubscriptionPlan,
+  type InsertSubscriptionPlan,
+  type BrokerSubscription,
+  type InsertBrokerSubscription,
+  type BrokerAdmin,
+  type InsertBrokerAdmin,
+  type BrokerBranding,
+  type InsertBrokerBranding,
+  type PlatformSetting,
+  type InsertPlatformSetting,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -89,6 +107,41 @@ export interface IStorage {
 
   getDashboardStats(): Promise<any>;
   getAdminDashboardStats(): Promise<any>;
+
+  // Super Admin - Brokers
+  getAllBrokers(): Promise<Broker[]>;
+  getBroker(id: string): Promise<Broker | undefined>;
+  createBroker(broker: InsertBroker): Promise<Broker>;
+  updateBroker(id: string, data: Partial<InsertBroker>): Promise<Broker | undefined>;
+
+  // Super Admin - Subscription Plans
+  getSubscriptionPlans(): Promise<SubscriptionPlan[]>;
+  getSubscriptionPlan(id: string): Promise<SubscriptionPlan | undefined>;
+  createSubscriptionPlan(plan: InsertSubscriptionPlan): Promise<SubscriptionPlan>;
+  updateSubscriptionPlan(id: string, data: Partial<InsertSubscriptionPlan>): Promise<SubscriptionPlan | undefined>;
+
+  // Super Admin - Broker Subscriptions
+  getBrokerSubscriptions(): Promise<BrokerSubscription[]>;
+  getBrokerSubscriptionsByBroker(brokerId: string): Promise<BrokerSubscription[]>;
+  createBrokerSubscription(sub: InsertBrokerSubscription): Promise<BrokerSubscription>;
+  updateBrokerSubscription(id: string, data: Partial<InsertBrokerSubscription>): Promise<BrokerSubscription | undefined>;
+
+  // Super Admin - Broker Admins
+  getBrokerAdmins(): Promise<BrokerAdmin[]>;
+  getBrokerAdminsByBroker(brokerId: string): Promise<BrokerAdmin[]>;
+  createBrokerAdmin(admin: InsertBrokerAdmin): Promise<BrokerAdmin>;
+  updateBrokerAdmin(id: string, data: Partial<InsertBrokerAdmin>): Promise<BrokerAdmin | undefined>;
+
+  // Super Admin - Broker Branding
+  getBrokerBrandingByBroker(brokerId: string): Promise<BrokerBranding | undefined>;
+  upsertBrokerBranding(brokerId: string, data: Partial<InsertBrokerBranding>): Promise<BrokerBranding>;
+
+  // Super Admin - Platform Settings
+  getPlatformSettings(): Promise<PlatformSetting[]>;
+  upsertPlatformSetting(setting: InsertPlatformSetting): Promise<PlatformSetting>;
+
+  // Super Admin - Dashboard
+  getSuperAdminDashboardStats(): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -380,6 +433,155 @@ export class DatabaseStorage implements IStorage {
       activeIBs: allUsers.filter(u => u.role === "ib" && u.status === "active").length,
       recentTransactions: allTransactions.slice(0, 10),
       recentClients: allUsers.slice(0, 5),
+    };
+  }
+
+  // ==================== SUPER ADMIN STORAGE ====================
+
+  async getAllBrokers(): Promise<Broker[]> {
+    return db.select().from(brokers).orderBy(desc(brokers.createdAt));
+  }
+
+  async getBroker(id: string): Promise<Broker | undefined> {
+    const [broker] = await db.select().from(brokers).where(eq(brokers.id, id));
+    return broker;
+  }
+
+  async createBroker(broker: InsertBroker): Promise<Broker> {
+    const [created] = await db.insert(brokers).values(broker).returning();
+    return created;
+  }
+
+  async updateBroker(id: string, data: Partial<InsertBroker>): Promise<Broker | undefined> {
+    const [updated] = await db.update(brokers).set(data).where(eq(brokers.id, id)).returning();
+    return updated;
+  }
+
+  async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
+    return db.select().from(subscriptionPlans).orderBy(subscriptionPlans.price);
+  }
+
+  async getSubscriptionPlan(id: string): Promise<SubscriptionPlan | undefined> {
+    const [plan] = await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.id, id));
+    return plan;
+  }
+
+  async createSubscriptionPlan(plan: InsertSubscriptionPlan): Promise<SubscriptionPlan> {
+    const [created] = await db.insert(subscriptionPlans).values(plan).returning();
+    return created;
+  }
+
+  async updateSubscriptionPlan(id: string, data: Partial<InsertSubscriptionPlan>): Promise<SubscriptionPlan | undefined> {
+    const [updated] = await db.update(subscriptionPlans).set(data).where(eq(subscriptionPlans.id, id)).returning();
+    return updated;
+  }
+
+  async getBrokerSubscriptions(): Promise<BrokerSubscription[]> {
+    return db.select().from(brokerSubscriptions).orderBy(desc(brokerSubscriptions.createdAt));
+  }
+
+  async getBrokerSubscriptionsByBroker(brokerId: string): Promise<BrokerSubscription[]> {
+    return db.select().from(brokerSubscriptions).where(eq(brokerSubscriptions.brokerId, brokerId)).orderBy(desc(brokerSubscriptions.createdAt));
+  }
+
+  async createBrokerSubscription(sub: InsertBrokerSubscription): Promise<BrokerSubscription> {
+    const [created] = await db.insert(brokerSubscriptions).values(sub).returning();
+    return created;
+  }
+
+  async updateBrokerSubscription(id: string, data: Partial<InsertBrokerSubscription>): Promise<BrokerSubscription | undefined> {
+    const [updated] = await db.update(brokerSubscriptions).set(data).where(eq(brokerSubscriptions.id, id)).returning();
+    return updated;
+  }
+
+  async getBrokerAdmins(): Promise<BrokerAdmin[]> {
+    return db.select().from(brokerAdmins).orderBy(desc(brokerAdmins.createdAt));
+  }
+
+  async getBrokerAdminsByBroker(brokerId: string): Promise<BrokerAdmin[]> {
+    return db.select().from(brokerAdmins).where(eq(brokerAdmins.brokerId, brokerId)).orderBy(desc(brokerAdmins.createdAt));
+  }
+
+  async createBrokerAdmin(admin: InsertBrokerAdmin): Promise<BrokerAdmin> {
+    const [created] = await db.insert(brokerAdmins).values(admin).returning();
+    return created;
+  }
+
+  async updateBrokerAdmin(id: string, data: Partial<InsertBrokerAdmin>): Promise<BrokerAdmin | undefined> {
+    const [updated] = await db.update(brokerAdmins).set(data).where(eq(brokerAdmins.id, id)).returning();
+    return updated;
+  }
+
+  async getBrokerBrandingByBroker(brokerId: string): Promise<BrokerBranding | undefined> {
+    const [branding] = await db.select().from(brokerBranding).where(eq(brokerBranding.brokerId, brokerId));
+    return branding;
+  }
+
+  async upsertBrokerBranding(brokerId: string, data: Partial<InsertBrokerBranding>): Promise<BrokerBranding> {
+    const existing = await this.getBrokerBrandingByBroker(brokerId);
+    if (existing) {
+      const [updated] = await db.update(brokerBranding).set(data).where(eq(brokerBranding.brokerId, brokerId)).returning();
+      return updated;
+    }
+    const [created] = await db.insert(brokerBranding).values({ ...data, brokerId } as any).returning();
+    return created;
+  }
+
+  async getPlatformSettings(): Promise<PlatformSetting[]> {
+    return db.select().from(platformSettings).orderBy(platformSettings.category);
+  }
+
+  async upsertPlatformSetting(setting: InsertPlatformSetting): Promise<PlatformSetting> {
+    const [existing] = await db.select().from(platformSettings).where(eq(platformSettings.settingKey, setting.settingKey));
+    if (existing) {
+      const [updated] = await db.update(platformSettings).set({
+        settingValue: setting.settingValue,
+        category: setting.category,
+        description: setting.description,
+        updatedAt: new Date(),
+      }).where(eq(platformSettings.settingKey, setting.settingKey)).returning();
+      return updated;
+    }
+    const [created] = await db.insert(platformSettings).values(setting).returning();
+    return created;
+  }
+
+  async getSuperAdminDashboardStats() {
+    const allBrokers = await this.getAllBrokers();
+    const allPlans = await this.getSubscriptionPlans();
+    const allSubs = await this.getBrokerSubscriptions();
+    const allAdmins = await this.getBrokerAdmins();
+    const allUsers = await this.getAllClients();
+    const allTransactions = await this.getTransactions();
+    const allAccounts = await this.getTradingAccounts();
+
+    const activeBrokers = allBrokers.filter(b => b.status === "active").length;
+    const suspendedBrokers = allBrokers.filter(b => b.status === "suspended").length;
+    const activeSubs = allSubs.filter(s => s.status === "active").length;
+    const mrr = allSubs
+      .filter(s => s.status === "active")
+      .reduce((sum, s) => {
+        const plan = allPlans.find(p => p.id === s.planId);
+        return sum + (plan ? Number(plan.price) : 0);
+      }, 0);
+
+    const totalDeposits = allTransactions
+      .filter(t => t.type === "deposit" && t.status === "completed")
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+
+    return {
+      totalBrokers: allBrokers.length,
+      activeBrokers,
+      suspendedBrokers,
+      totalPlans: allPlans.length,
+      activeSubscriptions: activeSubs,
+      mrr,
+      arr: mrr * 12,
+      totalAdminUsers: allAdmins.length,
+      totalClients: allUsers.length,
+      totalAccounts: allAccounts.length,
+      totalTransactionVolume: totalDeposits,
+      recentBrokers: allBrokers.slice(0, 5),
     };
   }
 }
