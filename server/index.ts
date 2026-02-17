@@ -60,6 +60,19 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Push database schema
+  const { db } = await import("./db");
+  const { sql } = await import("drizzle-orm");
+  try {
+    await db.execute(sql`SELECT 1`);
+    log("Database connected");
+  } catch (e) {
+    log("Database connection failed");
+  }
+
+  // Run migrations via db:push at startup
+  const { seedDatabase } = await import("./seed");
+  
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
@@ -96,8 +109,13 @@ app.use((req, res, next) => {
       host: "0.0.0.0",
       reusePort: true,
     },
-    () => {
+    async () => {
       log(`serving on port ${port}`);
+      try {
+        await seedDatabase();
+      } catch (e: any) {
+        log(`Seed: ${e.message}`);
+      }
     },
   );
 })();
