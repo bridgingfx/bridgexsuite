@@ -122,6 +122,85 @@ export const commissionTiers = pgTable("commission_tiers", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// ==================== SUPER ADMIN TABLES ====================
+
+export const brokers = pgTable("brokers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  companyName: text("company_name"),
+  country: text("country"),
+  status: text("status").notNull().default("active"),
+  maxClients: integer("max_clients").notNull().default(100),
+  maxAccounts: integer("max_accounts").notNull().default(500),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const subscriptionPlans = pgTable("subscription_plans", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  billingCycle: text("billing_cycle").notNull().default("monthly"),
+  maxClients: integer("max_clients").notNull().default(100),
+  maxAccounts: integer("max_accounts").notNull().default(500),
+  maxIBs: integer("max_ibs").notNull().default(50),
+  features: text("features"),
+  status: text("status").notNull().default("active"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const brokerSubscriptions = pgTable("broker_subscriptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  brokerId: varchar("broker_id").notNull().references(() => brokers.id),
+  planId: varchar("plan_id").notNull().references(() => subscriptionPlans.id),
+  status: text("status").notNull().default("active"),
+  startDate: timestamp("start_date").defaultNow(),
+  endDate: timestamp("end_date"),
+  renewalDate: timestamp("renewal_date"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const brokerAdmins = pgTable("broker_admins", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  brokerId: varchar("broker_id").notNull().references(() => brokers.id),
+  fullName: text("full_name").notNull(),
+  email: text("email").notNull(),
+  role: text("role").notNull().default("admin"),
+  status: text("status").notNull().default("active"),
+  lastLogin: timestamp("last_login"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const brokerBranding = pgTable("broker_branding", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  brokerId: varchar("broker_id").notNull().references(() => brokers.id).unique(),
+  logoUrl: text("logo_url"),
+  primaryColor: text("primary_color").default("#3b82f6"),
+  secondaryColor: text("secondary_color").default("#10b981"),
+  accentColor: text("accent_color").default("#f59e0b"),
+  customDomain: text("custom_domain"),
+  companyTagline: text("company_tagline"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const platformSettings = pgTable("platform_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  settingKey: text("setting_key").notNull().unique(),
+  settingValue: text("setting_value").notNull(),
+  category: text("category").notNull().default("general"),
+  description: text("description"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertBrokerSchema = createInsertSchema(brokers).omit({ id: true, createdAt: true });
+export const insertSubscriptionPlanSchema = createInsertSchema(subscriptionPlans).omit({ id: true, createdAt: true });
+export const insertBrokerSubscriptionSchema = createInsertSchema(brokerSubscriptions).omit({ id: true, createdAt: true });
+export const insertBrokerAdminSchema = createInsertSchema(brokerAdmins).omit({ id: true, createdAt: true, lastLogin: true });
+export const insertBrokerBrandingSchema = createInsertSchema(brokerBranding).omit({ id: true, createdAt: true });
+export const insertPlatformSettingSchema = createInsertSchema(platformSettings).omit({ id: true, updatedAt: true });
+
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const insertTradingAccountSchema = createInsertSchema(tradingAccounts).omit({ id: true, createdAt: true });
 export const insertTransactionSchema = createInsertSchema(transactions).omit({ id: true, createdAt: true, approvedBy: true, rejectionReason: true, processedAt: true });
@@ -153,3 +232,16 @@ export type InsertBrokerSetting = z.infer<typeof insertBrokerSettingSchema>;
 export type BrokerSetting = typeof brokerSettings.$inferSelect;
 export type InsertCommissionTier = z.infer<typeof insertCommissionTierSchema>;
 export type CommissionTier = typeof commissionTiers.$inferSelect;
+
+export type InsertBroker = z.infer<typeof insertBrokerSchema>;
+export type Broker = typeof brokers.$inferSelect;
+export type InsertSubscriptionPlan = z.infer<typeof insertSubscriptionPlanSchema>;
+export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
+export type InsertBrokerSubscription = z.infer<typeof insertBrokerSubscriptionSchema>;
+export type BrokerSubscription = typeof brokerSubscriptions.$inferSelect;
+export type InsertBrokerAdmin = z.infer<typeof insertBrokerAdminSchema>;
+export type BrokerAdmin = typeof brokerAdmins.$inferSelect;
+export type InsertBrokerBranding = z.infer<typeof insertBrokerBrandingSchema>;
+export type BrokerBranding = typeof brokerBranding.$inferSelect;
+export type InsertPlatformSetting = z.infer<typeof insertPlatformSettingSchema>;
+export type PlatformSetting = typeof platformSettings.$inferSelect;
