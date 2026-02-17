@@ -3,16 +3,19 @@ import {
   LayoutDashboard,
   TrendingUp,
   Wallet,
-  ArrowUpDown,
   Shield,
   Settings,
   HelpCircle,
   ChevronDown,
-  Bell,
   Trophy,
   PiggyBank,
-  Users,
-  Landmark,
+  Star,
+  Download,
+  ArrowLeftRight,
+  Sparkles,
+  LayoutGrid,
+  User,
+  LogOut,
 } from "lucide-react";
 import {
   Sidebar,
@@ -33,6 +36,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useAuth } from "@/hooks/use-auth";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 interface MenuItem {
   title: string;
@@ -41,54 +45,46 @@ interface MenuItem {
   children?: { title: string; url: string }[];
 }
 
-const tradingMenu: MenuItem[] = [
+const section1Menu: MenuItem[] = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  {
-    title: "Trading Accounts",
-    url: "/trading",
-    icon: TrendingUp,
-    children: [
-      { title: "All Accounts", url: "/trading" },
-      { title: "Live Accounts", url: "/trading/live" },
-      { title: "Demo Accounts", url: "/trading/demo" },
-    ],
-  },
   {
     title: "Wallet",
     url: "/wallet",
     icon: Wallet,
-    children: [
-      { title: "Overview", url: "/wallet" },
-      { title: "Deposits", url: "/wallet/deposits" },
-      { title: "Withdrawals", url: "/wallet/withdrawals" },
-    ],
   },
-  {
-    title: "Transactions",
-    url: "/transactions",
-    icon: ArrowUpDown,
-  },
+  { title: "KYC Verification", url: "/kyc", icon: Shield },
 ];
 
-const servicesMenu: MenuItem[] = [
+const section2Menu: MenuItem[] = [
+  {
+    title: "Forex Trading",
+    url: "/forex/dashboard",
+    icon: TrendingUp,
+    children: [
+      { title: "Dashboard", url: "/forex/dashboard" },
+      { title: "Trading Accounts", url: "/forex/accounts" },
+      { title: "Finance", url: "/forex/finance" },
+      { title: "Offers", url: "/forex/offers" },
+      { title: "IB Dashboard", url: "/forex/ib-dashboard" },
+      { title: "PAMM", url: "/forex/pamm" },
+      { title: "Copy Trading", url: "/forex/copy-trading" },
+    ],
+  },
   { title: "Prop Trading", url: "/prop-trading", icon: Trophy },
-  { title: "Investment", url: "/investment", icon: PiggyBank },
-  { title: "Copy Trading", url: "/copy-trading", icon: Users },
-  { title: "PAMM", url: "/pamm", icon: Landmark },
+  { title: "Investments", url: "/investment", icon: PiggyBank },
+  { title: "Loyalty Points", url: "/loyalty-points", icon: Star },
+  { title: "Download Platform", url: "/download-platform", icon: Download },
 ];
 
-const accountMenu: MenuItem[] = [
-  {
-    title: "KYC / Documents",
-    url: "/kyc",
-    icon: Shield,
-    children: [
-      { title: "Verification", url: "/kyc" },
-      { title: "Documents", url: "/kyc/documents" },
-    ],
-  },
-  { title: "Support Tickets", url: "/support", icon: HelpCircle },
-  { title: "Notifications", url: "/notifications", icon: Bell },
+const section3Menu: MenuItem[] = [
+  { title: "P2P Exchange", url: "/p2p-exchange", icon: ArrowLeftRight },
+  { title: "AI Center", url: "/ai-center", icon: Sparkles },
+];
+
+const section4Menu: MenuItem[] = [
+  { title: "Widgets", url: "/widgets", icon: LayoutGrid },
+  { title: "Support Desk", url: "/support", icon: HelpCircle },
+  { title: "Profile", url: "/profile", icon: User },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 
@@ -139,7 +135,16 @@ function NavItem({ item }: { item: MenuItem }) {
 
 export function AppSidebar() {
   const { user } = useAuth();
+  const [, setLocation] = useLocation();
   const initials = user?.fullName?.split(" ").map((n: string) => n[0]).join("").toUpperCase() || "U";
+
+  async function handleLogout() {
+    try {
+      await apiRequest("POST", "/api/auth/logout");
+    } catch (e) {}
+    queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+    setLocation("/login");
+  }
 
   return (
     <Sidebar>
@@ -157,10 +162,9 @@ export function AppSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Trading</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {tradingMenu.map((item) => (
+              {section1Menu.map((item) => (
                 <NavItem key={item.title} item={item} />
               ))}
             </SidebarMenu>
@@ -172,10 +176,9 @@ export function AppSidebar() {
         </div>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Services</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {servicesMenu.map((item) => (
+              {section2Menu.map((item) => (
                 <NavItem key={item.title} item={item} />
               ))}
             </SidebarMenu>
@@ -187,12 +190,33 @@ export function AppSidebar() {
         </div>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Account</SidebarGroupLabel>
+          <SidebarGroupLabel>Tools</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {accountMenu.map((item) => (
+              {section3Menu.map((item) => (
                 <NavItem key={item.title} item={item} />
               ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <div className="px-4">
+          <Separator />
+        </div>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>System</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {section4Menu.map((item) => (
+                <NavItem key={item.title} item={item} />
+              ))}
+              <SidebarMenuItem>
+                <SidebarMenuButton data-testid="nav-logout" onClick={handleLogout}>
+                  <LogOut className="w-4 h-4" />
+                  <span>Logout</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

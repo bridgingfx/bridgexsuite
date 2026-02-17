@@ -71,20 +71,28 @@ client/src/
     theme-toggle.tsx      - Dark/light mode toggle
   pages/
     dashboard.tsx         - Client dashboard
-    clients.tsx           - Client management (client-facing)
-    trading-accounts.tsx  - Trading account management
+    trading-accounts.tsx  - Trading account management (at /forex/accounts)
+    account-detail.tsx    - Trading account detail view
+    forex-dashboard.tsx   - Forex trading dashboard
+    finance.tsx           - Client finance overview
+    offers.tsx            - Promotional offers
+    ib-dashboard.tsx      - IB/Affiliate dashboard
     wallet.tsx            - Wallet/deposit/withdrawal
     transactions.tsx      - Transaction history
-    ib-affiliate.tsx      - IB/Affiliate program
     kyc.tsx               - KYC verification
-    reports.tsx           - Analytics reports
     support.tsx           - Support tickets
     notifications.tsx     - Notifications
     settings.tsx          - User settings
+    profile.tsx           - User profile page
     prop-trading.tsx      - Prop trading challenges & funded accounts
     investment.tsx        - Investment plans & portfolio
     copy-trading.tsx      - Copy trading with signal providers
     pamm.tsx              - PAMM fund manager investments
+    loyalty-points.tsx    - Loyalty points & rewards
+    download-platform.tsx - Platform download links (MT5)
+    p2p-exchange.tsx      - P2P cryptocurrency exchange
+    ai-center.tsx         - AI-powered trading tools
+    widgets.tsx           - Trading widgets configuration
     admin/
       dashboard.tsx       - Admin dashboard with broker-wide stats
       clients.tsx         - Admin client management with CRUD
@@ -227,6 +235,7 @@ shared/
 Admin Settings has an "MT5 Server" tab with fields: MT5 Manager ID, Manager Password, Server IP, Server Port. Saved to broker_settings table with category "mt5".
 
 ## Recent Changes
+- 2026-02-17: Restructured client sidebar into 4 sections: (1) Dashboard/Wallet/KYC, (2) Forex Trading submenu + Prop Trading/Investments/Loyalty Points/Download Platform, (3) Tools: P2P Exchange/AI Center, (4) System: Widgets/Support/Profile/Settings/Logout. Added 8 new pages, moved trading routes under /forex/* namespace
 - 2026-02-17: Added Prop Trading, Investment, Copy Trading, PAMM modules with 8 new DB tables, 13 API endpoints, 4 frontend pages, sidebar navigation under "Services" section
 - 2026-02-17: Separated login pages into three distinct portals (/login, /admin/login, /super-admin/login) with role validation
 - 2026-02-17: Made client API routes user-scoped (trading accounts, transactions, dashboard stats, KYC, support tickets all filtered by session userId)

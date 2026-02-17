@@ -53,8 +53,8 @@ export default function TradingAccounts() {
   const [depositOpen, setDepositOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<TradingAccount | null>(null);
 
-  const isLive = location === "/trading/live";
-  const isDemo = location === "/trading/demo";
+  const isLive = location === "/forex/accounts/live" || location === "/forex/accounts";
+  const isDemo = location === "/forex/accounts/demo";
 
   const { data: accounts, isLoading } = useQuery<TradingAccount[]>({
     queryKey: ["/api/trading-accounts"],
@@ -299,6 +299,7 @@ export default function TradingAccounts() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem
                               onClick={() => navigate(`/trading/account/${account.id}`)}
+
                               data-testid={`menu-view-${account.id}`}
                             >
                               <Eye className="w-4 h-4 mr-2" /> View Details

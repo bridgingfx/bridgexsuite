@@ -27,6 +27,16 @@ import InvestmentPage from "@/pages/investment";
 import CopyTradingPage from "@/pages/copy-trading";
 import PammPage from "@/pages/pamm";
 import AccountDetail from "@/pages/account-detail";
+import ForexDashboard from "@/pages/forex-dashboard";
+import OffersPage from "@/pages/offers";
+import IBDashboard from "@/pages/ib-dashboard";
+import FinancePage from "@/pages/finance";
+import LoyaltyPointsPage from "@/pages/loyalty-points";
+import DownloadPlatformPage from "@/pages/download-platform";
+import P2PExchangePage from "@/pages/p2p-exchange";
+import AICenterPage from "@/pages/ai-center";
+import WidgetsPage from "@/pages/widgets";
+import ProfilePage from "@/pages/profile";
 
 import AdminDashboard from "@/pages/admin/dashboard";
 import AdminClients from "@/pages/admin/clients";
@@ -87,23 +97,33 @@ function ClientRouter() {
   return (
     <Switch>
       <Route path="/" component={Dashboard} />
-      <Route path="/trading" component={TradingAccounts} />
-      <Route path="/trading/live" component={TradingAccounts} />
-      <Route path="/trading/demo" component={TradingAccounts} />
-      <Route path="/trading/account/:id">{(params) => <AccountDetail id={params.id} />}</Route>
       <Route path="/wallet" component={WalletPage} />
       <Route path="/wallet/deposits" component={WalletPage} />
       <Route path="/wallet/withdrawals" component={WalletPage} />
-      <Route path="/transactions" component={Transactions} />
       <Route path="/kyc" component={KycPage} />
       <Route path="/kyc/documents" component={KycPage} />
-      <Route path="/support" component={Support} />
-      <Route path="/notifications" component={Notifications} />
-      <Route path="/settings" component={SettingsPage} />
+      <Route path="/forex/dashboard" component={ForexDashboard} />
+      <Route path="/forex/accounts" component={TradingAccounts} />
+      <Route path="/forex/accounts/live" component={TradingAccounts} />
+      <Route path="/forex/accounts/demo" component={TradingAccounts} />
+      <Route path="/forex/finance" component={FinancePage} />
+      <Route path="/forex/offers" component={OffersPage} />
+      <Route path="/forex/ib-dashboard" component={IBDashboard} />
+      <Route path="/forex/pamm" component={PammPage} />
+      <Route path="/forex/copy-trading" component={CopyTradingPage} />
+      <Route path="/trading/account/:id">{(params) => <AccountDetail id={params.id} />}</Route>
       <Route path="/prop-trading" component={PropTradingPage} />
       <Route path="/investment" component={InvestmentPage} />
-      <Route path="/copy-trading" component={CopyTradingPage} />
-      <Route path="/pamm" component={PammPage} />
+      <Route path="/loyalty-points" component={LoyaltyPointsPage} />
+      <Route path="/download-platform" component={DownloadPlatformPage} />
+      <Route path="/p2p-exchange" component={P2PExchangePage} />
+      <Route path="/ai-center" component={AICenterPage} />
+      <Route path="/widgets" component={WidgetsPage} />
+      <Route path="/support" component={Support} />
+      <Route path="/profile" component={ProfilePage} />
+      <Route path="/settings" component={SettingsPage} />
+      <Route path="/notifications" component={Notifications} />
+      <Route path="/transactions" component={Transactions} />
       <Route component={NotFound} />
     </Switch>
   );

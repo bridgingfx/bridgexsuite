@@ -304,7 +304,7 @@ export default function AccountDetail({ id }: { id: string }) {
       <div className="p-6 max-w-[1600px] mx-auto">
         <div className="text-center py-16">
           <p className="text-muted-foreground">Account not found</p>
-          <Button variant="outline" className="mt-4" onClick={() => navigate("/trading/live")}>
+          <Button variant="outline" className="mt-4" onClick={() => navigate("/forex/accounts")}>
             Back to Accounts
           </Button>
         </div>
@@ -324,7 +324,7 @@ export default function AccountDetail({ id }: { id: string }) {
   return (
     <div className="p-6 space-y-6 max-w-[1600px] mx-auto">
       <div className="flex items-center gap-4 flex-wrap">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/trading/live")} data-testid="button-back">
+        <Button variant="ghost" size="icon" onClick={() => navigate("/forex/accounts")} data-testid="button-back">
           <ArrowLeft className="w-4 h-4" />
         </Button>
         <div className="flex-1">
