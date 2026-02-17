@@ -4,7 +4,10 @@ import { sql } from "drizzle-orm";
 
 export async function seedDatabase() {
   const existingUsers = await db.select().from(users);
-  if (existingUsers.length > 0) return;
+  if (existingUsers.length > 0) {
+    await seedSuperAdminData();
+    return;
+  }
 
   console.log("Seeding database...");
 
@@ -140,8 +143,12 @@ export async function seedDatabase() {
     { userId: admin.id, type: "referral", amount: "320.75", source: "Investment referrals", status: "paid" },
   ]);
 
-  // ==================== SUPER ADMIN SEED DATA ====================
+  await seedSuperAdminData();
 
+  console.log("Database seeded successfully!");
+}
+
+async function seedSuperAdminData() {
   const existingBrokers = await db.select().from(brokers);
   if (existingBrokers.length === 0) {
     const [broker1] = await db.insert(brokers).values({
@@ -258,6 +265,4 @@ export async function seedDatabase() {
       { settingKey: "maintenance_mode", settingValue: "false", category: "system", description: "Enable maintenance mode" },
     ]);
   }
-
-  console.log("Database seeded successfully!");
 }

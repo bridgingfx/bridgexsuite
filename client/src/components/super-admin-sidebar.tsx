@@ -32,7 +32,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 interface MenuItem {
   title: string;
   url: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: ({ className }: { className?: string }) => JSX.Element;
   children?: { title: string; url: string }[];
   testId?: string;
 }
