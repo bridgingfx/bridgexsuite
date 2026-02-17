@@ -6,9 +6,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { AdminSidebar } from "@/components/admin-sidebar";
+import { SuperAdminSidebar } from "@/components/super-admin-sidebar";
 import { ThemeProvider } from "@/lib/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Bell, Shield } from "lucide-react";
+import { Bell, Shield, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 
@@ -34,6 +35,15 @@ import AdminIbManagement from "@/pages/admin/ib-management";
 import AdminSupport from "@/pages/admin/support-admin";
 import AdminReports from "@/pages/admin/reports";
 import AdminSettings from "@/pages/admin/system-settings";
+
+import SuperAdminDashboard from "@/pages/super-admin/dashboard";
+import SuperAdminBrokers from "@/pages/super-admin/brokers";
+import SuperAdminBrokerDetail from "@/pages/super-admin/broker-detail";
+import SuperAdminPlans from "@/pages/super-admin/plans";
+import SuperAdminAdminUsers from "@/pages/super-admin/admin-users";
+import SuperAdminBranding from "@/pages/super-admin/branding";
+import SuperAdminAnalytics from "@/pages/super-admin/analytics";
+import SuperAdminPlatformConfig from "@/pages/super-admin/platform-config";
 
 import NotFound from "@/pages/not-found";
 
@@ -83,6 +93,22 @@ function AdminRouter() {
       <Route path="/admin/support" component={AdminSupport} />
       <Route path="/admin/reports" component={AdminReports} />
       <Route path="/admin/settings" component={AdminSettings} />
+      <Route component={NotFound} />
+    </Switch>
+  );
+}
+
+function SuperAdminRouter() {
+  return (
+    <Switch>
+      <Route path="/super-admin" component={SuperAdminDashboard} />
+      <Route path="/super-admin/brokers" component={SuperAdminBrokers} />
+      <Route path="/super-admin/brokers/:id" component={SuperAdminBrokerDetail} />
+      <Route path="/super-admin/plans" component={SuperAdminPlans} />
+      <Route path="/super-admin/admins" component={SuperAdminAdminUsers} />
+      <Route path="/super-admin/branding" component={SuperAdminBranding} />
+      <Route path="/super-admin/analytics" component={SuperAdminAnalytics} />
+      <Route path="/super-admin/config" component={SuperAdminPlatformConfig} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -138,6 +164,11 @@ function AdminLayout() {
           <header className="flex items-center justify-between gap-2 px-4 py-2 border-b bg-background sticky top-0 z-50">
             <SidebarTrigger data-testid="button-admin-sidebar-toggle" />
             <div className="flex items-center gap-1">
+              <Link href="/super-admin">
+                <Button variant="ghost" size="icon" data-testid="button-super-admin-panel">
+                  <Crown className="w-4 h-4" />
+                </Button>
+              </Link>
               <ThemeToggle />
             </div>
           </header>
@@ -150,15 +181,42 @@ function AdminLayout() {
   );
 }
 
+function SuperAdminLayout() {
+  const style = {
+    "--sidebar-width": "16rem",
+    "--sidebar-width-icon": "3rem",
+  };
+
+  return (
+    <SidebarProvider style={style as React.CSSProperties}>
+      <div className="flex h-screen w-full">
+        <SuperAdminSidebar />
+        <div className="flex flex-col flex-1 overflow-hidden">
+          <header className="flex items-center justify-between gap-2 px-4 py-2 border-b bg-background sticky top-0 z-50">
+            <SidebarTrigger data-testid="button-sa-sidebar-toggle" />
+            <div className="flex items-center gap-1">
+              <ThemeToggle />
+            </div>
+          </header>
+          <main className="flex-1 overflow-auto">
+            <SuperAdminRouter />
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
+  );
+}
+
 function App() {
   const [location] = useLocation();
+  const isSuperAdmin = location.startsWith("/super-admin");
   const isAdmin = location.startsWith("/admin");
 
   return (
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          {isAdmin ? <AdminLayout /> : <ClientLayout />}
+          {isSuperAdmin ? <SuperAdminLayout /> : isAdmin ? <AdminLayout /> : <ClientLayout />}
           <Toaster />
         </TooltipProvider>
       </QueryClientProvider>
