@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -27,20 +27,20 @@ import {
   DollarSign,
   BarChart3,
   Activity,
-  MoreVertical,
   Eye,
   Lock,
   Scale,
   Wallet,
+  ArrowUpRight,
+  ArrowDownRight,
+  Settings2,
+  CandlestickChart,
+  Layers,
 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import type { TradingAccount } from "@shared/schema";
 import { useLocation } from "wouter";
+import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function TradingAccounts() {
   const [search, setSearch] = useState("");
@@ -147,6 +147,23 @@ export default function TradingAccounts() {
   const passwordsMatch = newPassword === confirmPassword;
   const isPasswordValid = newPassword.length >= 6 && passwordsMatch;
 
+  function getPlatformColor(platform: string) {
+    switch (platform) {
+      case "MT5": return "text-blue-500 bg-blue-500/10";
+      case "MT4": return "text-indigo-500 bg-indigo-500/10";
+      case "cTrader": return "text-emerald-500 bg-emerald-500/10";
+      default: return "text-primary bg-primary/10";
+    }
+  }
+
+  function getPnl(account: TradingAccount) {
+    const balance = Number(account.balance);
+    const equity = Number(account.equity);
+    const pnl = equity - balance;
+    const pnlPercent = balance > 0 ? (pnl / balance) * 100 : 0;
+    return { pnl, pnlPercent };
+  }
+
   return (
     <div className="p-6 space-y-6 max-w-[1600px] mx-auto">
       <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -168,10 +185,10 @@ export default function TradingAccounts() {
             <div className="flex items-center justify-between gap-2 mb-3">
               <span className="text-sm text-muted-foreground">Total Accounts</span>
               <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
-                <TrendingUp className="w-4 h-4 text-primary" />
+                <Layers className="w-4 h-4 text-primary" />
               </div>
             </div>
-            <div className="text-2xl font-bold tracking-tight">{filtered.length}</div>
+            <div className="text-2xl font-bold tracking-tight" data-testid="text-total-accounts">{filtered.length}</div>
           </CardContent>
         </Card>
         <Card>
@@ -182,7 +199,7 @@ export default function TradingAccounts() {
                 <Activity className="w-4 h-4 text-emerald-500" />
               </div>
             </div>
-            <div className="text-2xl font-bold tracking-tight">{activeAccounts}</div>
+            <div className="text-2xl font-bold tracking-tight" data-testid="text-active-accounts">{activeAccounts}</div>
           </CardContent>
         </Card>
         <Card>
@@ -193,7 +210,7 @@ export default function TradingAccounts() {
                 <DollarSign className="w-4 h-4 text-blue-500" />
               </div>
             </div>
-            <div className="text-2xl font-bold tracking-tight">
+            <div className="text-2xl font-bold tracking-tight" data-testid="text-total-balance">
               ${totalBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
             </div>
           </CardContent>
@@ -206,133 +223,172 @@ export default function TradingAccounts() {
                 <BarChart3 className="w-4 h-4 text-purple-500" />
               </div>
             </div>
-            <div className="text-2xl font-bold tracking-tight">
+            <div className="text-2xl font-bold tracking-tight" data-testid="text-total-equity">
               ${totalEquity.toLocaleString("en-US", { minimumFractionDigits: 2 })}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between gap-2 pb-4">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by account number..."
-              className="pl-9"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              data-testid="input-search-accounts"
-            />
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm" data-testid="table-trading-accounts">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-3 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Account #</th>
-                  <th className="text-left py-3 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Platform</th>
-                  <th className="text-left py-3 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Type</th>
-                  <th className="text-left py-3 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Leverage</th>
-                  <th className="text-right py-3 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Balance</th>
-                  <th className="text-right py-3 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Equity</th>
-                  <th className="text-left py-3 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
-                  <th className="text-right py-3 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={8} className="py-16 text-center text-muted-foreground">
-                      Loading accounts...
-                    </td>
-                  </tr>
-                ) : filtered.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="py-16 text-center">
-                      <div className="flex flex-col items-center gap-3">
-                        <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center">
-                          <TrendingUp className="w-6 h-6 text-muted-foreground" />
-                        </div>
-                        <div className="space-y-1">
-                          <p className="font-medium">No trading accounts found</p>
-                          <p className="text-sm text-muted-foreground">Get started by opening your first trading account.</p>
-                        </div>
-                        <Button onClick={() => setAddOpen(true)} data-testid="button-empty-add-account">
-                          <Plus className="w-4 h-4 mr-2" />
-                          Open New Account
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  filtered.map((account) => (
-                    <tr key={account.id} className="border-b last:border-0" data-testid={`row-account-${account.id}`}>
-                      <td className="py-3 px-3 font-mono font-medium">{account.accountNumber}</td>
-                      <td className="py-3 px-3">
-                        <Badge variant="secondary" className="text-xs">{account.platform}</Badge>
-                      </td>
-                      <td className="py-3 px-3 capitalize">{account.type}</td>
-                      <td className="py-3 px-3">{account.leverage}</td>
-                      <td className="py-3 px-3 text-right font-mono">
-                        ${Number(account.balance).toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                      </td>
-                      <td className="py-3 px-3 text-right font-mono">
-                        ${Number(account.equity).toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                      </td>
-                      <td className="py-3 px-3">
-                        <Badge
-                          variant={account.status === "active" ? "default" : "secondary"}
-                          className={account.status === "active" ? "bg-emerald-500/10 text-emerald-500" : ""}
-                        >
-                          {account.status}
-                        </Badge>
-                      </td>
-                      <td className="py-3 px-3 text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" data-testid={`button-actions-${account.id}`}>
-                              <MoreVertical className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => navigate(`/trading/account/${account.id}`)}
+      <div className="relative max-w-sm">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input
+          placeholder="Search by account number..."
+          className="pl-9"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          data-testid="input-search-accounts"
+        />
+      </div>
 
-                              data-testid={`menu-view-${account.id}`}
-                            >
-                              <Eye className="w-4 h-4 mr-2" /> View Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => { setSelectedAccount(account); setNewPassword(""); setConfirmPassword(""); setPasswordOpen(true); }}
-                              data-testid={`menu-password-${account.id}`}
-                            >
-                              <Lock className="w-4 h-4 mr-2" /> Change Password
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => { setSelectedAccount(account); setNewLeverage(account.leverage); setLeverageOpen(true); }}
-                              data-testid={`menu-leverage-${account.id}`}
-                            >
-                              <Scale className="w-4 h-4 mr-2" /> Change Leverage
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => { setSelectedAccount(account); setDepositAmount(""); setDepositOpen(true); }}
-                              data-testid={`menu-deposit-${account.id}`}
-                            >
-                              <Wallet className="w-4 h-4 mr-2" /> Deposit from Wallet
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i}>
+              <CardContent className="p-5 space-y-4">
+                <Skeleton className="h-6 w-32" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-9 w-full" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
+        <Card>
+          <CardContent className="py-16 flex flex-col items-center gap-3">
+            <div className="w-14 h-14 rounded-md bg-muted flex items-center justify-center">
+              <CandlestickChart className="w-7 h-7 text-muted-foreground" />
+            </div>
+            <div className="space-y-1 text-center">
+              <p className="font-medium">No trading accounts found</p>
+              <p className="text-sm text-muted-foreground">Get started by opening your first trading account.</p>
+            </div>
+            <Button onClick={() => setAddOpen(true)} data-testid="button-empty-add-account">
+              <Plus className="w-4 h-4 mr-2" />
+              Open New Account
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {filtered.map((account) => {
+            const { pnl, pnlPercent } = getPnl(account);
+            const platformColor = getPlatformColor(account.platform);
+            const isPositive = pnl >= 0;
+
+            return (
+              <Card
+                key={account.id}
+                className="hover-elevate cursor-pointer transition-all duration-200"
+                onClick={() => navigate(`/trading/account/${account.id}`)}
+                data-testid={`card-account-${account.id}`}
+              >
+                <CardContent className="p-5 space-y-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-3">
+                      <div className={cn("w-10 h-10 rounded-md flex items-center justify-center shrink-0", platformColor)}>
+                        <CandlestickChart className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="font-mono font-semibold text-sm" data-testid={`text-account-number-${account.id}`}>
+                          {account.accountNumber}
+                        </p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{account.platform}</Badge>
+                          <span className="text-[11px] text-muted-foreground capitalize">{account.type}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <Badge
+                      variant={account.status === "active" ? "default" : "secondary"}
+                      className={cn(
+                        "text-[10px]",
+                        account.status === "active" && "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                      )}
+                      data-testid={`badge-status-${account.id}`}
+                    >
+                      {account.status}
+                    </Badge>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-0.5">
+                      <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Balance</p>
+                      <p className="text-lg font-bold tracking-tight" data-testid={`text-balance-${account.id}`}>
+                        ${Number(account.balance).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                    <div className="space-y-0.5">
+                      <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Equity</p>
+                      <p className="text-lg font-bold tracking-tight" data-testid={`text-equity-${account.id}`}>
+                        ${Number(account.equity).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2 pt-1 border-t">
+                    <div className="flex items-center gap-1.5">
+                      <div className={cn(
+                        "flex items-center gap-1 text-xs font-medium",
+                        isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"
+                      )}>
+                        {isPositive ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
+                        <span data-testid={`text-pnl-${account.id}`}>
+                          {isPositive ? "+" : ""}${pnl.toFixed(2)} ({pnlPercent.toFixed(1)}%)
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Scale className="w-3 h-3" />
+                      <span>{account.leverage}</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-1.5" onClick={(e) => e.stopPropagation()}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-[11px] px-0"
+                      onClick={() => navigate(`/trading/account/${account.id}`)}
+                      data-testid={`button-view-${account.id}`}
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-[11px] px-0"
+                      onClick={() => { setSelectedAccount(account); setNewPassword(""); setConfirmPassword(""); setPasswordOpen(true); }}
+                      data-testid={`button-password-${account.id}`}
+                    >
+                      <Lock className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-[11px] px-0"
+                      onClick={() => { setSelectedAccount(account); setNewLeverage(account.leverage); setLeverageOpen(true); }}
+                      data-testid={`button-leverage-${account.id}`}
+                    >
+                      <Settings2 className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-[11px] px-0"
+                      onClick={() => { setSelectedAccount(account); setDepositAmount(""); setDepositOpen(true); }}
+                      data-testid={`button-deposit-${account.id}`}
+                    >
+                      <Wallet className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent className="max-w-md">
@@ -527,7 +583,7 @@ export default function TradingAccounts() {
             <Button
               className="w-full"
               onClick={() => depositMutation.mutate()}
-              disabled={depositMutation.isPending || !depositAmount || parseFloat(depositAmount) <= 0}
+              disabled={depositMutation.isPending || !depositAmount || Number(depositAmount) <= 0}
               data-testid="button-submit-deposit"
             >
               {depositMutation.isPending ? "Processing..." : "Deposit Now"}
