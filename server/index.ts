@@ -2,6 +2,17 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+
+declare module "express-session" {
+  interface SessionData {
+    userId: string;
+    userRole: string;
+  }
+}
 
 const app = express();
 const httpServer = createServer(app);
@@ -58,6 +69,49 @@ app.use((req, res, next) => {
 
   next();
 });
+
+const PgStore = connectPgSimple(session);
+
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+  })
+);
+
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use("/api/auth/login", loginLimiter);
+app.use("/api/", generalLimiter);
+
+app.use(
+  session({
+    store: new PgStore({
+      conString: process.env.DATABASE_URL,
+      createTableIfMissing: true,
+    }),
+    secret: process.env.SESSION_SECRET || "fallback-secret-change-me",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 24 * 60 * 60 * 1000,
+    },
+  })
+);
 
 (async () => {
   // Push database schema

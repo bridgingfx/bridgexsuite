@@ -1,5 +1,5 @@
 import { Switch, Route, useLocation } from "wouter";
-import { queryClient } from "./lib/queryClient";
+import { queryClient, apiRequest } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,9 +9,10 @@ import { AdminSidebar } from "@/components/admin-sidebar";
 import { SuperAdminSidebar } from "@/components/super-admin-sidebar";
 import { ThemeProvider } from "@/lib/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Bell, Shield, Crown } from "lucide-react";
+import { Bell, Shield, Crown, LogOut, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
 
 import Dashboard from "@/pages/dashboard";
 import Clients from "@/pages/clients";
@@ -45,7 +46,26 @@ import SuperAdminBranding from "@/pages/super-admin/branding";
 import SuperAdminAnalytics from "@/pages/super-admin/analytics";
 import SuperAdminPlatformConfig from "@/pages/super-admin/platform-config";
 
+import LoginPage from "@/pages/login";
 import NotFound from "@/pages/not-found";
+
+function LogoutButton() {
+  const [, setLocation] = useLocation();
+
+  async function handleLogout() {
+    try {
+      await apiRequest("POST", "/api/auth/logout");
+    } catch (e) {}
+    queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+    setLocation("/");
+  }
+
+  return (
+    <Button variant="ghost" size="icon" onClick={handleLogout} data-testid="button-logout">
+      <LogOut className="w-4 h-4" />
+    </Button>
+  );
+}
 
 function ClientRouter() {
   return (
@@ -139,6 +159,7 @@ function ClientLayout() {
                 </Button>
               </Link>
               <ThemeToggle />
+              <LogoutButton />
             </div>
           </header>
           <main className="flex-1 overflow-auto">
@@ -170,6 +191,7 @@ function AdminLayout() {
                 </Button>
               </Link>
               <ThemeToggle />
+              <LogoutButton />
             </div>
           </header>
           <main className="flex-1 overflow-auto">
@@ -196,6 +218,7 @@ function SuperAdminLayout() {
             <SidebarTrigger data-testid="button-sa-sidebar-toggle" />
             <div className="flex items-center gap-1">
               <ThemeToggle />
+              <LogoutButton />
             </div>
           </header>
           <main className="flex-1 overflow-auto">
@@ -207,16 +230,48 @@ function SuperAdminLayout() {
   );
 }
 
-function App() {
-  const [location] = useLocation();
+function AuthenticatedApp() {
+  const [location, setLocation] = useLocation();
+  const { user } = useAuth();
   const isSuperAdmin = location.startsWith("/super-admin");
   const isAdmin = location.startsWith("/admin");
 
+  if (isSuperAdmin && user?.role !== "super_admin") {
+    setLocation(user?.role === "admin" ? "/admin" : "/");
+    return null;
+  }
+  if (isAdmin && user?.role !== "admin" && user?.role !== "super_admin") {
+    setLocation("/");
+    return null;
+  }
+
+  return isSuperAdmin ? <SuperAdminLayout /> : isAdmin ? <AdminLayout /> : <ClientLayout />;
+}
+
+function AppContent() {
+  const { isLoading, isAuthenticated } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <LoginPage />;
+  }
+
+  return <AuthenticatedApp />;
+}
+
+function App() {
   return (
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          {isSuperAdmin ? <SuperAdminLayout /> : isAdmin ? <AdminLayout /> : <ClientLayout />}
+          <AppContent />
           <Toaster />
         </TooltipProvider>
       </QueryClientProvider>

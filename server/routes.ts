@@ -1,12 +1,99 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
+import bcrypt from "bcryptjs";
+
+function requireAuth(req: Request, res: Response, next: NextFunction) {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: "Authentication required" });
+  }
+  next();
+}
+
+function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  if (req.session.userRole !== "admin" && req.session.userRole !== "super_admin") {
+    return res.status(403).json({ error: "Admin access required" });
+  }
+  next();
+}
+
+function requireSuperAdmin(req: Request, res: Response, next: NextFunction) {
+  if (req.session.userRole !== "super_admin") {
+    return res.status(403).json({ error: "Super admin access required" });
+  }
+  next();
+}
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+
+  // ==================== AUTH ROUTES (PUBLIC) ====================
+
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { email, password } = z.object({
+        email: z.string().email(),
+        password: z.string().min(1),
+      }).parse(req.body);
+
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(401).json({ error: "Invalid email or password" });
+      }
+
+      const isValid = await bcrypt.compare(password, user.password);
+      if (!isValid) {
+        return res.status(401).json({ error: "Invalid email or password" });
+      }
+
+      req.session.userId = user.id;
+      req.session.userRole = user.role;
+
+      const { password: _, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors[0].message });
+      }
+      res.status(500).json({ error: "Login failed" });
+    }
+  });
+
+  app.post("/api/auth/logout", (req, res) => {
+    req.session.destroy((err) => {
+      if (err) {
+        return res.status(500).json({ error: "Logout failed" });
+      }
+      res.clearCookie("connect.sid");
+      res.json({ message: "Logged out" });
+    });
+  });
+
+  app.get("/api/auth/me", async (req, res) => {
+    if (!req.session.userId) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+    const user = await storage.getUser(req.session.userId);
+    if (!user) {
+      return res.status(401).json({ error: "User not found" });
+    }
+    const { password: _, ...userWithoutPassword } = user;
+    res.json(userWithoutPassword);
+  });
+
+  // ==================== MIDDLEWARE PROTECTION ====================
+
+  app.use("/api/admin", requireAuth, requireAdmin);
+  app.use("/api/super-admin", requireAuth, requireSuperAdmin);
+  app.use("/api", (req: Request, res: Response, next: NextFunction) => {
+    if (req.path.startsWith("/auth")) {
+      return next();
+    }
+    requireAuth(req, res, next);
+  });
 
   // Dashboard
   app.get("/api/dashboard/stats", async (req, res) => {

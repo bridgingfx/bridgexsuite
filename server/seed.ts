@@ -1,6 +1,7 @@
 import { db } from "./db";
 import { users, tradingAccounts, transactions, kycDocuments, ibReferrals, supportTickets, commissions, brokers, subscriptionPlans, brokerSubscriptions, brokerAdmins, brokerBranding, platformSettings } from "@shared/schema";
 import { sql } from "drizzle-orm";
+import bcrypt from "bcryptjs";
 
 export async function seedDatabase() {
   const existingUsers = await db.select().from(users);
@@ -11,9 +12,12 @@ export async function seedDatabase() {
 
   console.log("Seeding database...");
 
+  const adminPasswordHash = bcrypt.hashSync("admin123", 10);
+  const userPasswordHash = bcrypt.hashSync("pass123", 10);
+
   const [admin] = await db.insert(users).values({
     username: "admin@forexcrm.com",
-    password: "admin123",
+    password: adminPasswordHash,
     fullName: "Admin User",
     email: "admin@forexcrm.com",
     phone: "+1 234 567 890",
@@ -25,7 +29,7 @@ export async function seedDatabase() {
 
   const [john] = await db.insert(users).values({
     username: "john.smith@email.com",
-    password: "pass123",
+    password: userPasswordHash,
     fullName: "John Smith",
     email: "john.smith@email.com",
     phone: "+44 20 7946 0958",
@@ -37,7 +41,7 @@ export async function seedDatabase() {
 
   const [sarah] = await db.insert(users).values({
     username: "sarah.chen@email.com",
-    password: "pass123",
+    password: userPasswordHash,
     fullName: "Sarah Chen",
     email: "sarah.chen@email.com",
     phone: "+86 138 0013 8000",
@@ -49,7 +53,7 @@ export async function seedDatabase() {
 
   const [ahmed] = await db.insert(users).values({
     username: "ahmed.hassan@email.com",
-    password: "pass123",
+    password: userPasswordHash,
     fullName: "Ahmed Hassan",
     email: "ahmed.hassan@email.com",
     phone: "+971 50 123 4567",
@@ -61,7 +65,7 @@ export async function seedDatabase() {
 
   const [maria] = await db.insert(users).values({
     username: "maria.garcia@email.com",
-    password: "pass123",
+    password: userPasswordHash,
     fullName: "Maria Garcia",
     email: "maria.garcia@email.com",
     phone: "+34 612 345 678",
@@ -73,7 +77,7 @@ export async function seedDatabase() {
 
   const [kenji] = await db.insert(users).values({
     username: "kenji.tanaka@email.com",
-    password: "pass123",
+    password: userPasswordHash,
     fullName: "Kenji Tanaka",
     email: "kenji.tanaka@email.com",
     phone: "+81 90 1234 5678",
@@ -81,6 +85,18 @@ export async function seedDatabase() {
     status: "inactive",
     kycStatus: "rejected",
     country: "Japan",
+  }).returning();
+
+  const [superAdmin] = await db.insert(users).values({
+    username: "superadmin@forexcrm.com",
+    password: bcrypt.hashSync("admin123", 10),
+    fullName: "Super Admin",
+    email: "superadmin@forexcrm.com",
+    phone: "+1 555 000 0001",
+    role: "super_admin",
+    status: "active",
+    kycStatus: "verified",
+    country: "United States",
   }).returning();
 
   // Trading Accounts

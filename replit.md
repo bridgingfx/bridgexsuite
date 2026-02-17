@@ -164,6 +164,25 @@ shared/
 - GET/PATCH /api/super-admin/brokers/:id/branding
 - GET/POST /api/super-admin/platform-settings
 
+## Authentication & Security
+- **Login**: Email/password authentication with bcrypt password hashing
+- **Sessions**: PostgreSQL-backed session store (connect-pg-simple), httpOnly cookies, sameSite=lax
+- **Rate Limiting**: 5 attempts/15min for login, 100 requests/15min for general API
+- **Security Headers**: Helmet middleware for XSS protection, HSTS, etc.
+- **Role-Based Access**: requireAuth, requireAdmin, requireSuperAdmin middleware on API routes
+- **Frontend Protection**: Role-based route guards redirect unauthorized users
+
+### Login Credentials (Seed Data)
+- **Super Admin**: superadmin@forexcrm.com / admin123
+- **Admin**: admin@forexcrm.com / admin123
+- **Client**: john.smith@email.com / pass123
+
+### Auth API
+- POST /api/auth/login (public)
+- POST /api/auth/logout
+- GET /api/auth/me
+
 ## Recent Changes
+- 2026-02-17: Added authentication system with bcrypt password hashing, PostgreSQL session store, role-based access control, rate limiting, helmet security headers, login page, frontend auth flow
 - 2026-02-17: Added Super Admin CRM with 8 pages, super-admin sidebar, 20+ super-admin API endpoints, 6 new database tables (brokers, subscription_plans, broker_subscriptions, broker_admins, broker_branding, platform_settings)
 - 2026-02-17: Added Admin CRM with 10 pages, admin sidebar, 20+ admin API endpoints, broker_settings and commission_tiers tables
