@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { queryClient, apiRequest } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -65,7 +66,9 @@ import NotFound from "@/pages/not-found";
 
 function RedirectTo({ path }: { path: string }) {
   const [, setLocation] = useLocation();
-  setLocation(path);
+  useEffect(() => {
+    setLocation(path);
+  }, [path, setLocation]);
   return null;
 }
 

@@ -175,6 +175,81 @@
   }
 }
 
+@layer utilities {
+  .gradient-card-blue {
+    background: linear-gradient(135deg, hsl(217 91% 60% / 0.08) 0%, hsl(217 91% 60% / 0.02) 100%);
+    border: 1px solid hsl(217 91% 60% / 0.12);
+  }
+  .dark .gradient-card-blue {
+    background: linear-gradient(135deg, hsl(217 91% 60% / 0.15) 0%, hsl(217 91% 60% / 0.04) 100%);
+    border-color: hsl(217 91% 60% / 0.2);
+  }
+
+  .gradient-card-emerald {
+    background: linear-gradient(135deg, hsl(142 76% 36% / 0.08) 0%, hsl(142 76% 36% / 0.02) 100%);
+    border: 1px solid hsl(142 76% 36% / 0.12);
+  }
+  .dark .gradient-card-emerald {
+    background: linear-gradient(135deg, hsl(142 76% 36% / 0.15) 0%, hsl(142 76% 36% / 0.04) 100%);
+    border-color: hsl(142 76% 36% / 0.2);
+  }
+
+  .gradient-card-red {
+    background: linear-gradient(135deg, hsl(0 84% 60% / 0.08) 0%, hsl(0 84% 60% / 0.02) 100%);
+    border: 1px solid hsl(0 84% 60% / 0.12);
+  }
+  .dark .gradient-card-red {
+    background: linear-gradient(135deg, hsl(0 84% 60% / 0.15) 0%, hsl(0 84% 60% / 0.04) 100%);
+    border-color: hsl(0 84% 60% / 0.2);
+  }
+
+  .gradient-card-purple {
+    background: linear-gradient(135deg, hsl(262 83% 58% / 0.08) 0%, hsl(262 83% 58% / 0.02) 100%);
+    border: 1px solid hsl(262 83% 58% / 0.12);
+  }
+  .dark .gradient-card-purple {
+    background: linear-gradient(135deg, hsl(262 83% 58% / 0.15) 0%, hsl(262 83% 58% / 0.04) 100%);
+    border-color: hsl(262 83% 58% / 0.2);
+  }
+
+  .gradient-card-amber {
+    background: linear-gradient(135deg, hsl(38 92% 50% / 0.08) 0%, hsl(38 92% 50% / 0.02) 100%);
+    border: 1px solid hsl(38 92% 50% / 0.12);
+  }
+  .dark .gradient-card-amber {
+    background: linear-gradient(135deg, hsl(38 92% 50% / 0.15) 0%, hsl(38 92% 50% / 0.04) 100%);
+    border-color: hsl(38 92% 50% / 0.2);
+  }
+
+  .hero-gradient {
+    background: linear-gradient(135deg, hsl(217 91% 55%) 0%, hsl(262 83% 58%) 50%, hsl(280 65% 40%) 100%);
+  }
+
+  .hero-gradient-dark {
+    background: linear-gradient(135deg, hsl(217 91% 30%) 0%, hsl(262 60% 30%) 50%, hsl(280 50% 20%) 100%);
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  @keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 0.4s ease-out forwards;
+  }
+
+  .animate-delay-100 { animation-delay: 0.1s; }
+  .animate-delay-200 { animation-delay: 0.2s; }
+  .animate-delay-300 { animation-delay: 0.3s; }
+  .animate-delay-400 { animation-delay: 0.4s; }
+}
+
 /**
  * Using the elevate system.
  * Automatic contrast adjustment.

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -69,6 +70,7 @@ export default function TradingAccounts() {
   const totalBalance = filtered.reduce((sum, a) => sum + Number(a.balance), 0);
   const totalEquity = filtered.reduce((sum, a) => sum + Number(a.equity), 0);
   const activeAccounts = filtered.filter((a) => a.status === "active").length;
+  const totalPnl = totalEquity - totalBalance;
 
   const [formData, setFormData] = useState({
     platform: "MT5",
@@ -149,10 +151,10 @@ export default function TradingAccounts() {
 
   function getPlatformColor(platform: string) {
     switch (platform) {
-      case "MT5": return "text-blue-500 bg-blue-500/10";
-      case "MT4": return "text-indigo-500 bg-indigo-500/10";
-      case "cTrader": return "text-emerald-500 bg-emerald-500/10";
-      default: return "text-primary bg-primary/10";
+      case "MT5": return { text: "text-blue-500 dark:text-blue-400", bg: "bg-blue-500/10 dark:bg-blue-400/10" };
+      case "MT4": return { text: "text-indigo-500 dark:text-indigo-400", bg: "bg-indigo-500/10 dark:bg-indigo-400/10" };
+      case "cTrader": return { text: "text-emerald-500 dark:text-emerald-400", bg: "bg-emerald-500/10 dark:bg-emerald-400/10" };
+      default: return { text: "text-primary", bg: "bg-primary/10" };
     }
   }
 
@@ -180,52 +182,64 @@ export default function TradingAccounts() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+        <Card className="gradient-card-blue rounded-md">
           <CardContent className="p-5">
             <div className="flex items-center justify-between gap-2 mb-3">
               <span className="text-sm text-muted-foreground">Total Accounts</span>
-              <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
-                <Layers className="w-4 h-4 text-primary" />
+              <div className="w-9 h-9 rounded-md bg-blue-500/15 dark:bg-blue-400/15 flex items-center justify-center shrink-0">
+                <Layers className="w-[18px] h-[18px] text-blue-500 dark:text-blue-400" />
               </div>
             </div>
             <div className="text-2xl font-bold tracking-tight" data-testid="text-total-accounts">{filtered.length}</div>
+            <p className="text-xs text-muted-foreground mt-1">{activeAccounts} active</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between gap-2 mb-3">
-              <span className="text-sm text-muted-foreground">Active</span>
-              <div className="w-8 h-8 rounded-md bg-emerald-500/10 flex items-center justify-center shrink-0">
-                <Activity className="w-4 h-4 text-emerald-500" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold tracking-tight" data-testid="text-active-accounts">{activeAccounts}</div>
-          </CardContent>
-        </Card>
-        <Card>
+        <Card className="gradient-card-emerald rounded-md">
           <CardContent className="p-5">
             <div className="flex items-center justify-between gap-2 mb-3">
               <span className="text-sm text-muted-foreground">Total Balance</span>
-              <div className="w-8 h-8 rounded-md bg-blue-500/10 flex items-center justify-center shrink-0">
-                <DollarSign className="w-4 h-4 text-blue-500" />
+              <div className="w-9 h-9 rounded-md bg-emerald-500/15 dark:bg-emerald-400/15 flex items-center justify-center shrink-0">
+                <DollarSign className="w-[18px] h-[18px] text-emerald-500 dark:text-emerald-400" />
               </div>
             </div>
             <div className="text-2xl font-bold tracking-tight" data-testid="text-total-balance">
               ${totalBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">Across all accounts</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="gradient-card-purple rounded-md">
           <CardContent className="p-5">
             <div className="flex items-center justify-between gap-2 mb-3">
               <span className="text-sm text-muted-foreground">Total Equity</span>
-              <div className="w-8 h-8 rounded-md bg-purple-500/10 flex items-center justify-center shrink-0">
-                <BarChart3 className="w-4 h-4 text-purple-500" />
+              <div className="w-9 h-9 rounded-md bg-purple-500/15 dark:bg-purple-400/15 flex items-center justify-center shrink-0">
+                <BarChart3 className="w-[18px] h-[18px] text-purple-500 dark:text-purple-400" />
               </div>
             </div>
             <div className="text-2xl font-bold tracking-tight" data-testid="text-total-equity">
               ${totalEquity.toLocaleString("en-US", { minimumFractionDigits: 2 })}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">Current market value</p>
+          </CardContent>
+        </Card>
+        <Card className={cn("rounded-md", totalPnl >= 0 ? "gradient-card-emerald" : "gradient-card-red")}>
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <span className="text-sm text-muted-foreground">Unrealized P&L</span>
+              <div className={cn("w-9 h-9 rounded-md flex items-center justify-center shrink-0", totalPnl >= 0 ? "bg-emerald-500/15" : "bg-red-400/15")}>
+                {totalPnl >= 0 ? (
+                  <ArrowUpRight className="w-[18px] h-[18px] text-emerald-500 dark:text-emerald-400" />
+                ) : (
+                  <ArrowDownRight className="w-[18px] h-[18px] text-red-400" />
+                )}
+              </div>
+            </div>
+            <div className={cn("text-2xl font-bold tracking-tight", totalPnl >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400")} data-testid="text-total-pnl">
+              {totalPnl >= 0 ? "+" : ""}${totalPnl.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {totalBalance > 0 ? `${((totalPnl / totalBalance) * 100).toFixed(2)}% return` : "No open positions"}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -244,7 +258,7 @@ export default function TradingAccounts() {
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <Card key={i}>
+            <Card key={i} className="rounded-md">
               <CardContent className="p-5 space-y-4">
                 <Skeleton className="h-6 w-32" />
                 <Skeleton className="h-10 w-full" />
@@ -255,7 +269,7 @@ export default function TradingAccounts() {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <Card>
+        <Card className="rounded-md">
           <CardContent className="py-16 flex flex-col items-center gap-3">
             <div className="w-14 h-14 rounded-md bg-muted flex items-center justify-center">
               <CandlestickChart className="w-7 h-7 text-muted-foreground" />
@@ -280,30 +294,30 @@ export default function TradingAccounts() {
             return (
               <Card
                 key={account.id}
-                className="hover-elevate cursor-pointer transition-all duration-200"
+                className="rounded-md hover:border-primary/30 dark:hover:border-primary/30 cursor-pointer transition-all duration-200 group"
                 onClick={() => navigate(`/trading/account/${account.id}`)}
                 data-testid={`card-account-${account.id}`}
               >
                 <CardContent className="p-5 space-y-4">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-3">
-                      <div className={cn("w-10 h-10 rounded-md flex items-center justify-center shrink-0", platformColor)}>
-                        <CandlestickChart className="w-5 h-5" />
+                      <div className={cn("w-11 h-11 rounded-md flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105", platformColor.bg)}>
+                        <CandlestickChart className={cn("w-5 h-5", platformColor.text)} />
                       </div>
                       <div>
                         <p className="font-mono font-semibold text-sm" data-testid={`text-account-number-${account.id}`}>
                           {account.accountNumber}
                         </p>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{account.platform}</Badge>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-medium">{account.platform}</Badge>
                           <span className="text-[11px] text-muted-foreground capitalize">{account.type}</span>
                         </div>
                       </div>
                     </div>
                     <Badge
-                      variant={account.status === "active" ? "default" : "secondary"}
+                      variant="secondary"
                       className={cn(
-                        "text-[10px]",
+                        "text-[10px] font-medium",
                         account.status === "active" && "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                       )}
                       data-testid={`badge-status-${account.id}`}
@@ -312,44 +326,44 @@ export default function TradingAccounts() {
                     </Badge>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-4 p-3 rounded-md bg-muted/40 dark:bg-muted/20">
                     <div className="space-y-0.5">
-                      <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Balance</p>
+                      <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Balance</p>
                       <p className="text-lg font-bold tracking-tight" data-testid={`text-balance-${account.id}`}>
                         ${Number(account.balance).toLocaleString("en-US", { minimumFractionDigits: 2 })}
                       </p>
                     </div>
                     <div className="space-y-0.5">
-                      <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Equity</p>
+                      <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Equity</p>
                       <p className="text-lg font-bold tracking-tight" data-testid={`text-equity-${account.id}`}>
                         ${Number(account.equity).toLocaleString("en-US", { minimumFractionDigits: 2 })}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between gap-2 pt-1 border-t">
-                    <div className="flex items-center gap-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
                       <div className={cn(
-                        "flex items-center gap-1 text-xs font-medium",
-                        isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"
+                        "flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-md",
+                        isPositive ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10" : "text-red-500 dark:text-red-400 bg-red-500/10"
                       )}>
-                        {isPositive ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
+                        {isPositive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
                         <span data-testid={`text-pnl-${account.id}`}>
                           {isPositive ? "+" : ""}${pnl.toFixed(2)} ({pnlPercent.toFixed(1)}%)
                         </span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-md">
                       <Scale className="w-3 h-3" />
                       <span>{account.leverage}</span>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-4 gap-1.5" onClick={(e) => e.stopPropagation()}>
+                  <div className="grid grid-cols-4 gap-2 pt-1" onClick={(e) => e.stopPropagation()}>
                     <Button
                       variant="outline"
                       size="sm"
-                      className="text-[11px] px-0"
+                      className="text-[11px] px-0 h-9"
                       onClick={() => navigate(`/trading/account/${account.id}`)}
                       data-testid={`button-view-${account.id}`}
                     >
@@ -358,7 +372,7 @@ export default function TradingAccounts() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="text-[11px] px-0"
+                      className="text-[11px] px-0 h-9"
                       onClick={() => { setSelectedAccount(account); setNewPassword(""); setConfirmPassword(""); setPasswordOpen(true); }}
                       data-testid={`button-password-${account.id}`}
                     >
@@ -367,16 +381,15 @@ export default function TradingAccounts() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="text-[11px] px-0"
+                      className="text-[11px] px-0 h-9"
                       onClick={() => { setSelectedAccount(account); setNewLeverage(account.leverage); setLeverageOpen(true); }}
                       data-testid={`button-leverage-${account.id}`}
                     >
                       <Settings2 className="w-3.5 h-3.5" />
                     </Button>
                     <Button
-                      variant="outline"
                       size="sm"
-                      className="text-[11px] px-0"
+                      className="text-[11px] px-0 h-9"
                       onClick={() => { setSelectedAccount(account); setDepositAmount(""); setDepositOpen(true); }}
                       data-testid={`button-deposit-${account.id}`}
                     >
@@ -394,6 +407,7 @@ export default function TradingAccounts() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Create Trading Account</DialogTitle>
+            <DialogDescription>Select platform, type, leverage, and currency for your new account.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -458,6 +472,7 @@ export default function TradingAccounts() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Change Trading Password</DialogTitle>
+            <DialogDescription>Set a new password for your trading account.</DialogDescription>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
             Account: <span className="font-mono font-medium text-foreground">{selectedAccount?.accountNumber}</span>
@@ -502,6 +517,7 @@ export default function TradingAccounts() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Change Leverage</DialogTitle>
+            <DialogDescription>Update the leverage ratio for your trading account.</DialogDescription>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
             Account: <span className="font-mono font-medium text-foreground">{selectedAccount?.accountNumber}</span>
@@ -526,9 +542,11 @@ export default function TradingAccounts() {
                 </SelectContent>
               </Select>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Changing leverage may affect margin requirements for your open positions. Changes take effect immediately.
-            </p>
+            <div className="rounded-md bg-amber-500/10 border border-amber-500/20 p-3">
+              <p className="text-xs text-amber-700 dark:text-amber-400">
+                Changing leverage may affect margin requirements for your open positions. Changes take effect immediately.
+              </p>
+            </div>
             <Button
               className="w-full"
               onClick={() => leverageMutation.mutate()}
@@ -544,26 +562,26 @@ export default function TradingAccounts() {
       <Dialog open={depositOpen} onOpenChange={setDepositOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Deposit to {selectedAccount?.accountNumber}</DialogTitle>
+            <DialogTitle>Deposit from Wallet</DialogTitle>
+            <DialogDescription>Transfer funds from your wallet to your trading account.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="p-3 rounded-md bg-muted/50 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
-                <Wallet className="w-4 h-4 text-primary" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Transfer Method</p>
-                <p className="text-sm font-medium">Wallet Transfer</p>
-              </div>
+          <div className="flex items-center gap-3 p-3 rounded-md bg-muted/50">
+            <div className="w-9 h-9 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+              <Wallet className="w-4 h-4 text-primary" />
             </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Deposit to</p>
+              <p className="font-mono font-medium text-sm">{selectedAccount?.accountNumber}</p>
+            </div>
+          </div>
+          <div className="space-y-4">
             <div className="space-y-2">
               <Label>Amount (USD)</Label>
               <Input
                 type="number"
-                placeholder="Enter deposit amount"
+                placeholder="Enter amount"
                 value={depositAmount}
                 onChange={(e) => setDepositAmount(e.target.value)}
-                min="1"
                 data-testid="input-deposit-amount"
               />
             </div>
@@ -574,7 +592,7 @@ export default function TradingAccounts() {
                   variant="outline"
                   size="sm"
                   onClick={() => setDepositAmount(v)}
-                  data-testid={`button-deposit-preset-${v}`}
+                  data-testid={`button-deposit-amount-${v}`}
                 >
                   ${v}
                 </Button>
@@ -583,7 +601,7 @@ export default function TradingAccounts() {
             <Button
               className="w-full"
               onClick={() => depositMutation.mutate()}
-              disabled={depositMutation.isPending || !depositAmount || Number(depositAmount) <= 0}
+              disabled={depositMutation.isPending || !depositAmount}
               data-testid="button-submit-deposit"
             >
               {depositMutation.isPending ? "Processing..." : "Deposit Now"}
