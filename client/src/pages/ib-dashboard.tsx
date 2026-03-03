@@ -183,7 +183,7 @@ export default function IBDashboard() {
                 <XAxis dataKey="month" tick={{ fill: "#9ca3af", fontSize: 12 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: "#9ca3af", fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${v}`} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: "rgba(0,0,0,0.8)", border: "none", borderRadius: "8px", color: "#fff" }}
+                  contentStyle={{ backgroundColor: "#1e293b", borderColor: "#334155", borderRadius: "8px", color: "#fff" }}
                   formatter={(value: number) => [`$${value}`, "Commission"]}
                 />
                 <Bar dataKey="commission" fill="#0ea5e9" radius={[4, 4, 0, 0]} />

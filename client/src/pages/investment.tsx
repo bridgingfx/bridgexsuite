@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import {
+  PieChart, Pie, Cell, ResponsiveContainer, Tooltip, AreaChart, Area, XAxis, YAxis, CartesianGrid,
+} from "recharts";
 import {
   TrendingUp,
   PiggyBank,
@@ -20,6 +22,7 @@ import {
   Clock,
   DollarSign,
   Briefcase,
+  TrendingDown,
 } from "lucide-react";
 import type { InvestmentPlan, Investment } from "@shared/schema";
 
@@ -60,17 +63,44 @@ const demoPlanData = [
 ];
 
 const demoPortfolio = [
-  { name: "Fixed Yield", allocation: 35, color: "bg-blue-500" },
-  { name: "Variable", allocation: 25, color: "bg-emerald-500" },
-  { name: "Real Estate", allocation: 22, color: "bg-amber-500" },
-  { name: "Crypto Fund", allocation: 18, color: "bg-purple-500" },
+  { name: "Fixed Yield", allocation: 35, color: "#3b82f6" },
+  { name: "Variable", allocation: 25, color: "#10b981" },
+  { name: "Real Estate", allocation: 22, color: "#f59e0b" },
+  { name: "Crypto Fund", allocation: 18, color: "#8b5cf6" },
 ];
+
+const portfolioColorMap: Record<string, string> = {
+  "Fixed Yield": "bg-blue-500",
+  "Variable": "bg-emerald-500",
+  "Real Estate": "bg-amber-500",
+  "Crypto Fund": "bg-purple-500",
+};
 
 const demoInvestments = [
   { id: "inv-1", planName: "Conservative Growth", amount: 5000, currentValue: 5420, profit: 420, status: "active", maturityDate: "2025-12-15" },
   { id: "inv-2", planName: "Balanced Tech Fund", amount: 10000, currentValue: 11200, profit: 1200, status: "active", maturityDate: "2025-09-01" },
   { id: "inv-3", planName: "Aggressive Crypto", amount: 2500, currentValue: 2150, profit: -350, status: "active", maturityDate: "2025-06-30" },
 ];
+
+const portfolioGrowthData = [
+  { month: "Jan", value: 15200 },
+  { month: "Feb", value: 15800 },
+  { month: "Mar", value: 16100 },
+  { month: "Apr", value: 15900 },
+  { month: "May", value: 16800 },
+  { month: "Jun", value: 17200 },
+  { month: "Jul", value: 17600 },
+  { month: "Aug", value: 18100 },
+  { month: "Sep", value: 18400 },
+  { month: "Oct", value: 18770 },
+];
+
+const chartTooltipStyle = {
+  backgroundColor: "#1e293b",
+  borderColor: "#334155",
+  borderRadius: "8px",
+  color: "#fff",
+};
 
 function getRiskColor(riskLevel: string) {
   switch (riskLevel.toLowerCase()) {
@@ -173,7 +203,7 @@ export default function InvestmentPage() {
               </div>
             </div>
             <div className="mt-4 flex items-center gap-1 text-sm">
-              <TrendingUp size={16} className={card.isPositive ? "text-emerald-500" : "text-red-500"} />
+              {card.isPositive ? <TrendingUp size={16} className="text-emerald-500" /> : <TrendingDown size={16} className="text-red-500" />}
               <span className={`font-medium ${card.isPositive ? "text-emerald-500" : "text-red-500"}`}>{card.trend}</span>
             </div>
           </div>
@@ -269,18 +299,35 @@ export default function InvestmentPage() {
         <div>
           <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4" data-testid="text-portfolio-heading">Portfolio Allocation</h2>
           <div className="bg-card rounded-xl border shadow-sm p-6">
-            <div className="flex items-center gap-2 mb-6">
-              <div className="flex-1 flex rounded-full h-4 overflow-hidden">
-                {demoPortfolio.map((seg) => (
-                  <div key={seg.name} className={`${seg.color} h-full`} style={{ width: `${seg.allocation}%` }} />
-                ))}
-              </div>
+            <div className="flex justify-center mb-4">
+              <ResponsiveContainer width="100%" height={200}>
+                <PieChart>
+                  <Pie
+                    data={demoPortfolio}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={55}
+                    outerRadius={85}
+                    dataKey="allocation"
+                    nameKey="name"
+                    stroke="none"
+                  >
+                    {demoPortfolio.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={chartTooltipStyle}
+                    formatter={(value: number) => [`${value}%`, "Allocation"]}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
             <div className="space-y-3">
               {demoPortfolio.map((seg) => (
                 <div key={seg.name} className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <div className={`w-3 h-3 rounded-full ${seg.color}`} />
+                    <div className={`w-3 h-3 rounded-full ${portfolioColorMap[seg.name]}`} />
                     <span className="text-sm text-gray-600 dark:text-gray-300">{seg.name}</span>
                   </div>
                   <span className="text-sm font-semibold text-gray-900 dark:text-white">{seg.allocation}%</span>
@@ -294,6 +341,27 @@ export default function InvestmentPage() {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div>
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4" data-testid="text-growth-heading">Portfolio Growth</h2>
+        <div className="bg-card rounded-xl border shadow-sm p-6">
+          <ResponsiveContainer width="100%" height={280}>
+            <AreaChart data={portfolioGrowthData}>
+              <defs>
+                <linearGradient id="portfolioGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.2} />
+              <XAxis dataKey="month" tick={{ fontSize: 12, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 12, fill: "#94a3b8" }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
+              <Tooltip contentStyle={chartTooltipStyle} formatter={(value: number) => [`$${value.toLocaleString()}`, "Portfolio Value"]} />
+              <Area type="monotone" dataKey="value" stroke="#0ea5e9" strokeWidth={2} fill="url(#portfolioGradient)" />
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
@@ -333,7 +401,7 @@ export default function InvestmentPage() {
                           <Badge variant="secondary" className={`text-xs ${getStatusColor(inv.status)}`} data-testid={`badge-status-${inv.id}`}>{inv.status}</Badge>
                         </td>
                         <td className="p-4 text-sm text-gray-500 dark:text-gray-400" data-testid={`text-maturity-${inv.id}`}>
-                          {inv.maturityDate ? new Date(inv.maturityDate).toLocaleDateString() : "—"}
+                          {inv.maturityDate ? new Date(inv.maturityDate).toLocaleDateString() : "\u2014"}
                         </td>
                       </tr>
                     );

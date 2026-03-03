@@ -296,12 +296,12 @@ export default function WalletPage() {
                 <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
+                    backgroundColor: "#1e293b",
+                    borderColor: "#334155",
                     borderRadius: "8px",
-                    fontSize: "12px",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                    color: "#fff",
                   }}
+                  itemStyle={{ color: "#fff" }}
                   formatter={(value: number) => [`$${value.toLocaleString()}`, "Balance"]}
                 />
                 <Area type="monotone" dataKey="balance" stroke="#0ea5e9" fill="url(#walletGrad)" strokeWidth={2.5} dot={false} activeDot={{ r: 5, strokeWidth: 2, stroke: "#0ea5e9", fill: "hsl(var(--background))" }} />

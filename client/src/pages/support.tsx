@@ -228,7 +228,7 @@ export default function Support() {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         {statCards.map((card) => (
-          <div key={card.label} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6">
+          <div key={card.label} className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6">
             <div className="flex items-center justify-between gap-2 mb-3">
               <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{card.label}</span>
               <div className={`p-3 rounded-lg shrink-0 ${card.iconBg}`}>
@@ -240,7 +240,7 @@ export default function Support() {
         ))}
       </div>
 
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6">
+      <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6">
         <div className="relative max-w-sm mb-6">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <Input

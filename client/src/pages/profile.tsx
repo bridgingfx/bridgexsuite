@@ -66,7 +66,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6" data-testid="card-account-details">
+      <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6" data-testid="card-account-details">
         <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Account Details</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {fields.map((field) => (
@@ -84,7 +84,7 @@ export default function ProfilePage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6" data-testid="card-account-activity">
+        <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6" data-testid="card-account-activity">
           <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Account Activity</h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between gap-4">
@@ -104,7 +104,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6" data-testid="card-quick-links">
+        <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6" data-testid="card-quick-links">
           <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Quick Links</h3>
           <div className="space-y-3">
             <Link href="/settings">

@@ -116,7 +116,7 @@ function NavItem({ item, expandedMenu, onToggle }: { item: MenuItem; expandedMen
           )}
         >
           <div className="flex items-center gap-3">
-            <span className={cn("flex items-center justify-center w-5 h-5 shrink-0", isActive ? item.iconColor : "")}>
+            <span className={cn("flex items-center justify-center w-5 h-5 shrink-0", item.iconColor || "")}>
               <item.icon className="w-[18px] h-[18px]" />
             </span>
             <span>{item.title}</span>
@@ -156,7 +156,7 @@ function NavItem({ item, expandedMenu, onToggle }: { item: MenuItem; expandedMen
         <Link href={item.url} data-testid={`nav-${item.title.toLowerCase().replace(/\s+/g, '-')}`}>
           <span className={cn(
             "flex items-center justify-center w-5 h-5 shrink-0 transition-colors duration-200",
-            isActive ? item.iconColor : "text-muted-foreground group-hover/nav-item:text-foreground"
+            item.iconColor || "text-muted-foreground group-hover/nav-item:text-foreground"
           )}>
             <item.icon className="w-[18px] h-[18px]" />
           </span>

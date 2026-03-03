@@ -64,7 +64,7 @@ export default function SettingsPage() {
 
       <Tabs defaultValue="profile">
         <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-6">
-          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-3">
+          <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-3">
             <TabsList className="flex flex-col w-full h-auto gap-1 bg-transparent">
               {tabs.map((tab) => (
                 <TabsTrigger key={tab.value} value={tab.value} className="w-full justify-start" data-testid={`tab-${tab.value}`}>
@@ -77,7 +77,7 @@ export default function SettingsPage() {
 
           <div>
             <TabsContent value="profile" className="mt-0">
-              <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6">
+              <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6">
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Profile Information</h3>
                 <div className="flex items-center gap-4 flex-wrap mb-6">
                   <Avatar className="w-16 h-16">
@@ -119,7 +119,7 @@ export default function SettingsPage() {
             </TabsContent>
 
             <TabsContent value="security" className="mt-0 space-y-6">
-              <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6">
+              <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6">
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Change Password</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Update your password regularly for security</p>
                 <div className="space-y-4 max-w-md">
@@ -139,7 +139,7 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6">
+              <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6">
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Two-Factor Authentication</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Add an extra layer of security to your account</p>
                 <div className="flex items-center justify-between gap-4 max-w-md p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50">
@@ -156,7 +156,7 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6">
+              <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6">
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Active Sessions</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Manage your active login sessions</p>
                 <div className="flex items-center justify-between gap-4 p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50">
@@ -170,7 +170,7 @@ export default function SettingsPage() {
             </TabsContent>
 
             <TabsContent value="notifications" className="mt-0">
-              <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6">
+              <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6">
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Notification Preferences</h3>
                 <div className="space-y-6">
                   <div>
@@ -221,7 +221,7 @@ export default function SettingsPage() {
             </TabsContent>
 
             <TabsContent value="appearance" className="mt-0">
-              <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6">
+              <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6">
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Appearance</h3>
                 <div className="space-y-6">
                   <div>

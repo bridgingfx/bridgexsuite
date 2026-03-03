@@ -118,14 +118,14 @@ export default function PropTradingPage() {
                 key={challenge.id}
                 className={`relative bg-white dark:bg-gray-900 p-6 rounded-xl border shadow-sm hover:shadow-md transition-all ${
                   isPopular
-                    ? "border-blue-500 ring-2 ring-blue-500/20 bg-blue-50/50 dark:bg-blue-900/10"
+                    ? "border-sky-500 ring-2 ring-sky-500/20 bg-sky-50/50 dark:bg-sky-900/10"
                     : "border-gray-100 dark:border-gray-800"
                 }`}
                 data-testid={`card-challenge-${challenge.id}`}
               >
                 {isPopular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <Badge className="bg-blue-600 text-white border-0">
+                    <Badge className="bg-sky-600 text-white border-0">
                       <Star className="w-3 h-3 mr-1" />
                       POPULAR
                     </Badge>
@@ -139,7 +139,7 @@ export default function PropTradingPage() {
                   <h2 className="text-4xl font-bold text-gray-900 dark:text-white" data-testid={`text-funding-${challenge.id}`}>
                     ${Number(challenge.accountSize).toLocaleString()}
                   </h2>
-                  <p className="text-lg font-semibold text-blue-600 dark:text-blue-400 mt-1" data-testid={`text-price-${challenge.id}`}>
+                  <p className="text-lg font-semibold text-sky-600 dark:text-sky-400 mt-1" data-testid={`text-price-${challenge.id}`}>
                     ${Number(challenge.price).toFixed(0)}
                   </p>
                 </div>
@@ -166,7 +166,7 @@ export default function PropTradingPage() {
                 </div>
 
                 <Button
-                  className={`w-full ${isPopular ? "bg-blue-600 text-white" : ""}`}
+                  className={`w-full ${isPopular ? "bg-sky-600 text-white" : ""}`}
                   variant={isPopular ? "default" : "outline"}
                   onClick={() => purchaseMutation.mutate(challenge.id)}
                   disabled={purchaseMutation.isPending}
@@ -208,7 +208,7 @@ export default function PropTradingPage() {
                     </h3>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Evaluation</p>
                   </div>
-                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg">
+                  <div className="p-3 bg-sky-50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400 rounded-lg">
                     <DollarSign className="w-5 h-5" />
                   </div>
                 </div>
@@ -285,7 +285,7 @@ export default function PropTradingPage() {
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white">$50K</h3>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Evaluation</p>
                   </div>
-                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg">
+                  <div className="p-3 bg-sky-50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400 rounded-lg">
                     <DollarSign className="w-5 h-5" />
                   </div>
                 </div>

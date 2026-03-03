@@ -9,6 +9,10 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import {
+  PieChart, Pie, Cell, ResponsiveContainer, Tooltip,
+  LineChart, Line, XAxis, YAxis, CartesianGrid,
+} from "recharts";
+import {
   Users,
   Square,
   TrendingUp,
@@ -80,6 +84,31 @@ const demoTraders = [
     avatarBg: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400",
   },
 ];
+
+const allocationData = [
+  { name: "Alex Morgan", value: 35, color: "#3b82f6" },
+  { name: "Sarah Chen", value: 30, color: "#8b5cf6" },
+  { name: "Marcus Webb", value: 20, color: "#f59e0b" },
+  { name: "Elena Ivanova", value: 15, color: "#10b981" },
+];
+
+const performanceData = [
+  { month: "Jan", alex: 2.1, sarah: 3.2, marcus: 4.5, elena: 1.8 },
+  { month: "Feb", alex: 3.5, sarah: 2.8, marcus: -1.2, elena: 2.4 },
+  { month: "Mar", alex: 1.8, sarah: 4.1, marcus: 5.8, elena: 3.1 },
+  { month: "Apr", alex: 4.2, sarah: 3.5, marcus: 2.3, elena: 1.5 },
+  { month: "May", alex: 2.8, sarah: 5.2, marcus: 6.1, elena: 4.2 },
+  { month: "Jun", alex: 3.1, sarah: 2.9, marcus: 3.4, elena: 2.8 },
+  { month: "Jul", alex: 5.0, sarah: 4.8, marcus: 7.2, elena: 3.5 },
+  { month: "Aug", alex: 2.4, sarah: 3.6, marcus: -0.8, elena: 4.1 },
+];
+
+const chartTooltipStyle = {
+  backgroundColor: "#1e293b",
+  borderColor: "#334155",
+  borderRadius: "8px",
+  color: "#fff",
+};
 
 function riskBadgeColor(score: number): string {
   if (score <= 3) return "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400";
@@ -171,6 +200,80 @@ export default function CopyTradingPage() {
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4" data-testid="text-performance-heading">Trader Performance</h2>
+          <div className="bg-card rounded-xl border shadow-sm p-6">
+            <ResponsiveContainer width="100%" height={280}>
+              <LineChart data={performanceData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.2} />
+                <XAxis dataKey="month" tick={{ fontSize: 12, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 12, fill: "#94a3b8" }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}%`} />
+                <Tooltip contentStyle={chartTooltipStyle} formatter={(value: number) => [`${value}%`, ""]} />
+                <Line type="monotone" dataKey="alex" stroke="#3b82f6" strokeWidth={2} dot={false} name="Alex Morgan" />
+                <Line type="monotone" dataKey="sarah" stroke="#8b5cf6" strokeWidth={2} dot={false} name="Sarah Chen" />
+                <Line type="monotone" dataKey="marcus" stroke="#f59e0b" strokeWidth={2} dot={false} name="Marcus Webb" />
+                <Line type="monotone" dataKey="elena" stroke="#10b981" strokeWidth={2} dot={false} name="Elena Ivanova" />
+              </LineChart>
+            </ResponsiveContainer>
+            <div className="flex items-center gap-4 mt-4 flex-wrap">
+              {[
+                { name: "Alex Morgan", color: "bg-blue-500" },
+                { name: "Sarah Chen", color: "bg-purple-500" },
+                { name: "Marcus Webb", color: "bg-amber-500" },
+                { name: "Elena Ivanova", color: "bg-emerald-500" },
+              ].map((legend) => (
+                <div key={legend.name} className="flex items-center gap-2">
+                  <div className={`w-3 h-3 rounded-full ${legend.color}`} />
+                  <span className="text-xs text-gray-500 dark:text-gray-400">{legend.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4" data-testid="text-allocation-heading">Portfolio Allocation</h2>
+          <div className="bg-card rounded-xl border shadow-sm p-6">
+            <div className="flex justify-center mb-4">
+              <ResponsiveContainer width="100%" height={200}>
+                <PieChart>
+                  <Pie
+                    data={allocationData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={55}
+                    outerRadius={85}
+                    dataKey="value"
+                    nameKey="name"
+                    stroke="none"
+                  >
+                    {allocationData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={chartTooltipStyle}
+                    formatter={(value: number) => [`${value}%`, "Allocation"]}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="space-y-3">
+              {allocationData.map((seg) => (
+                <div key={seg.name} className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: seg.color }} />
+                    <span className="text-sm text-gray-600 dark:text-gray-300">{seg.name}</span>
+                  </div>
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white">{seg.value}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
 
       <div>

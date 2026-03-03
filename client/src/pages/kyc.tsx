@@ -171,7 +171,7 @@ export default function KycPage() {
         </Button>
       </div>
 
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6" data-testid="card-verification-status">
+      <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6" data-testid="card-verification-status">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
             <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg shrink-0">
@@ -190,7 +190,7 @@ export default function KycPage() {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6" data-testid="card-verification-steps">
+      <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6" data-testid="card-verification-steps">
         <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Verification Steps</h3>
         <div className="flex flex-col md:flex-row gap-6">
           {verificationSteps.map((step, idx) => (
@@ -215,7 +215,7 @@ export default function KycPage() {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-visible">
+      <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all overflow-visible">
         <Tabs defaultValue="all">
           <div className="border-b border-gray-100 dark:border-gray-800 px-6 pt-4">
             <TabsList>
@@ -251,7 +251,7 @@ export default function KycPage() {
         </Tabs>
       </div>
 
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6" data-testid="card-why-verify">
+      <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6" data-testid="card-why-verify">
         <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Why Verify Your Account?</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {whyVerifyBenefits.map((benefit) => (

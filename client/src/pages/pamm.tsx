@@ -8,6 +8,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip,
+  BarChart, Bar,
+} from "recharts";
+import {
   Landmark,
   TrendingUp,
   Users,
@@ -82,6 +86,31 @@ const demoManagers = [
     iconBg: "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400",
   },
 ];
+
+const performanceData = [
+  { month: "Jan", alpha: 3.2, momentum: 5.1, vertex: 7.8, phoenix: 12.4 },
+  { month: "Feb", alpha: 4.1, momentum: 6.3, vertex: 8.2, phoenix: 10.1 },
+  { month: "Mar", alpha: 3.8, momentum: 4.8, vertex: 9.5, phoenix: 15.2 },
+  { month: "Apr", alpha: 5.2, momentum: 7.1, vertex: 8.8, phoenix: 11.8 },
+  { month: "May", alpha: 4.5, momentum: 6.8, vertex: 10.2, phoenix: 14.5 },
+  { month: "Jun", alpha: 4.8, momentum: 7.2, vertex: 9.5, phoenix: 14.2 },
+];
+
+const aumGrowthData = [
+  { month: "Jan", aum: 7.2 },
+  { month: "Feb", aum: 7.8 },
+  { month: "Mar", aum: 8.1 },
+  { month: "Apr", aum: 8.5 },
+  { month: "May", aum: 9.0 },
+  { month: "Jun", aum: 9.5 },
+];
+
+const chartTooltipStyle = {
+  backgroundColor: "#1e293b",
+  borderColor: "#334155",
+  borderRadius: "8px",
+  color: "#fff",
+};
 
 function getRiskColor(riskLevel: string) {
   switch (riskLevel?.toLowerCase()) {
@@ -168,6 +197,60 @@ export default function PammPage() {
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4" data-testid="text-performance-heading">Monthly Performance (%)</h2>
+          <div className="bg-card rounded-xl border shadow-sm p-6">
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={performanceData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.2} />
+                <XAxis dataKey="month" tick={{ fontSize: 12, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 12, fill: "#94a3b8" }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}%`} />
+                <Tooltip contentStyle={chartTooltipStyle} formatter={(value: number) => [`${value}%`, ""]} />
+                <Bar dataKey="alpha" fill="#3b82f6" radius={[2, 2, 0, 0]} name="Alpha Capital" />
+                <Bar dataKey="momentum" fill="#8b5cf6" radius={[2, 2, 0, 0]} name="Momentum Trading" />
+                <Bar dataKey="vertex" fill="#10b981" radius={[2, 2, 0, 0]} name="Vertex Quant" />
+                <Bar dataKey="phoenix" fill="#ef4444" radius={[2, 2, 0, 0]} name="Phoenix Growth" />
+              </BarChart>
+            </ResponsiveContainer>
+            <div className="flex items-center gap-4 mt-4 flex-wrap">
+              {[
+                { name: "Alpha Capital", color: "bg-blue-500" },
+                { name: "Momentum Trading", color: "bg-purple-500" },
+                { name: "Vertex Quant", color: "bg-emerald-500" },
+                { name: "Phoenix Growth", color: "bg-red-500" },
+              ].map((legend) => (
+                <div key={legend.name} className="flex items-center gap-2">
+                  <div className={`w-3 h-3 rounded-full ${legend.color}`} />
+                  <span className="text-xs text-gray-500 dark:text-gray-400">{legend.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4" data-testid="text-aum-heading">AUM Growth ($M)</h2>
+          <div className="bg-card rounded-xl border shadow-sm p-6">
+            <ResponsiveContainer width="100%" height={280}>
+              <AreaChart data={aumGrowthData}>
+                <defs>
+                  <linearGradient id="aumGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.2} />
+                <XAxis dataKey="month" tick={{ fontSize: 12, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 12, fill: "#94a3b8" }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${v}M`} />
+                <Tooltip contentStyle={chartTooltipStyle} formatter={(value: number) => [`$${value}M`, "Total AUM"]} />
+                <Area type="monotone" dataKey="aum" stroke="#0ea5e9" strokeWidth={2} fill="url(#aumGradient)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
       </div>
 
       <div>

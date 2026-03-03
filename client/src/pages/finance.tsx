@@ -127,6 +127,22 @@ export default function FinancePage() {
           <p className="text-sm text-gray-500 dark:text-gray-400">Your financial overview and transaction history</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            className="bg-emerald-600 text-white"
+            onClick={() => setActiveTab("deposits")}
+            data-testid="button-deposit"
+          >
+            <ArrowUpRight className="w-4 h-4 mr-2" />
+            Deposit
+          </Button>
+          <Button
+            className="bg-red-600 text-white"
+            onClick={() => setActiveTab("withdrawals")}
+            data-testid="button-withdraw"
+          >
+            <ArrowDownRight className="w-4 h-4 mr-2" />
+            Withdraw
+          </Button>
           <Button variant="outline" size="sm" data-testid="button-export-transactions">
             <Download className="w-4 h-4 mr-2" />
             Export
