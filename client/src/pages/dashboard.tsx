@@ -161,7 +161,7 @@ export default function Dashboard() {
   });
 
   const { data: allTransactions } = useQuery<Transaction[]>({
-    queryKey: ["/api/transactions"],
+    queryKey: ["/api/transactions/recent"],
   });
 
   const { toast } = useToast();
@@ -400,10 +400,9 @@ export default function Dashboard() {
       <div className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden" data-testid="transaction-history">
         <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
           <h3 className="font-bold text-gray-900 dark:text-white">Transaction History</h3>
-          <button className="flex items-center gap-1.5 text-sm text-primary font-medium" data-testid="button-export-transactions">
-            <Download size={14} />
-            Export
-          </button>
+          <Link href="/wallet">
+            <span className="text-sm text-primary font-medium cursor-pointer" data-testid="link-view-all-transactions">View All →</span>
+          </Link>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left" data-testid="table-transaction-history">
@@ -419,7 +418,7 @@ export default function Dashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-              {(allTransactions && allTransactions.length > 0 ? allTransactions : demoTransactions).map((tx: any, i: number) => (
+              {(allTransactions && allTransactions.length > 0 ? allTransactions.slice(0, 5) : demoTransactions).map((tx: any, i: number) => (
                 <tr key={tx.id || i} className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors" data-testid={`row-transaction-${i}`}>
                   <td className="px-6 py-4 text-sm font-mono text-gray-700 dark:text-gray-300" data-testid={`text-tx-ref-${i}`}>
                     {tx.reference || tx.id?.slice(0, 12) || "N/A"}
@@ -532,19 +531,17 @@ export default function Dashboard() {
                   }`} data-testid="text-detail-status">{viewTx.status}</span>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">Created</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">Created Date & Time</p>
                   <p className="text-sm font-medium text-gray-900 dark:text-white" data-testid="text-detail-created">
-                    {viewTx.createdAt ? new Date(viewTx.createdAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "N/A"}
+                    {viewTx.createdAt ? new Date(viewTx.createdAt).toLocaleString("en-US", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "N/A"}
                   </p>
                 </div>
-                {viewTx.processedAt && (
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">Processed At</p>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white" data-testid="text-detail-processed">
-                      {new Date(viewTx.processedAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}
-                    </p>
-                  </div>
-                )}
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">Approved Date & Time</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white" data-testid="text-detail-processed">
+                    {viewTx.processedAt ? new Date(viewTx.processedAt).toLocaleString("en-US", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "—"}
+                  </p>
+                </div>
                 {viewTx.approvedBy && (
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">Approved By</p>

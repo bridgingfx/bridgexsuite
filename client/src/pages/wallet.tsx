@@ -4,6 +4,13 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Wallet as WalletIcon,
   ArrowUpRight,
   ArrowDownRight,
@@ -18,9 +25,14 @@ import {
   Gift,
   RefreshCw,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Users,
   MessageSquare,
+  Eye,
+  XCircle,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import type { Transaction, TradingAccount } from "@shared/schema";
 
 const depositMethods = [
@@ -140,6 +152,25 @@ export default function WalletPage() {
     },
   });
 
+  const [txPage, setTxPage] = useState(1);
+  const [viewTx, setViewTx] = useState<Transaction | null>(null);
+  const txPerPage = 10;
+
+  const cancelMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest("PATCH", `/api/transactions/${id}/cancel`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions/recent"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      toast({ title: "Transaction cancelled", description: "Your withdrawal request has been cancelled." });
+    },
+    onError: () => {
+      toast({ title: "Cancel failed", variant: "destructive" });
+    },
+  });
+
   const deposits = (transactions || []).filter((t) => t.type === "deposit");
   const withdrawals = (transactions || []).filter((t) => t.type === "withdrawal");
   const totalDeposits = deposits.reduce((sum, d) => sum + Number(d.amount), 0);
@@ -155,8 +186,6 @@ export default function WalletPage() {
       toAccount: prev.fromAccount,
     }));
   };
-
-  const allTx = transactions && transactions.length > 0 ? transactions : demoTransactions;
 
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto">
@@ -514,68 +543,225 @@ export default function WalletPage() {
         </div>
       )}
 
-      <div className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden" data-testid="transaction-history">
-        <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
-          <h3 className="font-bold text-gray-900 dark:text-white">Transaction History</h3>
-          <button className="text-sm text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1" data-testid="button-export">
-            <Download size={16} /> Export
-          </button>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left" data-testid="table-transactions">
-            <thead className="bg-gray-50 dark:bg-gray-800/50">
-              <tr>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">ID</th>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</th>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Amount</th>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-              {isLoading ? (
-                <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">Loading...</td></tr>
-              ) : (allTx as any[]).map((tx: any, i: number) => (
-                <tr key={tx.id || i} className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors" data-testid={`row-transaction-${i}`}>
-                  <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 font-mono">
-                    {tx.reference || tx.id}
-                  </td>
-                  <td className="px-6 py-4 text-sm">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
-                      tx.type === "deposit" ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" :
-                      tx.type === "withdrawal" ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" :
-                      "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
-                    }`}>
-                      {tx.type}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                    {tx.description || tx.method?.replace(/_/g, " ") || "-"}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                    {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : tx.date || "N/A"}
-                  </td>
-                  <td className={`px-6 py-4 text-sm font-bold ${
-                    tx.type === "withdrawal" ? "text-red-500" : "text-green-500"
-                  }`}>
-                    {tx.type === "withdrawal" ? "-" : "+"}${Math.abs(Number(tx.amount)).toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                  </td>
-                  <td className="px-6 py-4 text-sm">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
-                      tx.status === "completed" || tx.status === "approved" ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" :
-                      tx.status === "pending" ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" :
-                      "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
-                    }`}>
-                      {tx.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      {(() => {
+        const txList = transactions && transactions.length > 0 ? transactions : demoTransactions;
+        const totalPages = Math.ceil(txList.length / txPerPage);
+        const paginatedTx = txList.slice((txPage - 1) * txPerPage, txPage * txPerPage);
+
+        return (
+          <div className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden" data-testid="wallet-transaction-history">
+            <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
+              <h3 className="font-bold text-gray-900 dark:text-white">Transaction History</h3>
+              <button className="flex items-center gap-1.5 text-sm text-primary font-medium" data-testid="button-export">
+                <Download size={14} /> Export
+              </button>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left" data-testid="table-wallet-transactions">
+                <thead className="bg-gray-50 dark:bg-gray-800/50">
+                  <tr>
+                    <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">ID</th>
+                    <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
+                    <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</th>
+                    <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
+                    <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Amount</th>
+                    <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                  {isLoading ? (
+                    <tr><td colSpan={7} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">Loading...</td></tr>
+                  ) : (paginatedTx as any[]).map((tx: any, i: number) => {
+                    const globalIdx = (txPage - 1) * txPerPage + i;
+                    return (
+                      <tr key={tx.id || i} className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors" data-testid={`row-wallet-tx-${globalIdx}`}>
+                        <td className="px-6 py-4 text-sm font-mono text-gray-700 dark:text-gray-300" data-testid={`text-wallet-tx-ref-${globalIdx}`}>
+                          {tx.reference || tx.id?.slice(0, 12) || "N/A"}
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
+                            tx.type === "deposit" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" :
+                            tx.type === "withdrawal" ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" :
+                            tx.type === "profit" ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" :
+                            "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+                          }`} data-testid={`badge-wallet-tx-type-${globalIdx}`}>
+                            {tx.type}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm font-medium text-gray-700 dark:text-gray-300" data-testid={`text-wallet-tx-desc-${globalIdx}`}>
+                          {tx.method ? tx.method.replace(/_/g, " ") : tx.description || "N/A"}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400" data-testid={`text-wallet-tx-date-${globalIdx}`}>
+                          {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : tx.date || "N/A"}
+                        </td>
+                        <td className={`px-6 py-4 text-sm font-bold ${
+                          tx.type === "withdrawal" ? "text-red-500" : "text-green-500"
+                        }`} data-testid={`text-wallet-tx-amount-${globalIdx}`}>
+                          {tx.type === "withdrawal" ? "-" : "+"}${Math.abs(Number(tx.amount)).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="px-6 py-4 text-sm" data-testid={`badge-wallet-tx-status-${globalIdx}`}>
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
+                            tx.status === "completed" || tx.status === "approved" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" :
+                            tx.status === "pending" ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" :
+                            tx.status === "rejected" ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" :
+                            tx.status === "cancelled" ? "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300" :
+                            "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+                          }`}>
+                            {tx.status === "approved" ? "Approved" : tx.status === "pending" ? "Pending" : tx.status === "rejected" ? "Rejected" : tx.status === "cancelled" ? "Cancelled" : tx.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => setViewTx(tx)}
+                              className="p-1.5 rounded-lg text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                              title="View details"
+                              data-testid={`button-wallet-view-tx-${globalIdx}`}
+                            >
+                              <Eye size={16} />
+                            </button>
+                            {tx.status === "pending" && tx.type === "withdrawal" && (
+                              <button
+                                onClick={() => cancelMutation.mutate(tx.id)}
+                                className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                title="Cancel withdrawal"
+                                disabled={cancelMutation.isPending}
+                                data-testid={`button-wallet-cancel-tx-${globalIdx}`}
+                              >
+                                <XCircle size={16} />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            {totalPages > 1 && (
+              <div className="p-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                <p className="text-sm text-gray-500 dark:text-gray-400" data-testid="text-wallet-tx-pagination-info">
+                  Showing {(txPage - 1) * txPerPage + 1}–{Math.min(txPage * txPerPage, txList.length)} of {txList.length} transactions
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setTxPage((p) => Math.max(1, p - 1))}
+                    disabled={txPage === 1}
+                    data-testid="button-wallet-tx-prev"
+                  >
+                    <ChevronLeft size={16} />
+                  </Button>
+                  {Array.from({ length: totalPages }, (_, idx) => (
+                    <Button
+                      key={idx + 1}
+                      variant={txPage === idx + 1 ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setTxPage(idx + 1)}
+                      data-testid={`button-wallet-tx-page-${idx + 1}`}
+                    >
+                      {idx + 1}
+                    </Button>
+                  ))}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setTxPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={txPage === totalPages}
+                    data-testid="button-wallet-tx-next"
+                  >
+                    <ChevronRight size={16} />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
+      <Dialog open={!!viewTx} onOpenChange={(open) => !open && setViewTx(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Transaction Details</DialogTitle>
+            <DialogDescription>Full details for transaction {viewTx?.reference || viewTx?.id?.slice(0, 12)}</DialogDescription>
+          </DialogHeader>
+          {viewTx && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">Reference</p>
+                  <p className="font-mono text-sm font-medium text-gray-900 dark:text-white" data-testid="text-wallet-detail-ref">{viewTx.reference || "N/A"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">Type</p>
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize mt-1 ${
+                    viewTx.type === "deposit" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" :
+                    viewTx.type === "withdrawal" ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" :
+                    "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+                  }`} data-testid="text-wallet-detail-type">{viewTx.type}</span>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">Amount</p>
+                  <p className={`text-lg font-bold ${viewTx.type === "withdrawal" ? "text-red-500" : "text-green-500"}`} data-testid="text-wallet-detail-amount">
+                    {viewTx.type === "withdrawal" ? "-" : "+"}${Math.abs(Number(viewTx.amount)).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">Currency</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white" data-testid="text-wallet-detail-currency">{viewTx.currency}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">Method</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white capitalize" data-testid="text-wallet-detail-method">{viewTx.method?.replace(/_/g, " ") || "N/A"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">Status</p>
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize mt-1 ${
+                    viewTx.status === "approved" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" :
+                    viewTx.status === "pending" ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" :
+                    viewTx.status === "rejected" ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" :
+                    viewTx.status === "cancelled" ? "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300" :
+                    "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+                  }`} data-testid="text-wallet-detail-status">{viewTx.status}</span>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">Created Date & Time</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white" data-testid="text-wallet-detail-created">
+                    {viewTx.createdAt ? new Date(viewTx.createdAt).toLocaleString("en-US", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "N/A"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">Approved Date & Time</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white" data-testid="text-wallet-detail-processed">
+                    {viewTx.processedAt ? new Date(viewTx.processedAt).toLocaleString("en-US", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "—"}
+                  </p>
+                </div>
+                {viewTx.approvedBy && (
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">Approved By</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white" data-testid="text-wallet-detail-approved-by">{viewTx.approvedBy}</p>
+                  </div>
+                )}
+              </div>
+              {viewTx.notes && (
+                <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">Notes / Comment</p>
+                  <p className="text-sm text-gray-700 dark:text-gray-300" data-testid="text-wallet-detail-notes">{viewTx.notes}</p>
+                </div>
+              )}
+              {viewTx.rejectionReason && (
+                <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+                  <p className="text-xs text-red-500 uppercase mb-1">Rejection Reason</p>
+                  <p className="text-sm text-red-700 dark:text-red-400" data-testid="text-wallet-detail-rejection">{viewTx.rejectionReason}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
