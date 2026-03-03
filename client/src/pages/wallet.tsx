@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -276,44 +276,42 @@ export default function WalletPage() {
         </div>
       </div>
 
-      <Card className="bg-white dark:bg-card border border-gray-100 dark:border-gray-800 shadow-sm rounded-xl">
-        <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
-          <CardTitle className="text-lg font-bold text-gray-900 dark:text-white">Wallet Balance Growth</CardTitle>
+      <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
+        <div className="flex items-center justify-between gap-2 mb-4">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">Wallet Balance Growth</h2>
           <Badge variant="secondary" className="text-xs font-normal">Last 7 months</Badge>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="h-[240px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={walletHistory}>
-                <defs>
-                  <linearGradient id="walletGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.25} />
-                    <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
-                <XAxis dataKey="month" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#1e293b",
-                    borderColor: "#334155",
-                    borderRadius: "8px",
-                    color: "#fff",
-                  }}
-                  itemStyle={{ color: "#fff" }}
-                  formatter={(value: number) => [`$${value.toLocaleString()}`, "Balance"]}
-                />
-                <Area type="monotone" dataKey="balance" stroke="#0ea5e9" fill="url(#walletGrad)" strokeWidth={2.5} dot={false} activeDot={{ r: 5, strokeWidth: 2, stroke: "#0ea5e9", fill: "hsl(var(--background))" }} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+        <div className="h-[240px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={walletHistory}>
+              <defs>
+                <linearGradient id="walletGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
+              <XAxis dataKey="month" tick={{ fill: "#94a3b8", fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "#1e293b",
+                  borderColor: "#334155",
+                  borderRadius: "8px",
+                  color: "#fff",
+                }}
+                itemStyle={{ color: "#fff" }}
+                formatter={(value: number) => [`$${value.toLocaleString()}`, "Balance"]}
+              />
+              <Area type="monotone" dataKey="balance" stroke="#0ea5e9" fill="url(#walletGrad)" strokeWidth={2.5} dot={false} activeDot={{ r: 5, strokeWidth: 2, stroke: "#0ea5e9", fill: "#0f172a" }} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
 
-      <Card className="bg-white dark:bg-card border border-gray-100 dark:border-gray-800 shadow-sm rounded-xl">
-        <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2 flex-wrap">
-          <CardTitle className="text-lg font-bold text-gray-900 dark:text-white">Transaction History</CardTitle>
+      <div className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between gap-2 p-6 pb-4 flex-wrap">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">Transaction History</h2>
           <div className="flex items-center gap-1">
             {([
               { key: "all", label: "All" },
@@ -331,11 +329,11 @@ export default function WalletPage() {
               </Button>
             ))}
           </div>
-        </CardHeader>
-        <CardContent className="p-0">
+        </div>
+        <div className="px-0">
           <TransactionTable transactions={filteredTransactions} isLoading={isLoading} />
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <TransactionDialog open={depositOpen} onOpenChange={setDepositOpen} type="deposit" />
       <TransactionDialog open={withdrawOpen} onOpenChange={setWithdrawOpen} type="withdrawal" />
