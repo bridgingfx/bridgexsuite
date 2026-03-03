@@ -453,6 +453,33 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/commission-transfer", requireAuth, async (req, res) => {
+    try {
+      const userId = req.session.userId!;
+      const userCommissions = await storage.getCommissionsByUser(userId);
+      const paidCommissions = userCommissions.filter(c => c.status === "paid");
+      const totalAmount = paidCommissions.reduce((s, c) => s + Number(c.amount), 0);
+      if (totalAmount <= 0) {
+        return res.status(400).json({ error: "No commission balance available to transfer" });
+      }
+      await storage.createTransaction({
+        userId,
+        type: "deposit",
+        amount: totalAmount.toString(),
+        currency: "USD",
+        method: "commission_transfer",
+        notes: `Commission transfer to wallet ($${totalAmount.toFixed(2)})`,
+        status: "approved",
+      });
+      for (const comm of paidCommissions) {
+        await storage.updateCommissionStatus(comm.id, "transferred");
+      }
+      res.json({ success: true, message: `$${totalAmount.toFixed(2)} commission transferred to wallet` });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message || "Commission transfer failed" });
+    }
+  });
+
   // Commissions
   app.get("/api/commissions", async (req, res) => {
     try {

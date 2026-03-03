@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import {
   DollarSign,
   ArrowUpRight,
@@ -15,10 +17,45 @@ import {
   ArrowUpDown,
   CreditCard,
   Repeat,
+  Wallet,
+  TrendingUp,
+  TrendingDown,
+  Send,
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  AreaChart,
+  Area,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+} from "recharts";
 
 type FilterTab = "all" | "deposits" | "withdrawals" | "internal";
+
+const cashFlowData = [
+  { name: "Jan", deposit: 4000, withdraw: 2400, commission: 450 },
+  { name: "Feb", deposit: 3000, withdraw: 1398, commission: 320 },
+  { name: "Mar", deposit: 2000, withdraw: 9800, commission: 150 },
+  { name: "Apr", deposit: 2780, withdraw: 3908, commission: 290 },
+  { name: "May", deposit: 1890, withdraw: 4800, commission: 480 },
+  { name: "Jun", deposit: 2390, withdraw: 3800, commission: 350 },
+  { name: "Jul", deposit: 3490, withdraw: 4300, commission: 510 },
+];
+
+const balanceGrowthData = [
+  { name: "Jan", value: 18000 },
+  { name: "Feb", value: 21000 },
+  { name: "Mar", value: 19500 },
+  { name: "Apr", value: 24500 },
+  { name: "May", value: 28000 },
+  { name: "Jun", value: 32000 },
+  { name: "Jul", value: 34500 },
+];
 
 const demoTransactions = [
   { id: 1, type: "deposit", amount: 5000, method: "Bank Transfer", status: "completed", createdAt: "2026-02-15T10:30:00Z", reference: "DEP-001" },
@@ -33,13 +70,45 @@ const demoTransactions = [
   { id: 10, type: "deposit", amount: 4000, method: "Bank Transfer", status: "pending", createdAt: "2026-02-06T09:45:00Z", reference: "DEP-005" },
 ];
 
+const chartTooltipStyle = {
+  backgroundColor: "#1e293b",
+  borderColor: "#334155",
+  borderRadius: "8px",
+  color: "#fff",
+};
+
 export default function FinancePage() {
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [, navigate] = useLocation();
+  const { toast } = useToast();
 
   const { data: transactions, isLoading } = useQuery<any[]>({
     queryKey: ["/api/transactions"],
+  });
+
+  const { data: commissions } = useQuery<any[]>({
+    queryKey: ["/api/commissions"],
+  });
+
+  const paidCommissions = commissions?.filter((c: any) => c.status === "paid") || [];
+  const totalCommissions = paidCommissions.reduce((s: number, c: any) => s + Number(c.amount), 0) || 2121.25;
+
+  const transferCommissionMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("POST", "/api/commission-transfer", {
+        amount: totalCommissions.toString(),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/commissions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      toast({ title: `$${totalCommissions.toFixed(2)} commission transferred to wallet` });
+    },
+    onError: (error: any) => {
+      toast({ title: error?.message || "Commission transfer failed", variant: "destructive" });
+    },
   });
 
   const allTxns = transactions?.length ? transactions : demoTransactions;
@@ -48,14 +117,13 @@ export default function FinancePage() {
   const withdrawals = allTxns.filter(t => t.type === "withdrawal");
   const totalDeposited = deposits.filter(t => t.status === "approved" || t.status === "completed").reduce((s, t) => s + Number(t.amount), 0);
   const totalWithdrawn = withdrawals.filter(t => t.status === "approved" || t.status === "completed").reduce((s, t) => s + Number(t.amount), 0);
-  const pendingCount = allTxns.filter(t => t.status === "pending").length;
-  const totalTransactions = allTxns.length;
+  const walletBalance = totalDeposited - totalWithdrawn;
 
   const kpis = [
-    { title: "Total Deposited", value: `$${totalDeposited.toLocaleString("en-US", { minimumFractionDigits: 2 })}`, icon: ArrowUpRight, iconBg: "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400", trend: "+12.5%", isPositive: true },
-    { title: "Total Withdrawn", value: `$${totalWithdrawn.toLocaleString("en-US", { minimumFractionDigits: 2 })}`, icon: ArrowDownRight, iconBg: "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400", trend: "-5.2%", isPositive: false },
-    { title: "Net Balance", value: `$${(totalDeposited - totalWithdrawn).toLocaleString("en-US", { minimumFractionDigits: 2 })}`, icon: DollarSign, iconBg: "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400", trend: "+8.3%", isPositive: true },
-    { title: "Pending Transactions", value: pendingCount.toString(), icon: Clock, iconBg: "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400", trend: `${totalTransactions} total`, isPositive: true },
+    { title: "Wallet Balance", value: `$${walletBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}`, icon: Wallet, trend: "+12.5%", isPositive: true },
+    { title: "Wallet Deposit", value: `$${totalDeposited.toLocaleString("en-US", { minimumFractionDigits: 2 })}`, icon: ArrowUpRight, trend: "+8.4%", isPositive: true },
+    { title: "Wallet Withdrawal", value: `$${totalWithdrawn.toLocaleString("en-US", { minimumFractionDigits: 2 })}`, icon: ArrowDownRight, trend: "+5.2%", isPositive: false },
+    { title: "Commissions", value: `$${totalCommissions.toLocaleString("en-US", { minimumFractionDigits: 2 })}`, icon: DollarSign, trend: "+$340.00", isPositive: true },
   ];
 
   const filterTabs: { key: FilterTab; label: string; icon: typeof DollarSign }[] = [
@@ -116,6 +184,10 @@ export default function FinancePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-32 rounded-xl" />)}
         </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Skeleton className="h-96 rounded-xl" />
+          <Skeleton className="h-96 rounded-xl" />
+        </div>
         <Skeleton className="h-96 rounded-xl" />
       </div>
     );
@@ -156,29 +228,96 @@ export default function FinancePage() {
         {kpis.map((kpi) => (
           <div
             key={kpi.title}
-            className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm"
+            className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all cursor-pointer h-full"
             data-testid={`card-stat-${kpi.title.toLowerCase().replace(/\s+/g, '-')}`}
           >
-            <div className="flex items-center justify-between gap-2 mb-3">
-              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{kpi.title}</span>
-              <div className={`p-3 rounded-lg ${kpi.iconBg}`}>
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{kpi.title}</p>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white" data-testid={`text-${kpi.title.toLowerCase().replace(/\s+/g, '-')}`}>
+                  {kpi.value}
+                </h3>
+              </div>
+              <div className="p-3 bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400 rounded-lg">
                 <kpi.icon className="w-5 h-5" />
               </div>
             </div>
-            <div className="text-2xl font-bold text-gray-900 dark:text-white" data-testid={`text-${kpi.title.toLowerCase().replace(/\s+/g, '-')}`}>
-              {kpi.value}
-            </div>
-            <div className="mt-1">
-              {kpi.title === "Pending Transactions" ? (
-                <span className="text-xs text-gray-500 dark:text-gray-400">{kpi.trend}</span>
+            <div className="mt-4 flex items-center gap-1 text-sm">
+              {kpi.isPositive ? (
+                <TrendingUp size={16} className="text-green-500" />
               ) : (
-                <span className={`text-xs font-medium ${kpi.isPositive ? "text-emerald-500" : "text-red-500"}`}>
-                  {kpi.trend}
-                </span>
+                <TrendingDown size={16} className="text-red-500" />
               )}
+              <span className={`font-medium ${kpi.isPositive ? "text-green-500" : "text-red-500"}`}>
+                {kpi.trend}
+              </span>
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm" data-testid="card-cash-flow-chart">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Cash Flow Analytics</h2>
+          <div className="h-80 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={cashFlowData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: "#94a3b8" }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: "#94a3b8" }} />
+                <Tooltip contentStyle={chartTooltipStyle} itemStyle={{ color: "#fff" }} />
+                <Legend />
+                <Bar dataKey="deposit" name="Deposits" fill="#10b981" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="withdraw" name="Withdrawals" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="commission" name="Commissions" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm" data-testid="card-balance-growth-chart">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Wallet Balance Growth</h2>
+          <div className="h-80 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={balanceGrowthData}>
+                <defs>
+                  <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: "#94a3b8" }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: "#94a3b8" }} />
+                <Tooltip contentStyle={chartTooltipStyle} itemStyle={{ color: "#fff" }} />
+                <Area type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorBalance)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm" data-testid="card-commission-transfer">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-purple-500" />
+              Commission Analytics
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              Total earned commission: <span className="font-bold text-purple-600 dark:text-purple-400">${totalCommissions.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+            </p>
+          </div>
+          <Button
+            className="bg-purple-600 text-white"
+            onClick={() => transferCommissionMutation.mutate()}
+            disabled={transferCommissionMutation.isPending || totalCommissions <= 0}
+            data-testid="button-transfer-commission"
+          >
+            <Send className="w-4 h-4 mr-2" />
+            {transferCommissionMutation.isPending ? "Transferring..." : "Transfer Commission to Wallet"}
+          </Button>
+        </div>
       </div>
 
       <div className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">

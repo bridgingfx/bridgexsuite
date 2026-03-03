@@ -122,6 +122,7 @@ export interface IStorage {
   getCommissions(): Promise<Commission[]>;
   getCommissionsByUser(userId: string): Promise<Commission[]>;
   createCommission(commission: InsertCommission): Promise<Commission>;
+  updateCommissionStatus(id: string, status: string): Promise<Commission | undefined>;
 
   getBrokerSettings(): Promise<BrokerSetting[]>;
   getBrokerSetting(key: string): Promise<BrokerSetting | undefined>;
@@ -403,6 +404,11 @@ export class DatabaseStorage implements IStorage {
   async createCommission(commission: InsertCommission): Promise<Commission> {
     const [created] = await db.insert(commissions).values(commission).returning();
     return created;
+  }
+
+  async updateCommissionStatus(id: string, status: string): Promise<Commission | undefined> {
+    const [updated] = await db.update(commissions).set({ status }).where(eq(commissions.id, id)).returning();
+    return updated;
   }
 
   async getBrokerSettings(): Promise<BrokerSetting[]> {

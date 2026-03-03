@@ -1,7 +1,7 @@
-# ForexCRM - All-in-One Forex CRM Application
+# BridgeX Suite - All-in-One Forex CRM Application
 
 ## Overview
-ForexCRM is a comprehensive three-tier SaaS Forex CRM application designed to serve the needs of forex brokers, their administrators, and their clients. Inspired by BridgeX CRM, it provides a robust platform for managing client relationships, financial operations, trading accounts, and platform-wide administration. The project aims to deliver a full-featured, scalable solution for the forex industry, enhancing operational efficiency and client engagement.
+BridgeX Suite is a comprehensive three-tier SaaS Forex CRM application designed to serve the needs of forex brokers, their administrators, and their clients. Inspired by BridgeX CRM, it provides a robust platform for managing client relationships, financial operations, trading accounts, and platform-wide administration. The project aims to deliver a full-featured, scalable solution for the forex industry, enhancing operational efficiency and client engagement.
 
 The system is structured into three distinct CRM tiers:
 - **Client CRM**: An end-user facing portal for traders to manage their profiles, trading activities, and support needs.
@@ -15,7 +15,7 @@ I want the agent to focus on high-level features only and avoid granular impleme
 
 ## System Architecture
 
-The ForexCRM application follows a three-tier architecture:
+The BridgeX Suite application follows a three-tier architecture:
 
 -   **Frontend**: Built with React, TypeScript, and Wouter for routing. It utilizes Tailwind CSS and Shadcn UI for a modern and responsive user interface, with Recharts for data visualization. State management is handled by TanStack React Query. The UI/UX design is inspired by BridgeX CRM, featuring a scrolling announcement marquee, live forex ticker, redesigned collapsible sidebars with user profiles, an enhanced top header with search, KYC status badges, notification systems, and language switchers. Separate login portals exist for Client, Admin, and Super Admin roles, each with distinct branding and role validation.
 
@@ -25,7 +25,7 @@ The ForexCRM application follows a three-tier architecture:
 
 **Core Feature Specifications:**
 
--   **Client CRM**: Full BridgeX CRM-inspired design clone with 20+ pages. Dashboard features 12 stat cards in 3 rows (Wallet, Deposits, Withdrawals, Commissions, Trading Accounts, Prop Accounts, Investments, Support, IB/Affiliate/Referral Earnings, Loyalty Points) plus Recharts area/bar charts. Wallet page has gradient hero, payment methods grid, balance chart. Forex section includes dashboard with KPIs, trading accounts with live/demo tabs and multi-step account creation wizard, finance page, offers, IB dashboard with referral tree, PAMM managers, and copy trading providers. Additional pages: Prop Trading (challenge cards with active status), Investment (portfolio pie chart, plans), Loyalty Points (tier progress, rewards), P2P Exchange (buy/sell with trader listings), AI Center (chat interface), Download Platform (5 platform cards), Widgets (toggle-able widgets), Profile (gradient header), KYC (verification steps), Settings, Support tickets.
+-   **Client CRM**: Full BridgeX CRM-inspired design clone with 20+ pages. Dashboard features 12 stat cards in 3 rows (Wallet, Deposits, Withdrawals, Commissions, Trading Accounts, Prop Accounts, Investments, Support, IB/Affiliate/Referral Earnings, Loyalty Points) plus Recharts area/bar charts. Wallet page has gradient hero, payment methods grid (including wallet-to-wallet P2P transfer), balance chart. Forex section includes dashboard with KPIs + Profit Growth/Volume Traded charts + Live Open Positions table, trading accounts with live/demo tabs and multi-step account creation wizard, finance page (BridgeX design: 4 KPIs, Cash Flow Analytics + Wallet Balance Growth charts, Commission Analytics with Transfer Commission to Wallet button, transaction history with filters), offers, IB dashboard with referral tree, PAMM managers, and copy trading providers. Additional pages: Prop Trading (challenge cards with active status), Investment (portfolio pie chart, plans), Loyalty Points (tier progress, rewards), P2P Exchange (buy/sell with trader listings), AI Center (chat interface), Download Platform (5 platform cards), Widgets (toggle-able widgets), Profile (gradient header), KYC (verification steps), Settings, Support tickets.
 -   **Admin CRM**: Offers a broker-wide dashboard with KPIs, client management with detailed views, financial operations (transaction approval/rejection), trading account administration, KYC verification workflows, IB management, support ticket handling, and system settings configuration across multiple categories (General, Trading, Financial, Commission, Platform).
 -   **Super Admin CRM**: Provides a platform-wide dashboard, broker tenant management (CRUD, suspend/activate), subscription plan configuration with pricing tiers and feature limits, cross-broker admin user management, white-label branding customization (color pickers, logos, custom domains), and platform analytics.
 -   **Authentication & Security**: Implements robust email/password authentication, PostgreSQL-backed sessions, role-based access control (client, admin, super_admin), rate limiting for brute-force protection, and security headers (Helmet). Separate login portals enforce role-specific access.
