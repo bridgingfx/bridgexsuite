@@ -7,6 +7,7 @@ import {
   Settings,
   HelpCircle,
   ChevronRight,
+  ChevronDown,
   Trophy,
   PiggyBank,
   Star,
@@ -22,9 +23,8 @@ import {
   Users,
   BarChart3,
   Copy,
-  Wrench,
-  Cpu,
 } from "lucide-react";
+import { useState } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -34,14 +34,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubItem,
-  SidebarMenuSubButton,
   SidebarHeader,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
@@ -49,13 +44,13 @@ import { cn } from "@/lib/utils";
 interface SubMenuItem {
   title: string;
   url: string;
-  icon?: React.ComponentType<{ className?: string }>;
+  icon?: React.ComponentType<{ className?: string; size?: number }>;
 }
 
 interface MenuItem {
   title: string;
   url: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string; size?: number }>;
   iconColor?: string;
   children?: SubMenuItem[];
 }
@@ -73,7 +68,7 @@ const section2Menu: MenuItem[] = [
     icon: CandlestickChart,
     iconColor: "text-indigo-500 dark:text-indigo-400",
     children: [
-      { title: "Forex Dashboard", url: "/forex/dashboard", icon: BarChart3 },
+      { title: "Dashboard", url: "/forex/dashboard", icon: BarChart3 },
       { title: "Trading Accounts", url: "/forex/accounts", icon: TrendingUp },
       { title: "Finance", url: "/forex/finance", icon: CircleDollarSign },
       { title: "Offers", url: "/forex/offers", icon: Gift },
@@ -100,60 +95,64 @@ const section4Menu: MenuItem[] = [
   { title: "Settings", url: "/settings", icon: Settings, iconColor: "text-gray-500 dark:text-gray-400" },
 ];
 
-function NavItem({ item }: { item: MenuItem }) {
+function NavItem({ item, expandedMenu, onToggle }: { item: MenuItem; expandedMenu: string; onToggle: (name: string) => void }) {
   const [location] = useLocation();
   const isActive = location === item.url || (item.children && item.children.some(c => location === c.url));
 
   if (item.children) {
+    const isExpanded = expandedMenu === item.title;
     return (
-      <Collapsible defaultOpen={isActive}>
-        <SidebarMenuItem>
-          <CollapsibleTrigger asChild>
-            <SidebarMenuButton
-              data-testid={`nav-${item.title.toLowerCase().replace(/\s+/g, '-').replace(/\//g, '')}`}
-              isActive={isActive}
-              className="group/collapsible"
-            >
-              <span className={cn(
-                "flex items-center justify-center w-5 h-5 shrink-0 transition-colors duration-200",
-                isActive ? item.iconColor : "text-muted-foreground group-hover/collapsible:text-foreground"
-              )}>
-                <item.icon className="w-[18px] h-[18px]" />
-              </span>
-              <span className="font-medium">{item.title}</span>
-              <ChevronRight className="ml-auto w-4 h-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-            </SidebarMenuButton>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="transition-all data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0">
-            <SidebarMenuSub>
-              {item.children.map((child) => {
-                const childActive = location === child.url;
-                return (
-                  <SidebarMenuSubItem key={child.url}>
-                    <SidebarMenuSubButton asChild isActive={childActive}>
-                      <Link href={child.url} data-testid={`nav-${child.title.toLowerCase().replace(/\s+/g, '-')}`}>
-                        {child.icon && (
-                          <child.icon className={cn(
-                            "w-3.5 h-3.5 shrink-0 transition-colors duration-200",
-                            childActive ? "text-primary" : "text-muted-foreground"
-                          )} />
-                        )}
-                        <span>{child.title}</span>
-                      </Link>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                );
-              })}
-            </SidebarMenuSub>
-          </CollapsibleContent>
-        </SidebarMenuItem>
-      </Collapsible>
+      <SidebarMenuItem>
+        <button
+          onClick={() => onToggle(item.title)}
+          aria-expanded={isExpanded}
+          aria-controls={`submenu-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
+          data-testid={`nav-${item.title.toLowerCase().replace(/\s+/g, '-').replace(/\//g, '')}`}
+          className={cn(
+            "w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200",
+            isExpanded
+              ? "bg-muted/60 dark:bg-muted/30 text-foreground font-semibold"
+              : "text-muted-foreground hover:bg-muted/40 dark:hover:bg-muted/20 hover:text-foreground"
+          )}
+        >
+          <div className="flex items-center gap-3">
+            <span className={cn("flex items-center justify-center w-5 h-5 shrink-0", isActive ? item.iconColor : "")}>
+              <item.icon className="w-[18px] h-[18px]" />
+            </span>
+            <span>{item.title}</span>
+          </div>
+          {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+        </button>
+        {isExpanded && (
+          <div id={`submenu-${item.title.toLowerCase().replace(/\s+/g, '-')}`} role="region" className="pl-4 space-y-1 mt-1 animate-fade-in-up" style={{ animationDuration: '0.2s' }}>
+            {item.children.map((child) => {
+              const childActive = location === child.url;
+              return (
+                <Link
+                  key={child.url}
+                  href={child.url}
+                  data-testid={`nav-${child.title.toLowerCase().replace(/\s+/g, '-')}`}
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-all duration-200 border-l-2",
+                    childActive
+                      ? "border-primary text-primary bg-primary/5 dark:bg-primary/10 font-medium"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {child.icon && <child.icon className={cn("w-3.5 h-3.5 shrink-0", childActive ? "text-primary" : "")} />}
+                  <span>{child.title}</span>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </SidebarMenuItem>
     );
   }
 
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton asChild isActive={isActive} className="group/nav-item">
+      <SidebarMenuButton asChild isActive={isActive} className={cn("group/nav-item", isActive && "translate-x-0.5")}>
         <Link href={item.url} data-testid={`nav-${item.title.toLowerCase().replace(/\s+/g, '-')}`}>
           <span className={cn(
             "flex items-center justify-center w-5 h-5 shrink-0 transition-colors duration-200",
@@ -171,7 +170,15 @@ function NavItem({ item }: { item: MenuItem }) {
 export function AppSidebar() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
+  const [location] = useLocation();
   const initials = user?.fullName?.split(" ").map((n: string) => n[0]).join("").toUpperCase() || "U";
+
+  const defaultExpanded = section2Menu[0]?.children?.some(c => location.startsWith("/forex")) ? "Forex Trading" : "";
+  const [expandedMenu, setExpandedMenu] = useState(defaultExpanded);
+
+  function handleToggle(name: string) {
+    setExpandedMenu(prev => prev === name ? "" : name);
+  }
 
   async function handleLogout() {
     try {
@@ -186,92 +193,105 @@ export function AppSidebar() {
       <SidebarHeader className="p-4 pb-2">
         <Link href="/">
           <div className="flex items-center gap-3 group cursor-pointer">
-            <div className="w-9 h-9 rounded-md bg-primary flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105">
-              <CandlestickChart className="w-5 h-5 text-primary-foreground" />
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shrink-0 shadow-md transition-transform duration-200 group-hover:scale-105">
+              <span className="text-white font-bold text-xl">F</span>
             </div>
-            <div className="min-w-0">
-              <h2 className="text-sm font-bold tracking-tight leading-tight">ForexCRM</h2>
-              <p className="text-[11px] text-muted-foreground leading-tight">Trading Platform</p>
+            <div className="min-w-0 flex flex-col">
+              <span className="text-lg font-bold tracking-tight leading-none">ForexCRM</span>
+              <span className="text-[10px] font-semibold text-primary uppercase tracking-widest leading-none mt-1">Trading Platform</span>
             </div>
           </div>
         </Link>
       </SidebarHeader>
 
-      <SidebarContent className="px-1">
+      <SidebarContent className="custom-scrollbar flex flex-col flex-1 overflow-y-auto">
+        <div className="flex flex-col items-center pt-6 pb-6 px-4 border-b mx-3 mb-2">
+          <Link href="/profile" className="flex flex-col items-center group cursor-pointer">
+            <div className="w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-blue-500 to-purple-500 mb-3 shadow-md group-hover:scale-105 transition-transform">
+              <div className="w-full h-full rounded-full bg-background flex items-center justify-center border-2 border-background">
+                <span className="text-lg font-bold text-primary">{initials}</span>
+              </div>
+            </div>
+            <h3 className="font-bold text-lg group-hover:text-primary transition-colors" data-testid="text-sidebar-user-name">
+              {user?.fullName || "User"}
+            </h3>
+            <p className="text-sm text-muted-foreground" data-testid="text-sidebar-user-email">
+              {user?.email || ""}
+            </p>
+          </Link>
+        </div>
+
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="px-2 space-y-0.5">
               {section1Menu.map((item) => (
-                <NavItem key={item.title} item={item} />
+                <NavItem key={item.title} item={item} expandedMenu={expandedMenu} onToggle={handleToggle} />
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground/70 px-3">
+          <SidebarGroupLabel className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground/70 px-5">
             Trading
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="px-2 space-y-0.5">
               {section2Menu.map((item) => (
-                <NavItem key={item.title} item={item} />
+                <NavItem key={item.title} item={item} expandedMenu={expandedMenu} onToggle={handleToggle} />
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground/70 px-3">
+          <SidebarGroupLabel className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground/70 px-5">
             Tools
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="px-2 space-y-0.5">
               {section3Menu.map((item) => (
-                <NavItem key={item.title} item={item} />
+                <NavItem key={item.title} item={item} expandedMenu={expandedMenu} onToggle={handleToggle} />
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground/70 px-3">
+        <SidebarGroup className="mt-auto pt-2 border-t">
+          <SidebarGroupLabel className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground/70 px-5">
             System
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="px-2 space-y-0.5">
               {section4Menu.map((item) => (
-                <NavItem key={item.title} item={item} />
+                <NavItem key={item.title} item={item} expandedMenu={expandedMenu} onToggle={handleToggle} />
               ))}
               <SidebarMenuItem>
-                <SidebarMenuButton
+                <button
                   data-testid="nav-logout"
                   onClick={handleLogout}
-                  className="group/nav-item text-red-500/70 hover:text-red-500 dark:text-red-400/70 dark:hover:text-red-400"
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
                 >
-                  <span className="flex items-center justify-center w-5 h-5 shrink-0 transition-colors duration-200">
+                  <span className="flex items-center justify-center w-5 h-5 shrink-0">
                     <LogOut className="w-[18px] h-[18px]" />
                   </span>
                   <span className="font-medium">Logout</span>
-                </SidebarMenuButton>
+                </button>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-3 pt-0">
-        <Link href="/profile">
-          <div className="flex items-center gap-3 p-2.5 rounded-md hover-elevate cursor-pointer transition-colors duration-200">
-            <Avatar className="w-9 h-9 shrink-0">
-              <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">{initials}</AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold truncate leading-tight" data-testid="text-user-name">{user?.fullName || "User"}</p>
-              <p className="text-[11px] text-muted-foreground truncate leading-tight mt-0.5" data-testid="text-user-email">{user?.email || ""}</p>
-            </div>
+      <SidebarFooter className="p-3 pt-0 border-t">
+        <div className="flex items-center justify-center gap-2.5 py-2">
+          <div className="w-6 h-6 rounded-md bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-xs shadow-sm">
+            F
           </div>
-        </Link>
+          <span className="text-xs font-bold tracking-tight">
+            ForexCRM<sup className="text-[8px] text-muted-foreground font-medium ml-0.5">TM</sup>
+          </span>
+        </div>
       </SidebarFooter>
     </Sidebar>
   );

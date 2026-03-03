@@ -10,7 +10,9 @@ import { AdminSidebar } from "@/components/admin-sidebar";
 import { SuperAdminSidebar } from "@/components/super-admin-sidebar";
 import { ThemeProvider } from "@/lib/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Bell, Crown, LogOut, Loader2 } from "lucide-react";
+import { AnnouncementBar } from "@/components/announcement-bar";
+import { TickerBar } from "@/components/ticker-bar";
+import { Bell, Crown, LogOut, Loader2, Search, Globe, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
@@ -169,6 +171,93 @@ function SuperAdminRouter() {
   );
 }
 
+function ClientHeader() {
+  const { user } = useAuth();
+  const kycStatus = user?.kycStatus || "pending";
+  const initials = user?.fullName?.split(" ").map((n: string) => n[0]).join("").toUpperCase() || "U";
+
+  return (
+    <header className="h-16 bg-background border-b flex items-center justify-between px-4 sm:px-6 lg:px-8 shrink-0 relative z-30 shadow-sm" data-testid="client-header">
+      <div className="flex items-center gap-4 flex-1">
+        <SidebarTrigger className="lg:hidden" data-testid="button-sidebar-toggle" />
+        <div className="flex flex-1 max-w-xl mr-auto items-center bg-muted/50 rounded-full px-4 py-2 border-2 border-primary/20 focus-within:border-primary transition-all shadow-sm" data-testid="search-bar">
+          <Search size={16} className="text-primary mr-3 shrink-0" />
+          <input
+            type="text"
+            placeholder="Search accounts, transactions, or your account..."
+            className="flex-1 bg-transparent border-none outline-none text-sm placeholder-muted-foreground w-full"
+            data-testid="input-search"
+          />
+          <button aria-label="Clear search" className="text-muted-foreground hover:text-primary transition-colors p-1" data-testid="button-clear-search">
+            <X size={14} />
+          </button>
+        </div>
+      </div>
+      <div className="flex items-center gap-3 sm:gap-4">
+        <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold mr-2 transition-all hover:scale-105 border" data-testid="badge-kyc-status">
+          {kycStatus === "verified" ? (
+            <span className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800 flex items-center gap-2 px-2 py-0.5 rounded-full">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-emerald-400" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+              </span>
+              Verified
+            </span>
+          ) : (
+            <span className="bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800 flex items-center gap-2 px-2 py-0.5 rounded-full">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-red-400" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
+              </span>
+              KYC Pending
+            </span>
+          )}
+        </div>
+        <button aria-label="Language selector" className="flex items-center gap-1 text-muted-foreground hover:text-foreground text-sm font-medium mr-2" data-testid="button-language">
+          <Globe size={18} />
+          <span className="hidden sm:inline">EN</span>
+        </button>
+        <Link href="/notifications">
+          <button aria-label="Notifications" className="p-2 text-muted-foreground hover:bg-muted rounded-full transition-colors relative" data-testid="button-notifications">
+            <Bell size={20} />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-background" />
+          </button>
+        </Link>
+        <ThemeToggle />
+        <Link href="/profile">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 p-[2px] cursor-pointer hover:ring-2 ring-blue-300 transition-all" data-testid="button-header-avatar">
+            <div className="w-full h-full rounded-full bg-background flex items-center justify-center border-2 border-background">
+              <span className="text-xs font-bold text-primary">{initials}</span>
+            </div>
+          </div>
+        </Link>
+      </div>
+    </header>
+  );
+}
+
+function ClientFooter() {
+  return (
+    <footer className="py-8 border-t shrink-0" data-testid="client-footer">
+      <div className="flex flex-col items-center justify-center gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-sm shadow-md">
+            F
+          </div>
+          <span className="text-lg font-bold tracking-tight">
+            ForexCRM<sup className="text-xs text-muted-foreground font-medium ml-0.5">TM</sup>
+          </span>
+        </div>
+        <div className="text-sm text-muted-foreground flex flex-col sm:flex-row items-center gap-2">
+          <span>© {new Date().getFullYear()} ForexCRM Systems.</span>
+          <span className="hidden sm:inline opacity-50">|</span>
+          <span>All Rights Reserved.</span>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
 function ClientLayout() {
   const style = {
     "--sidebar-width": "16rem",
@@ -179,21 +268,15 @@ function ClientLayout() {
     <SidebarProvider style={style as React.CSSProperties}>
       <div className="flex h-screen w-full">
         <AppSidebar />
-        <div className="flex flex-col flex-1 overflow-hidden">
-          <header className="flex items-center justify-between gap-2 px-4 py-2 border-b bg-background sticky top-0 z-50">
-            <SidebarTrigger data-testid="button-sidebar-toggle" />
-            <div className="flex items-center gap-1">
-              <Link href="/notifications">
-                <Button variant="ghost" size="icon" data-testid="button-notifications">
-                  <Bell className="w-4 h-4" />
-                </Button>
-              </Link>
-              <ThemeToggle />
-              <LogoutButton />
+        <div className="flex flex-col flex-1 overflow-hidden relative">
+          <ClientHeader />
+          <AnnouncementBar />
+          <TickerBar />
+          <main className="flex-1 overflow-y-auto bg-muted/30 flex flex-col">
+            <div className="flex-1 p-4 sm:p-6 lg:p-8">
+              <ClientRouter />
             </div>
-          </header>
-          <main className="flex-1 overflow-auto">
-            <ClientRouter />
+            <ClientFooter />
           </main>
         </div>
       </div>

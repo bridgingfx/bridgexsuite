@@ -1,247 +1,56 @@
 # ForexCRM - All-in-One Forex CRM Application
 
 ## Overview
-A comprehensive three-tier SaaS Forex CRM application inspired by BridgeX CRM. Built with React (frontend), Express/Node.js (backend), and PostgreSQL (database) using Drizzle ORM. Features a Client CRM, Admin CRM, and Super Admin CRM with separate layouts and routing.
+ForexCRM is a comprehensive three-tier SaaS Forex CRM application designed to serve the needs of forex brokers, their administrators, and their clients. Inspired by BridgeX CRM, it provides a robust platform for managing client relationships, financial operations, trading accounts, and platform-wide administration. The project aims to deliver a full-featured, scalable solution for the forex industry, enhancing operational efficiency and client engagement.
 
-## Architecture
-- **Frontend**: React with TypeScript, Tailwind CSS, Shadcn UI components, Recharts for data visualization
-- **Backend**: Express.js with TypeScript
-- **Database**: PostgreSQL with Drizzle ORM
-- **Routing**: Wouter (frontend), Express (backend API)
-- **State Management**: TanStack React Query
+The system is structured into three distinct CRM tiers:
+- **Client CRM**: An end-user facing portal for traders to manage their profiles, trading activities, and support needs.
+- **Admin CRM**: A powerful back-office for broker administrators to oversee client operations, approve transactions, and configure broker-specific settings.
+- **Super Admin CRM**: A platform-level administration panel for managing broker tenants, subscription plans, and white-label branding, targeting SaaS platform providers.
 
-## Three-Tier CRM Structure
-### Client CRM (root routes: /)
-End-user facing CRM for traders to manage their accounts, deposits, KYC, and support tickets.
+Key capabilities include full CRUD operations for clients and brokers, extensive financial management with transaction approval workflows, advanced KYC verification, IB/affiliate program management, and comprehensive reporting and analytics. New modules like Prop Trading, Investment, Copy Trading, and PAMM have been integrated to offer a wide range of services.
 
-### Admin CRM (routes: /admin/*)
-Broker admin panel for managing all clients, approving transactions/KYC, configuring settings, and overseeing operations. Uses separate AdminSidebar and AdminLayout.
+## User Preferences
+I want the agent to focus on high-level features only and avoid granular implementation details. Consolidate redundant information and prioritize architectural decisions over implementation specifics.
 
-### Super Admin CRM (routes: /super-admin/*)
-SaaS platform management layer for managing broker tenants, subscription plans, admin users, white-label branding, and platform-wide analytics. Uses SuperAdminSidebar and SuperAdminLayout.
+## System Architecture
 
-## Key Features
+The ForexCRM application follows a three-tier architecture:
 
-### Client CRM
-- **Dashboard**: Overview with wallet balance, deposits, withdrawals, commissions, charts, and recent transactions
-- **Clients Management**: Full CRUD with search, filter, status badges, KYC status tracking
-- **Trading Accounts**: MT4/MT5/cTrader account management with balance and equity tracking
-- **Wallet**: Deposit/withdrawal management with transaction history and balance charts
-- **Transactions**: Complete transaction log with type and status filters
-- **IB/Affiliate**: Introducing Broker program with referral tracking, commission analytics
-- **KYC/Documents**: Document verification workflow with status tracking
-- **Reports**: Financial, trading, and commission reports with interactive charts
-- **Support Tickets**: Ticket creation and management system
-- **Notifications**: Activity notification feed
-- **Settings**: Profile, security, notification preferences, and appearance (dark/light mode)
-- **Account Details**: View detailed account info, transaction history, P&L, change password, change leverage, deposit from wallet
-- **Prop Trading**: Funded trading challenges (10K-100K accounts), purchase challenges, track phases (Phase 1/2/Funded), drawdown rules
-- **Investment**: Managed investment plans with different risk levels, invest/track returns, maturity dates
-- **Copy Trading**: Follow signal providers, allocate funds, view P&L, stop copying
-- **PAMM**: Percentage Allocation Management - invest with professional money managers, track AUM/returns/fees
+-   **Frontend**: Built with React, TypeScript, and Wouter for routing. It utilizes Tailwind CSS and Shadcn UI for a modern and responsive user interface, with Recharts for data visualization. State management is handled by TanStack React Query. The UI/UX design is inspired by BridgeX CRM, featuring a scrolling announcement marquee, live forex ticker, redesigned collapsible sidebars with user profiles, an enhanced top header with search, KYC status badges, notification systems, and language switchers. Separate login portals exist for Client, Admin, and Super Admin roles, each with distinct branding and role validation.
 
-### Admin CRM
-- **Admin Dashboard**: Broker-wide stats (12 KPIs), recent transactions & clients tables
-- **Client Management**: Full CRUD, status/KYC toggles, search/filter by role & status, client detail view with tabs
-- **Financial Operations**: Transaction approve/reject with rejection reasons, filter by type/status
-- **Trading Accounts**: Create/edit accounts, assign to clients, platform management
-- **KYC Verification**: Document review with approve/reject workflow, reviewer tracking
-- **IB Management**: Referral tracking, commission analytics, commission tier configuration
-- **Support Management**: Ticket handling, admin replies, status changes, priority management
-- **Reports & Analytics**: Financial, client, trading, and commission analytics with Recharts
-- **System Settings**: Configurable broker settings across 5 categories (General, Trading, Financial, Commission, Platform)
+-   **Backend**: Developed with Express.js and TypeScript, providing a robust API layer. API routes are protected with role-based access control middleware (`requireAuth`, `requireAdmin`, `requireSuperAdmin`) and input validation using Zod. Security features include bcrypt for password hashing, PostgreSQL-backed session store with httpOnly cookies, rate limiting, and Helmet middleware for essential security headers.
 
-### Super Admin CRM
-- **Dashboard**: Platform-wide KPIs (Total Brokers, Active Brokers, MRR, ARR, Admin Users, Clients, Transaction Volume), recent brokers list, platform summary
-- **Broker Management**: Full CRUD for broker tenants, search/filter by status, suspend/activate brokers, broker detail view with tabs (admins, subscriptions, branding)
-- **Subscription Plans**: Plan management with pricing tiers (Starter $99, Professional $299, Enterprise $799), billing cycles, feature lists, client/account/IB limits
-- **Admin Users**: Cross-broker admin user management, role assignment (super_admin, admin, manager, support), activate/deactivate
-- **White-Label Branding**: Per-broker branding configuration with color pickers, logo URL, tagline, custom domain, live preview
-- **Platform Analytics**: Charts (Recharts) for broker status distribution, revenue by plan, brokers by country, plan subscribers
-- **Platform Config**: Platform-wide settings management organized by category (general, limits, billing, financial, system, security), inline editing
+-   **Database**: PostgreSQL is used as the primary data store, managed with Drizzle ORM for type-safe and efficient database interactions.
 
-## Project Structure
-```
-client/src/
-  App.tsx                 - Main app with client/admin/super-admin layout switching and routing
-  components/
-    app-sidebar.tsx       - Client CRM navigation sidebar
-    admin-sidebar.tsx     - Admin CRM navigation sidebar
-    super-admin-sidebar.tsx - Super Admin CRM navigation sidebar
-    theme-toggle.tsx      - Dark/light mode toggle
-  pages/
-    dashboard.tsx         - Client dashboard
-    trading-accounts.tsx  - Trading account management (at /forex/accounts)
-    account-detail.tsx    - Trading account detail view
-    forex-dashboard.tsx   - Forex trading dashboard
-    finance.tsx           - Client finance overview
-    offers.tsx            - Promotional offers
-    ib-dashboard.tsx      - IB/Affiliate dashboard
-    wallet.tsx            - Wallet/deposit/withdrawal
-    transactions.tsx      - Transaction history
-    kyc.tsx               - KYC verification
-    support.tsx           - Support tickets
-    notifications.tsx     - Notifications
-    settings.tsx          - User settings
-    profile.tsx           - User profile page
-    prop-trading.tsx      - Prop trading challenges & funded accounts
-    investment.tsx        - Investment plans & portfolio
-    copy-trading.tsx      - Copy trading with signal providers
-    pamm.tsx              - PAMM fund manager investments
-    loyalty-points.tsx    - Loyalty points & rewards
-    download-platform.tsx - Platform download links (MT5)
-    p2p-exchange.tsx      - P2P cryptocurrency exchange
-    ai-center.tsx         - AI-powered trading tools
-    widgets.tsx           - Trading widgets configuration
-    admin/
-      dashboard.tsx       - Admin dashboard with broker-wide stats
-      clients.tsx         - Admin client management with CRUD
-      client-detail.tsx   - Admin client detail with tabs
-      finance.tsx         - Financial operations (approve/reject)
-      accounts.tsx        - Trading account management
-      kyc-verification.tsx - KYC document review
-      ib-management.tsx   - IB/Affiliate management
-      support-admin.tsx   - Support ticket management
-      reports.tsx         - Admin reports & analytics
-      system-settings.tsx - System settings configuration
-    super-admin/
-      dashboard.tsx       - Super Admin dashboard with platform KPIs
-      brokers.tsx         - Broker tenant management
-      broker-detail.tsx   - Broker detail with tabs
-      plans.tsx           - Subscription plan management
-      admin-users.tsx     - Admin user management across brokers
-      branding.tsx        - White-label branding configuration
-      analytics.tsx       - Platform-wide analytics with charts
-      platform-config.tsx - Platform settings configuration
-  lib/
-    theme-provider.tsx    - Theme context provider
+**Core Feature Specifications:**
 
-server/
-  index.ts               - Express server setup
-  routes.ts              - API routes with Zod validation (client + admin + super-admin endpoints)
-  storage.ts             - Database storage layer (CRUD operations)
-  db.ts                  - Database connection
-  seed.ts                - Seed data (client, admin, and super-admin data)
+-   **Client CRM**: Features a personalized dashboard, comprehensive client management (profile, security, notifications), trading account management (MT4/MT5/cTrader integration, leverage, deposits), wallet & transaction management, IB/Affiliate program, KYC/Documents verification, reports, support tickets, and specialized modules for Prop Trading, Investment, Copy Trading, and PAMM.
+-   **Admin CRM**: Offers a broker-wide dashboard with KPIs, client management with detailed views, financial operations (transaction approval/rejection), trading account administration, KYC verification workflows, IB management, support ticket handling, and system settings configuration across multiple categories (General, Trading, Financial, Commission, Platform).
+-   **Super Admin CRM**: Provides a platform-wide dashboard, broker tenant management (CRUD, suspend/activate), subscription plan configuration with pricing tiers and feature limits, cross-broker admin user management, white-label branding customization (color pickers, logos, custom domains), and platform analytics.
+-   **Authentication & Security**: Implements robust email/password authentication, PostgreSQL-backed sessions, role-based access control (client, admin, super_admin), rate limiting for brute-force protection, and security headers (Helmet). Separate login portals enforce role-specific access.
+-   **MT5 Server Configuration**: Integrated within Admin Settings for managing MT5 Manager ID, password, server IP, and port.
 
-shared/
-  schema.ts              - Drizzle ORM schema definitions
-```
+## External Dependencies
 
-## Database Tables
-- users, trading_accounts, transactions, kyc_documents, ib_referrals, support_tickets, ticket_replies, commissions, broker_settings, commission_tiers
-- brokers, subscription_plans, broker_subscriptions, broker_admins, broker_branding, platform_settings
-- prop_challenges, prop_accounts, investment_plans, investments, signal_providers, copy_relationships, pamm_managers, pamm_investments
-
-## API Endpoints
-
-### Client API
-- GET/POST /api/clients
-- GET/POST /api/trading-accounts
-- GET /api/trading-accounts/:id (account details + transactions)
-- POST /api/trading-accounts/:id/change-password
-- PATCH /api/trading-accounts/:id/leverage
-- POST /api/trading-accounts/:id/deposit (wallet transfer)
-- GET/POST /api/transactions
-- GET/POST /api/kyc/documents
-- GET/POST /api/ib/referrals
-- GET /api/commissions
-- GET/POST /api/support/tickets
-- GET /api/dashboard/stats
-
-### Prop Trading API
-- GET /api/prop/challenges
-- GET /api/prop/accounts
-- POST /api/prop/accounts
-
-### Investment API
-- GET /api/investments/plans
-- GET /api/investments
-- POST /api/investments
-
-### Copy Trading API
-- GET /api/copy/providers
-- GET /api/copy/relationships
-- POST /api/copy/relationships
-- PATCH /api/copy/relationships/:id
-
-### PAMM API
-- GET /api/pamm/managers
-- GET /api/pamm/investments
-- POST /api/pamm/investments
-
-### Admin API
-- GET /api/admin/dashboard/stats
-- GET /api/admin/clients
-- GET /api/admin/clients/:id (returns client + accounts + transactions + kyc + tickets)
-- PATCH /api/admin/clients/:id/status
-- PATCH /api/admin/clients/:id/kyc-status
-- GET /api/admin/transactions
-- POST /api/admin/transactions/:id/approve
-- POST /api/admin/transactions/:id/reject
-- GET /api/admin/trading-accounts
-- POST /api/admin/trading-accounts
-- PATCH /api/admin/trading-accounts/:id
-- GET /api/admin/kyc/documents
-- POST /api/admin/kyc/documents/:id/review
-- GET /api/admin/ib/referrals
-- GET /api/admin/commissions
-- GET/POST /api/admin/commission-tiers
-- GET /api/admin/support/tickets
-- PATCH /api/admin/support/tickets/:id/status
-- POST /api/admin/support/tickets/:id/reply
-- GET/POST /api/admin/settings
-
-### Super Admin API
-- GET /api/super-admin/dashboard/stats
-- GET/POST /api/super-admin/brokers
-- GET/PATCH /api/super-admin/brokers/:id
-- POST /api/super-admin/brokers/:id/suspend
-- POST /api/super-admin/brokers/:id/activate
-- GET/POST /api/super-admin/plans
-- PATCH /api/super-admin/plans/:id
-- GET/POST /api/super-admin/subscriptions
-- PATCH /api/super-admin/subscriptions/:id
-- GET/POST /api/super-admin/admins
-- PATCH /api/super-admin/admins/:id
-- GET /api/super-admin/brokers/:id/admins
-- GET/PATCH /api/super-admin/brokers/:id/branding
-- GET/POST /api/super-admin/platform-settings
-
-## Authentication & Security
-- **Login**: Email/password authentication with bcrypt password hashing
-- **Sessions**: PostgreSQL-backed session store (connect-pg-simple), httpOnly cookies, sameSite=lax
-- **Rate Limiting**: 5 attempts/15min for login, 100 requests/15min for general API
-- **Security Headers**: Helmet middleware for XSS protection, HSTS, etc.
-- **Role-Based Access**: requireAuth, requireAdmin, requireSuperAdmin middleware on API routes
-- **Frontend Protection**: Role-based route guards redirect unauthorized users
-
-### Login Credentials (Seed Data)
-- **Super Admin**: superadmin@forexcrm.com / admin123
-- **Admin**: admin@forexcrm.com / admin123
-- **Client**: john.smith@email.com / pass123
-
-### Auth API
-- POST /api/auth/login (public)
-- POST /api/auth/logout
-- GET /api/auth/me
-
-## Separate Login Portals
-- **Client Login**: `/login` - TrendingUp icon, "Client Portal" branding, only allows client/ib/lead roles
-- **Admin Login**: `/admin/login` - Shield icon, "Admin Portal" branding, only allows admin/super_admin roles  
-- **Super Admin Login**: `/super-admin/login` - Crown icon, "Platform Administration" branding, only allows super_admin role
-- Each login validates the user role after authentication and logs out + shows error if wrong portal is used
-
-## MT5 Server Configuration
-Admin Settings has an "MT5 Server" tab with fields: MT5 Manager ID, Manager Password, Server IP, Server Port. Saved to broker_settings table with category "mt5".
-
-## Recent Changes
-- 2026-02-17: Restructured client sidebar into 4 sections: (1) Dashboard/Wallet/KYC, (2) Forex Trading submenu + Prop Trading/Investments/Loyalty Points/Download Platform, (3) Tools: P2P Exchange/AI Center, (4) System: Widgets/Support/Profile/Settings/Logout. Added 8 new pages, moved trading routes under /forex/* namespace
-- 2026-02-17: Added Prop Trading, Investment, Copy Trading, PAMM modules with 8 new DB tables, 13 API endpoints, 4 frontend pages, sidebar navigation under "Services" section
-- 2026-02-17: Separated login pages into three distinct portals (/login, /admin/login, /super-admin/login) with role validation
-- 2026-02-17: Made client API routes user-scoped (trading accounts, transactions, dashboard stats, KYC, support tickets all filtered by session userId)
-- 2026-02-17: Refactored client sidebar to be trader-focused (removed Clients, IB/Affiliate, Reports; kept Dashboard, Trading, Wallet, Transactions, KYC, Support, Settings)
-- 2026-02-17: Added MT5 Server Configuration tab to Admin System Settings
-- 2026-02-17: Updated client dashboard with personalized welcome message using auth user data
-- 2026-02-17: Added authentication system with bcrypt password hashing, PostgreSQL session store, role-based access control, rate limiting, helmet security headers, login page, frontend auth flow
-- 2026-02-17: Added Super Admin CRM with 8 pages, super-admin sidebar, 20+ super-admin API endpoints, 6 new database tables (brokers, subscription_plans, broker_subscriptions, broker_admins, broker_branding, platform_settings)
-- 2026-02-17: Added Admin CRM with 10 pages, admin sidebar, 20+ admin API endpoints, broker_settings and commission_tiers tables
+-   **Frontend**:
+    -   React
+    -   TypeScript
+    -   Tailwind CSS
+    -   Shadcn UI
+    -   Recharts
+    -   Wouter
+    -   TanStack React Query
+-   **Backend**:
+    -   Express.js
+    -   TypeScript
+    -   Zod (for validation)
+    -   bcrypt (for password hashing)
+    -   connect-pg-simple (for PostgreSQL session store)
+    -   Helmet (for security headers)
+-   **Database**:
+    -   PostgreSQL
+    -   Drizzle ORM
+-   **Trading Platforms**:
+    -   MT4/MT5 (for trading account integration)
+    -   cTrader (for trading account integration)

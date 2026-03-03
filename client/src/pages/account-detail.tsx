@@ -322,7 +322,7 @@ export default function AccountDetail({ id }: { id: string }) {
   const totalWithdrawals = withdrawals.reduce((s, t) => s + Number(t.amount), 0);
 
   return (
-    <div className="p-6 space-y-6 max-w-[1600px] mx-auto">
+    <div className="space-y-6 max-w-[1600px] mx-auto">
       <div className="flex items-center gap-4 flex-wrap">
         <Button variant="ghost" size="icon" onClick={() => navigate("/forex/accounts")} data-testid="button-back">
           <ArrowLeft className="w-4 h-4" />

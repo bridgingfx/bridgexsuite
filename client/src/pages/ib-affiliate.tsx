@@ -55,7 +55,7 @@ export default function IbAffiliate() {
   const referralLink = "https://forexcrm.com/ref/ADMIN123";
 
   return (
-    <div className="p-6 space-y-6 max-w-[1600px] mx-auto">
+    <div className="space-y-6 max-w-[1600px] mx-auto">
       <div>
         <h1 className="text-2xl font-bold tracking-tight" data-testid="text-ib-title">IB / Affiliate Program</h1>
         <p className="text-sm text-muted-foreground">Manage your referral network and earnings</p>

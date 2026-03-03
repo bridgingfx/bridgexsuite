@@ -12,7 +12,7 @@ const offers = [
 
 export default function OffersPage() {
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold" data-testid="text-page-title">Offers</h1>
         <p className="text-sm text-muted-foreground">Special promotions and bonuses available to you</p>

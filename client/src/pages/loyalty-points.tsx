@@ -17,7 +17,7 @@ export default function LoyaltyPointsPage() {
   ];
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold" data-testid="text-page-title">Loyalty Points</h1>
         <p className="text-sm text-muted-foreground">Earn points through trading and redeem for rewards</p>

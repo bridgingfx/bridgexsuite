@@ -10,7 +10,7 @@ export default function ForexDashboard() {
 
   if (isLoading) {
     return (
-      <div className="p-6 space-y-6">
+      <div className="space-y-6">
         <Skeleton className="h-8 w-48" />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
@@ -29,7 +29,7 @@ export default function ForexDashboard() {
   ];
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold" data-testid="text-page-title">Forex Trading Dashboard</h1>
         <p className="text-sm text-muted-foreground">Overview of your forex trading activity</p>
