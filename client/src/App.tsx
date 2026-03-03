@@ -12,7 +12,8 @@ import { ThemeProvider } from "@/lib/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AnnouncementBar } from "@/components/announcement-bar";
 import { TickerBar } from "@/components/ticker-bar";
-import { Bell, Crown, LogOut, Loader2, Search, Globe, X } from "lucide-react";
+import { Bell, Crown, LogOut, Loader2, Search, Globe, X, Wallet } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
@@ -175,6 +176,8 @@ function ClientHeader() {
   const { user } = useAuth();
   const kycStatus = user?.kycStatus || "pending";
   const initials = user?.fullName?.split(" ").map((n: string) => n[0]).join("").toUpperCase() || "U";
+  const { data: stats } = useQuery<{ walletBalance: number }>({ queryKey: ["/api/dashboard/stats"] });
+  const walletBalance = stats?.walletBalance ?? 0;
 
   return (
     <header className="h-16 bg-background border-b flex items-center justify-between px-4 sm:px-6 lg:px-8 shrink-0 relative z-30 shadow-sm" data-testid="client-header">
@@ -194,6 +197,12 @@ function ClientHeader() {
         </div>
       </div>
       <div className="flex items-center gap-3 sm:gap-4">
+        <Link href="/wallet">
+          <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold mr-1 border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 cursor-pointer transition-all hover:scale-105" data-testid="header-wallet-balance">
+            <Wallet size={14} />
+            <span>${Number(walletBalance).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+          </div>
+        </Link>
         <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold mr-2 transition-all hover:scale-105 border" data-testid="badge-kyc-status">
           {kycStatus === "verified" ? (
             <span className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800 flex items-center gap-2 px-2 py-0.5 rounded-full">
@@ -269,9 +278,9 @@ function ClientLayout() {
       <div className="flex h-screen w-full">
         <AppSidebar />
         <div className="flex flex-col flex-1 overflow-hidden relative">
+          <TickerBar />
           <ClientHeader />
           <AnnouncementBar />
-          <TickerBar />
           <main className="flex-1 overflow-y-auto bg-muted/30 flex flex-col">
             <div className="flex-1 p-4 sm:p-6 lg:p-8">
               <ClientRouter />
