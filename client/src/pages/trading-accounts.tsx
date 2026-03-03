@@ -206,6 +206,52 @@ export default function TradingAccounts() {
     return amount * rate;
   }
 
+  const [transferAmount, setTransferAmount] = useState("");
+  const [transferToAccountId, setTransferToAccountId] = useState("");
+
+  const transferToAccount = (accounts || []).find((a) => String(a.id) === transferToAccountId) || null;
+
+  function getTransferConversionRate() {
+    if (!selectedAccount || !transferToAccount) return 1;
+    if (selectedAccount.currency === transferToAccount.currency) return 1;
+    return conversionRates[selectedAccount.currency]?.[transferToAccount.currency] ?? 1;
+  }
+
+  function getTransferConvertedAmount() {
+    const amount = Number(transferAmount) || 0;
+    return amount * getTransferConversionRate();
+  }
+
+  const transferMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedAccount || !transferToAccountId) throw new Error("Missing accounts");
+      return apiRequest("POST", "/api/trading-accounts/internal-transfer", {
+        fromAccountId: String(selectedAccount.id),
+        toAccountId: transferToAccountId,
+        amount: transferAmount,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/trading-accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      const rate = getTransferConversionRate();
+      const converted = getTransferConvertedAmount();
+      const fromCurrency = selectedAccount?.currency || "USD";
+      const toCurrency = transferToAccount?.currency || "USD";
+      const desc = fromCurrency !== toCurrency
+        ? `${currencySymbols[fromCurrency]}${Number(transferAmount).toLocaleString()} → ${currencySymbols[toCurrency]}${converted.toFixed(2)} transferred`
+        : `${currencySymbols[fromCurrency]}${Number(transferAmount).toLocaleString()} transferred`;
+      toast({ title: "Transfer successful", description: desc });
+      setTransferOpen(false);
+      setTransferAmount("");
+      setTransferToAccountId("");
+    },
+    onError: (error: any) => {
+      toast({ title: "Transfer failed", description: error?.message || "Could not complete transfer", variant: "destructive" });
+    },
+  });
+
   const passwordsMatch = newPassword === confirmPassword;
   const isPasswordValid = newPassword.length >= 6 && passwordsMatch;
 
@@ -238,7 +284,7 @@ export default function TradingAccounts() {
     { label: "Leverage", icon: RefreshCw, action: (account: TradingAccount) => { setSelectedAccount(account); setNewLeverage(account.leverage); setLeverageOpen(true); } },
     { label: "Deposit", icon: ArrowDownCircle, action: (account: TradingAccount) => { setSelectedAccount(account); setDepositAmount(""); setDepositOpen(true); } },
     { label: "Withdraw", icon: ArrowUpCircle, action: (account: TradingAccount) => { setSelectedAccount(account); setWithdrawAmount(""); setWithdrawCurrency("USD"); setWithdrawOpen(true); } },
-    { label: "Transfer", icon: ArrowLeftRight, action: (account: TradingAccount) => { setSelectedAccount(account); setTransferOpen(true); } },
+    { label: "Transfer", icon: ArrowLeftRight, action: (account: TradingAccount) => { setSelectedAccount(account); setTransferAmount(""); setTransferToAccountId(""); setTransferOpen(true); } },
     { label: "Bonus", icon: Gift, action: () => { toast({ title: "Coming soon", description: "Bonus feature is coming soon." }); } },
   ];
 
@@ -393,13 +439,15 @@ export default function TradingAccounts() {
                       <span className="font-bold text-white text-base" data-testid={`text-account-number-${account.id}`}>
                         {account.accountNumber}
                       </span>
-                      <button
-                        onClick={() => navigate(`/trading/account/${account.id}`)}
-                        className="text-gray-400 cursor-pointer"
+                      <a
+                        href="https://webtrader.leveragemarkets.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-gray-400 cursor-pointer hover:text-white transition-colors"
                         data-testid={`button-webtrader-${account.id}`}
                       >
                         <CandlestickChart className="w-5 h-5" />
-                      </button>
+                      </a>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="border border-emerald-500 text-emerald-400 px-3 py-1 rounded-lg text-xs font-bold" data-testid={`badge-status-${account.id}`}>
@@ -912,21 +960,118 @@ export default function TradingAccounts() {
             <DialogTitle>Internal Transfer</DialogTitle>
             <DialogDescription>Transfer funds between your trading accounts.</DialogDescription>
           </DialogHeader>
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50">
-            <div className="p-2 rounded-lg bg-purple-50 dark:bg-purple-900/20">
-              <ArrowRightLeft className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+
+          <div className="space-y-4">
+            <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Transfer From</p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-purple-50 dark:bg-purple-900/20">
+                    <ArrowRightLeft className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <div>
+                    <p className="font-mono font-medium text-sm text-gray-900 dark:text-white" data-testid="text-transfer-from-account">{selectedAccount?.accountNumber}</p>
+                    <p className="text-xs text-gray-400">{selectedAccount?.platform} · {selectedAccount?.currency}</p>
+                  </div>
+                </div>
+                <p className="text-sm font-medium text-gray-900 dark:text-white" data-testid="text-transfer-from-balance">
+                  {currencySymbols[selectedAccount?.currency || "USD"]}{Number(selectedAccount?.balance || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                </p>
+              </div>
             </div>
+
             <div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Transfer from</p>
-              <p className="font-mono font-medium text-sm text-gray-900 dark:text-white">{selectedAccount?.accountNumber}</p>
+              <Label className="text-sm text-gray-700 dark:text-gray-300">Transfer To</Label>
+              <Select value={transferToAccountId} onValueChange={setTransferToAccountId}>
+                <SelectTrigger className="mt-1" data-testid="select-transfer-to">
+                  <SelectValue placeholder="Select destination account" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(accounts || [])
+                    .filter((a) => selectedAccount && a.id !== selectedAccount.id)
+                    .map((a) => (
+                      <SelectItem key={a.id} value={String(a.id)} data-testid={`option-transfer-to-${a.id}`}>
+                        {a.accountNumber} · {a.platform} · {a.currency} ({currencySymbols[a.currency || "USD"]}{Number(a.balance).toLocaleString("en-US", { minimumFractionDigits: 2 })})
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
             </div>
+
+            {transferToAccount && (
+              <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Destination Account</p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/20">
+                      <Wallet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                    <div>
+                      <p className="font-mono font-medium text-sm text-gray-900 dark:text-white" data-testid="text-transfer-to-account">{transferToAccount.accountNumber}</p>
+                      <p className="text-xs text-gray-400">{transferToAccount.platform} · {transferToAccount.currency}</p>
+                    </div>
+                  </div>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white" data-testid="text-transfer-to-balance">
+                    {currencySymbols[transferToAccount.currency || "USD"]}{Number(transferToAccount.balance).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div>
+              <Label className="text-sm text-gray-700 dark:text-gray-300">Amount ({selectedAccount?.currency || "USD"})</Label>
+              <Input
+                type="number"
+                placeholder="0.00"
+                value={transferAmount}
+                onChange={(e) => setTransferAmount(e.target.value)}
+                className="mt-1"
+                data-testid="input-transfer-amount"
+              />
+              <div className="flex gap-2 mt-2">
+                {[100, 500, 1000].map((preset) => (
+                  <Button key={preset} variant="outline" size="sm" onClick={() => setTransferAmount(String(preset))} data-testid={`button-transfer-preset-${preset}`}>
+                    {currencySymbols[selectedAccount?.currency || "USD"]}{preset}
+                  </Button>
+                ))}
+                <Button variant="outline" size="sm" onClick={() => setTransferAmount(String(Number(selectedAccount?.balance || 0)))} data-testid="button-transfer-max">
+                  Max
+                </Button>
+              </div>
+            </div>
+
+            {transferToAccount && selectedAccount && selectedAccount.currency !== transferToAccount.currency && Number(transferAmount) > 0 && (
+              <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600 dark:text-gray-400">Exchange Rate</span>
+                  <span className="font-medium text-gray-900 dark:text-white" data-testid="text-transfer-rate">
+                    1 {selectedAccount.currency} = {getTransferConversionRate().toFixed(4)} {transferToAccount.currency}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600 dark:text-gray-400">You send</span>
+                  <span className="font-medium text-gray-900 dark:text-white" data-testid="text-transfer-send">
+                    {currencySymbols[selectedAccount.currency]}{Number(transferAmount).toLocaleString("en-US", { minimumFractionDigits: 2 })} {selectedAccount.currency}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600 dark:text-gray-400">Recipient gets</span>
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400" data-testid="text-transfer-receive">
+                    {currencySymbols[transferToAccount.currency]}{getTransferConvertedAmount().toFixed(2)} {transferToAccount.currency}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <Button
+              className="w-full"
+              onClick={() => transferMutation.mutate()}
+              disabled={transferMutation.isPending || !transferAmount || !transferToAccountId || Number(transferAmount) <= 0 || Number(transferAmount) > Number(selectedAccount?.balance || 0)}
+              data-testid="button-submit-transfer"
+            >
+              {transferMutation.isPending ? "Processing..." : "Transfer Now"}
+            </Button>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Available: <span className="font-medium text-gray-900 dark:text-white">${Number(selectedAccount?.balance || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
-          </p>
-          <Button variant="outline" className="w-full" onClick={() => setTransferOpen(false)} data-testid="button-close-transfer">
-            Close
-          </Button>
         </DialogContent>
       </Dialog>
     </div>
