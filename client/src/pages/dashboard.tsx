@@ -93,10 +93,11 @@ interface StatCardProps {
   trend?: string;
   isPositive?: boolean;
   icon: JSX.Element;
+  iconBg?: string;
   link?: string;
 }
 
-function StatCard({ title, value, trend, isPositive = true, icon, link }: StatCardProps) {
+function StatCard({ title, value, trend, isPositive = true, icon, iconBg, link }: StatCardProps) {
   const content = (
     <div
       className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all cursor-pointer h-full"
@@ -107,7 +108,7 @@ function StatCard({ title, value, trend, isPositive = true, icon, link }: StatCa
           <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{title}</p>
           <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{value}</h3>
         </div>
-        <div className="p-3 bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400 rounded-lg shrink-0">
+        <div className={`p-3 rounded-lg shrink-0 ${iconBg || "bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400"}`}>
           {icon}
         </div>
       </div>
@@ -172,6 +173,7 @@ export default function Dashboard() {
           trend="+12.5%"
           isPositive={true}
           icon={<Wallet size={20} />}
+          iconBg="bg-sky-50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400"
           link="/wallet"
         />
         <StatCard
@@ -180,6 +182,7 @@ export default function Dashboard() {
           trend="+8.4%"
           isPositive={true}
           icon={<ArrowUpRight size={20} />}
+          iconBg="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400"
           link="/wallet"
         />
         <StatCard
@@ -188,6 +191,7 @@ export default function Dashboard() {
           trend="+5.2%"
           isPositive={false}
           icon={<ArrowDownRight size={20} />}
+          iconBg="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400"
           link="/wallet"
         />
         <StatCard
@@ -196,6 +200,7 @@ export default function Dashboard() {
           trend="+$340.00"
           isPositive={true}
           icon={<DollarSign size={20} />}
+          iconBg="bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
           link="/forex/ib-dashboard"
         />
       </div>
@@ -246,24 +251,28 @@ export default function Dashboard() {
           title="Trading Accounts"
           value={`${stats?.tradingAccounts ?? 4}`}
           icon={<CandlestickChart size={20} />}
+          iconBg="bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400"
           link="/forex/accounts"
         />
         <StatCard
           title="Prop Accounts"
           value="2 Active"
           icon={<Trophy size={20} />}
+          iconBg="bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400"
           link="/prop-trading"
         />
         <StatCard
           title="Total Investments"
           value="$5,200.00"
           icon={<PiggyBank size={20} />}
+          iconBg="bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400"
           link="/investment"
         />
         <StatCard
           title="Support Tickets"
           value={`${stats?.openTickets ?? 1} Open`}
           icon={<Headphones size={20} />}
+          iconBg="bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400"
           link="/support"
         />
       </div>
@@ -275,6 +284,7 @@ export default function Dashboard() {
           trend="+15%"
           isPositive={true}
           icon={<Users size={20} />}
+          iconBg="bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400"
           link="/forex/ib-dashboard"
         />
         <StatCard
@@ -283,6 +293,7 @@ export default function Dashboard() {
           trend="+5%"
           isPositive={true}
           icon={<UserPlus size={20} />}
+          iconBg="bg-cyan-50 dark:bg-cyan-900/20 text-cyan-600 dark:text-cyan-400"
           link="/forex/ib-dashboard"
         />
         <StatCard
@@ -291,6 +302,7 @@ export default function Dashboard() {
           trend="+8%"
           isPositive={true}
           icon={<Gift size={20} />}
+          iconBg="bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400"
           link="/investment"
         />
         <StatCard
@@ -299,6 +311,7 @@ export default function Dashboard() {
           trend="+150"
           isPositive={true}
           icon={<Star size={20} />}
+          iconBg="bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400"
           link="/loyalty-points"
         />
       </div>
