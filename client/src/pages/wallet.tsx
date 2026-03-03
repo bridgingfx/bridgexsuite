@@ -16,8 +16,10 @@ import {
   Send,
   Download,
   Gift,
+  RefreshCw,
+  ChevronDown,
 } from "lucide-react";
-import type { Transaction } from "@shared/schema";
+import type { Transaction, TradingAccount } from "@shared/schema";
 
 const depositMethods = [
   { id: "crypto", name: "Crypto (USDT)", icon: Bitcoin, desc: "Instant \u2022 Zero Fees" },
@@ -39,9 +41,10 @@ const demoTransactions = [
 
 export default function WalletPage() {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<"overview" | "deposit" | "withdraw">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "deposit" | "withdraw" | "transfer">("overview");
   const [depositForm, setDepositForm] = useState({ method: "", amount: "" });
   const [withdrawForm, setWithdrawForm] = useState({ method: "", amount: "", details: "" });
+  const [transferForm, setTransferForm] = useState({ fromAccount: "wallet", toAccount: "", amount: "" });
 
   const { data: transactions, isLoading } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],
@@ -91,11 +94,53 @@ export default function WalletPage() {
     },
   });
 
+  const { data: tradingAccounts } = useQuery<TradingAccount[]>({
+    queryKey: ["/api/trading-accounts"],
+  });
+
+  const transferMutation = useMutation({
+    mutationFn: async () => {
+      const { fromAccount, toAccount, amount } = transferForm;
+      if (fromAccount === "wallet" && toAccount) {
+        return apiRequest("POST", `/api/trading-accounts/${toAccount}/deposit`, { amount });
+      }
+      return apiRequest("POST", "/api/transactions", {
+        type: "internal_transfer",
+        amount,
+        method: "internal_transfer",
+        currency: "USD",
+        notes: `Internal transfer from ${fromAccount} to ${toAccount}`,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions/recent"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/trading-accounts"] });
+      toast({ title: "Transfer completed successfully" });
+      setTransferForm({ fromAccount: "wallet", toAccount: "", amount: "" });
+      setActiveTab("overview");
+    },
+    onError: (error: any) => {
+      toast({ title: error?.message || "Transfer failed", variant: "destructive" });
+    },
+  });
+
   const deposits = (transactions || []).filter((t) => t.type === "deposit");
   const withdrawals = (transactions || []).filter((t) => t.type === "withdrawal");
   const totalDeposits = deposits.reduce((sum, d) => sum + Number(d.amount), 0);
   const totalWithdrawals = withdrawals.reduce((sum, w) => sum + Number(w.amount), 0);
   const walletBalance = totalDeposits - totalWithdrawals || 24592.50;
+
+  const activeAccounts = (tradingAccounts || []).filter((a) => a.status === "active");
+
+  const swapAccounts = () => {
+    setTransferForm((prev) => ({
+      ...prev,
+      fromAccount: prev.toAccount || "wallet",
+      toAccount: prev.fromAccount,
+    }));
+  };
 
   const allTx = transactions && transactions.length > 0 ? transactions : demoTransactions;
 
@@ -124,6 +169,13 @@ export default function WalletPage() {
             data-testid="button-tab-withdraw"
           >
             Withdraw
+          </button>
+          <button
+            onClick={() => setActiveTab("transfer")}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === "transfer" ? "bg-brand-600 text-white" : "bg-white dark:bg-dark-card text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700"}`}
+            data-testid="button-tab-transfer"
+          >
+            Internal Transfer
           </button>
         </div>
       </div>
@@ -313,6 +365,106 @@ export default function WalletPage() {
               data-testid="button-submit-withdrawal"
             >
               <Send size={18} /> {withdrawMutation.isPending ? "Processing..." : "Submit Request"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "transfer" && (
+        <div className="bg-white dark:bg-dark-card rounded-xl p-6 border border-gray-100 dark:border-gray-800 animate-fade-in space-y-6" data-testid="transfer-form">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <ArrowLeftRight className="text-blue-500" /> Internal Transfer
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Transfer funds between your wallet and trading accounts instantly with zero fees.
+          </p>
+
+          <div className="max-w-lg space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">From</label>
+              <select
+                value={transferForm.fromAccount}
+                onChange={(e) => setTransferForm({ ...transferForm, fromAccount: e.target.value, toAccount: "" })}
+                className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none"
+                data-testid="select-transfer-from"
+              >
+                <option value="wallet">Main Wallet (${walletBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })})</option>
+                {activeAccounts.map((acc) => (
+                  <option key={acc.id} value={acc.id}>
+                    {acc.accountNumber} - {acc.platform} {acc.type.toUpperCase()} (${Number(acc.balance).toLocaleString("en-US", { minimumFractionDigits: 2 })})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex justify-center">
+              <button
+                onClick={swapAccounts}
+                className="p-2 rounded-full border border-gray-200 dark:border-gray-700 text-gray-500 hover:text-brand-600 hover:border-brand-500 transition-all"
+                data-testid="button-swap-accounts"
+              >
+                <RefreshCw size={20} />
+              </button>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">To</label>
+              <select
+                value={transferForm.toAccount}
+                onChange={(e) => setTransferForm({ ...transferForm, toAccount: e.target.value })}
+                className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none"
+                data-testid="select-transfer-to"
+              >
+                <option value="">Select destination account</option>
+                {transferForm.fromAccount !== "wallet" && (
+                  <option value="wallet">Main Wallet (${walletBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })})</option>
+                )}
+                {activeAccounts
+                  .filter((acc) => acc.id !== transferForm.fromAccount)
+                  .map((acc) => (
+                    <option key={acc.id} value={acc.id}>
+                      {acc.accountNumber} - {acc.platform} {acc.type.toUpperCase()} (${Number(acc.balance).toLocaleString("en-US", { minimumFractionDigits: 2 })})
+                    </option>
+                  ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount (USD)</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">$</span>
+                <input
+                  type="number"
+                  placeholder="0.00"
+                  value={transferForm.amount}
+                  onChange={(e) => setTransferForm({ ...transferForm, amount: e.target.value })}
+                  className="w-full pl-8 p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none text-lg font-bold"
+                  data-testid="input-transfer-amount"
+                />
+              </div>
+            </div>
+
+            {transferForm.fromAccount && transferForm.toAccount && transferForm.amount && (
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 animate-fade-in" data-testid="transfer-summary">
+                <h4 className="text-sm font-bold text-blue-800 dark:text-blue-300 mb-2">Transfer Summary</h4>
+                <div className="text-sm text-blue-700 dark:text-blue-400 space-y-1">
+                  <p>From: <span className="font-medium">{transferForm.fromAccount === "wallet" ? "Main Wallet" : activeAccounts.find(a => a.id === transferForm.fromAccount)?.accountNumber || transferForm.fromAccount}</span></p>
+                  <p>To: <span className="font-medium">{transferForm.toAccount === "wallet" ? "Main Wallet" : activeAccounts.find(a => a.id === transferForm.toAccount)?.accountNumber || transferForm.toAccount}</span></p>
+                  <p>Amount: <span className="font-bold">${Number(transferForm.amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span></p>
+                  <p className="text-xs mt-2">Fee: <span className="text-green-600 dark:text-green-400 font-medium">$0.00 (Free)</span></p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end pt-4 border-t border-gray-100 dark:border-gray-800">
+            <button
+              disabled={!transferForm.fromAccount || !transferForm.toAccount || !transferForm.amount || transferMutation.isPending}
+              onClick={() => transferMutation.mutate()}
+              className="px-8 py-3 bg-brand-600 hover:bg-brand-700 disabled:bg-gray-300 dark:disabled:bg-gray-800 disabled:text-gray-500 text-white rounded-lg font-bold shadow-lg shadow-brand-500/20 transition-all flex items-center gap-2"
+              data-testid="button-execute-transfer"
+            >
+              <ArrowLeftRight size={18} /> {transferMutation.isPending ? "Processing..." : "Execute Transfer"}
             </button>
           </div>
         </div>
