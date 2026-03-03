@@ -30,12 +30,11 @@ const demoFeatures = [
 ];
 
 const tradingRules = [
-  { metric: "Profit Target", phase1: "8%", phase2: "5%", funded: "N/A" },
   { metric: "Max Daily Loss", phase1: "5%", phase2: "5%", funded: "5%" },
   { metric: "Max Total Drawdown", phase1: "10%", phase2: "10%", funded: "10%" },
-  { metric: "Min Trading Days", phase1: "5 days", phase2: "5 days", funded: "N/A" },
-  { metric: "Profit Split", phase1: "N/A", phase2: "N/A", funded: "80%" },
-  { metric: "Leverage", phase1: "1:100", phase2: "1:100", funded: "1:100" },
+  { metric: "Profit Target", phase1: "8%", phase2: "5%", funded: "N/A" },
+  { metric: "Minimum Trading Days", phase1: "5 days", phase2: "5 days", funded: "N/A" },
+  { metric: "Maximum Trading Period", phase1: "No Limit", phase2: "No Limit", funded: "No Limit" },
 ];
 
 export default function PropTradingPage() {
@@ -95,7 +94,7 @@ export default function PropTradingPage() {
       {challengesLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
+            <div key={i} className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
               <div className="animate-pulse space-y-4">
                 <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3" />
                 <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
@@ -116,16 +115,16 @@ export default function PropTradingPage() {
             return (
               <div
                 key={challenge.id}
-                className={`relative bg-white dark:bg-gray-900 p-6 rounded-xl border shadow-sm hover:shadow-md transition-all ${
+                className={`relative bg-white dark:bg-dark-card p-6 rounded-xl border shadow-sm hover:shadow-md transition-all ${
                   isPopular
-                    ? "border-sky-500 ring-2 ring-sky-500/20 bg-sky-50/50 dark:bg-sky-900/10"
+                    ? "border-brand-500 ring-2 ring-brand-500/20 bg-brand-50 dark:bg-brand-900/10"
                     : "border-gray-100 dark:border-gray-800"
                 }`}
                 data-testid={`card-challenge-${challenge.id}`}
               >
                 {isPopular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <Badge className="bg-sky-600 text-white border-0">
+                    <Badge className="bg-brand-600 text-white border-0">
                       <Star className="w-3 h-3 mr-1" />
                       POPULAR
                     </Badge>
@@ -139,7 +138,7 @@ export default function PropTradingPage() {
                   <h2 className="text-4xl font-bold text-gray-900 dark:text-white" data-testid={`text-funding-${challenge.id}`}>
                     ${Number(challenge.accountSize).toLocaleString()}
                   </h2>
-                  <p className="text-lg font-semibold text-sky-600 dark:text-sky-400 mt-1" data-testid={`text-price-${challenge.id}`}>
+                  <p className="text-lg font-semibold text-brand-600 dark:text-brand-400 mt-1" data-testid={`text-price-${challenge.id}`}>
                     ${Number(challenge.price).toFixed(0)}
                   </p>
                 </div>
@@ -166,7 +165,7 @@ export default function PropTradingPage() {
                 </div>
 
                 <Button
-                  className={`w-full ${isPopular ? "bg-sky-600 text-white" : ""}`}
+                  className={`w-full ${isPopular ? "bg-brand-600 text-white" : ""}`}
                   variant={isPopular ? "default" : "outline"}
                   onClick={() => purchaseMutation.mutate(challenge.id)}
                   disabled={purchaseMutation.isPending}
@@ -188,7 +187,7 @@ export default function PropTradingPage() {
         {accountsLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
+              <div key={i} className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
                 <div className="animate-pulse space-y-3">
                   <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3" />
                   <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
@@ -197,139 +196,135 @@ export default function PropTradingPage() {
             ))}
           </div>
         ) : activeAccount ? (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm" data-testid="stat-account-size">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Account</p>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                      ${Number(activeAccount.currentBalance).toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                    </h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Evaluation</p>
-                  </div>
-                  <div className="p-3 bg-sky-50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400 rounded-lg">
-                    <DollarSign className="w-5 h-5" />
-                  </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm" data-testid="stat-account-size">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Account</p>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                    ${Number(activeAccount.currentBalance).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                  </h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Evaluation</p>
+                </div>
+                <div className="p-3 bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400 rounded-lg">
+                  <DollarSign className="w-5 h-5" />
                 </div>
               </div>
+            </div>
 
-              <div className="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm" data-testid="stat-phase">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Phase</p>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                      {activeAccount.status === "funded" ? "Funded" : `Phase ${activeAccount.currentPhase}`}
-                    </h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      {activeAccount.status === "funded" ? "Live Trading" : "Evaluation"}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-lg">
-                    <Layers className="w-5 h-5" />
-                  </div>
+            <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm" data-testid="stat-phase">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Phase</p>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                    {activeAccount.status === "funded" ? "Funded" : `Phase ${activeAccount.currentPhase}`}
+                  </h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {activeAccount.status === "funded" ? "Live Trading" : "Evaluation"}
+                  </p>
+                </div>
+                <div className="p-3 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-lg">
+                  <Layers className="w-5 h-5" />
                 </div>
               </div>
+            </div>
 
-              <div className="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm" data-testid="stat-equity">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Current Equity</p>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                      ${Number(activeAccount.currentBalance).toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                    </h3>
-                    <div className="flex items-center gap-1 mt-1">
-                      <TrendingUp className="w-3 h-3 text-emerald-500" />
-                      <span className={`text-xs font-medium ${Number(activeAccount.currentProfit) >= 0 ? "text-emerald-500" : "text-red-500"}`}>
-                        {Number(activeAccount.currentProfit) >= 0 ? "+" : ""}
-                        {((Number(activeAccount.currentProfit) / Math.max(Number(activeAccount.currentBalance), 1)) * 100).toFixed(1)}%
-                      </span>
-                    </div>
-                  </div>
-                  <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-lg">
-                    <TrendingUp className="w-5 h-5" />
+            <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm" data-testid="stat-equity">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Current Equity</p>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                    ${Number(activeAccount.currentBalance).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                  </h3>
+                  <div className="flex items-center gap-1 mt-1">
+                    <TrendingUp className="w-3 h-3 text-emerald-500" />
+                    <span className={`text-xs font-medium ${Number(activeAccount.currentProfit) >= 0 ? "text-emerald-500" : "text-red-500"}`}>
+                      {Number(activeAccount.currentProfit) >= 0 ? "+" : ""}
+                      {((Number(activeAccount.currentProfit) / Math.max(Number(activeAccount.currentBalance), 1)) * 100).toFixed(1)}%
+                    </span>
                   </div>
                 </div>
+                <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-lg">
+                  <TrendingUp className="w-5 h-5" />
+                </div>
               </div>
+            </div>
 
-              <div className="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm" data-testid="stat-profit-target">
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Profit Target</p>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                      {Math.min(((Number(activeAccount.currentProfit) / Math.max(Number(activeAccount.currentBalance) * 0.08, 1)) * 100), 100).toFixed(1)}%
-                    </h3>
-                  </div>
-                  <div className="p-3 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-lg">
-                    <Target className="w-5 h-5" />
-                  </div>
+            <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm" data-testid="stat-profit-target">
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Profit Target</p>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                    {Math.min(((Number(activeAccount.currentProfit) / Math.max(Number(activeAccount.currentBalance) * 0.08, 1)) * 100), 100).toFixed(1)}%
+                  </h3>
                 </div>
-                <Progress
-                  value={Math.min(((Number(activeAccount.currentProfit) / Math.max(Number(activeAccount.currentBalance) * 0.08, 1)) * 100), 100)}
-                  className="h-2"
-                  data-testid="progress-profit-target"
-                />
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                  ${Number(activeAccount.currentProfit).toLocaleString("en-US", { minimumFractionDigits: 2 })} / ${(Number(activeAccount.currentBalance) * 0.08).toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                </p>
+                <div className="p-3 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-lg">
+                  <Target className="w-5 h-5" />
+                </div>
               </div>
+              <Progress
+                value={Math.min(((Number(activeAccount.currentProfit) / Math.max(Number(activeAccount.currentBalance) * 0.08, 1)) * 100), 100)}
+                className="h-2"
+                data-testid="progress-profit-target"
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                ${Number(activeAccount.currentProfit).toLocaleString("en-US", { minimumFractionDigits: 2 })} / ${(Number(activeAccount.currentBalance) * 0.08).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+              </p>
             </div>
           </div>
         ) : (
-          <div className="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div data-testid="stat-account-demo">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Account</p>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">$50K</h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Evaluation</p>
-                  </div>
-                  <div className="p-3 bg-sky-50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400 rounded-lg">
-                    <DollarSign className="w-5 h-5" />
-                  </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm" data-testid="stat-account-demo">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Account</p>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">$50K</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Evaluation</p>
+                </div>
+                <div className="p-3 bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400 rounded-lg">
+                  <DollarSign className="w-5 h-5" />
                 </div>
               </div>
-              <div data-testid="stat-phase-demo">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Phase</p>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">Phase 1</h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Evaluation</p>
-                  </div>
-                  <div className="p-3 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-lg">
-                    <Layers className="w-5 h-5" />
-                  </div>
+            </div>
+            <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm" data-testid="stat-phase-demo">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Phase</p>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">Phase 1</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Evaluation</p>
+                </div>
+                <div className="p-3 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-lg">
+                  <Layers className="w-5 h-5" />
                 </div>
               </div>
-              <div data-testid="stat-equity-demo">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Current Equity</p>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">$51,200.00</h3>
-                    <div className="flex items-center gap-1 mt-1">
-                      <TrendingUp className="w-3 h-3 text-emerald-500" />
-                      <span className="text-xs font-medium text-emerald-500">+2.4%</span>
-                    </div>
-                  </div>
-                  <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-lg">
-                    <TrendingUp className="w-5 h-5" />
+            </div>
+            <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm" data-testid="stat-equity-demo">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Current Equity</p>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">$51,200.00</h3>
+                  <div className="flex items-center gap-1 mt-1">
+                    <TrendingUp className="w-3 h-3 text-emerald-500" />
+                    <span className="text-xs font-medium text-emerald-500">+2.4%</span>
                   </div>
                 </div>
-              </div>
-              <div data-testid="stat-profit-demo">
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Profit Target</p>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">30.0%</h3>
-                  </div>
-                  <div className="p-3 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-lg">
-                    <Target className="w-5 h-5" />
-                  </div>
+                <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-lg">
+                  <TrendingUp className="w-5 h-5" />
                 </div>
-                <Progress value={30} className="h-2" data-testid="progress-profit-target-demo" />
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">$1,200.00 / $4,000.00</p>
               </div>
+            </div>
+            <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm" data-testid="stat-profit-demo">
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Profit Target</p>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">60.0%</h3>
+                </div>
+                <div className="p-3 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-lg">
+                  <Target className="w-5 h-5" />
+                </div>
+              </div>
+              <Progress value={60} className="h-2" data-testid="progress-profit-target-demo" />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">$2,400.00 / $4,000.00</p>
             </div>
           </div>
         )}
@@ -339,7 +334,7 @@ export default function PropTradingPage() {
         <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4" data-testid="text-trading-rules-title">
           Trading Rules
         </h2>
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm" data-testid="table-trading-rules">
               <thead>

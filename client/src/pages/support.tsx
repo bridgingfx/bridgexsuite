@@ -38,7 +38,7 @@ function getStatusBadgeClass(status: string) {
     case "open":
       return "bg-amber-500/10 text-amber-600 dark:text-amber-400";
     case "in_progress":
-      return "bg-sky-500/10 text-sky-600 dark:text-sky-400";
+      return "bg-brand-500/10 text-brand-600 dark:text-brand-400";
     case "resolved":
       return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400";
     case "closed":
@@ -126,7 +126,7 @@ function TicketDetail({ ticket }: { ticket: SupportTicket }) {
             <div
               key={reply.id}
               className={`rounded-lg p-4 text-sm ${
-                reply.isAdmin ? "bg-sky-50 dark:bg-sky-900/10 border border-sky-100 dark:border-sky-800" : "bg-gray-50 dark:bg-gray-800/50"
+                reply.isAdmin ? "bg-brand-50 dark:bg-brand-900/10 border border-brand-100 dark:border-brand-800" : "bg-gray-50 dark:bg-gray-800/50"
               }`}
               data-testid={`reply-${reply.id}`}
             >
@@ -210,7 +210,7 @@ export default function Support() {
   const statCards = [
     { label: "Open Tickets", value: openCount, icon: MessageSquare, iconBg: "bg-amber-50 dark:bg-amber-900/20", iconColor: "text-amber-500" },
     { label: "Resolved", value: resolvedCount, icon: CheckCircle, iconBg: "bg-emerald-50 dark:bg-emerald-900/20", iconColor: "text-emerald-500" },
-    { label: "Total Tickets", value: (tickets || []).length, icon: HelpCircle, iconBg: "bg-sky-50 dark:bg-sky-900/20", iconColor: "text-sky-600" },
+    { label: "Total Tickets", value: (tickets || []).length, icon: HelpCircle, iconBg: "bg-brand-50 dark:bg-brand-900/20", iconColor: "text-brand-600 dark:text-brand-400" },
   ];
 
   return (
@@ -228,7 +228,7 @@ export default function Support() {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         {statCards.map((card) => (
-          <div key={card.label} className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6">
+          <div key={card.label} className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6">
             <div className="flex items-center justify-between gap-2 mb-3">
               <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{card.label}</span>
               <div className={`p-3 rounded-lg shrink-0 ${card.iconBg}`}>
@@ -240,7 +240,7 @@ export default function Support() {
         ))}
       </div>
 
-      <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6">
+      <div className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6">
         <div className="relative max-w-sm mb-6">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <Input
@@ -256,8 +256,8 @@ export default function Support() {
           <div className="py-12 text-center text-gray-500 dark:text-gray-400">Loading tickets...</div>
         ) : filtered.length === 0 ? (
           <div className="py-16 flex flex-col items-center gap-3">
-            <div className="p-3 bg-sky-50 dark:bg-sky-900/20 rounded-lg">
-              <HelpCircle className="w-6 h-6 text-sky-600" />
+            <div className="p-3 bg-brand-50 dark:bg-brand-900/20 rounded-lg">
+              <HelpCircle className="w-6 h-6 text-brand-600 dark:text-brand-400" />
             </div>
             <p className="font-medium text-gray-900 dark:text-white">No support tickets yet</p>
             <p className="text-sm text-gray-500 dark:text-gray-400">Create a ticket to get help from our support team</p>

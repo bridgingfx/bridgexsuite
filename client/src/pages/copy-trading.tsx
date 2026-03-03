@@ -40,6 +40,8 @@ const demoTraders = [
     monthlyFee: 29,
     monthlyReturn: 8.5,
     avatarBg: "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400",
+    color: "#3b82f6",
+    sparkline: [2.1, 3.5, 1.8, 4.2, 2.8, 3.1, 5.0, 2.4],
   },
   {
     id: "trader-2",
@@ -54,6 +56,8 @@ const demoTraders = [
     monthlyFee: 49,
     monthlyReturn: 12.3,
     avatarBg: "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400",
+    color: "#8b5cf6",
+    sparkline: [3.2, 2.8, 4.1, 3.5, 5.2, 2.9, 4.8, 3.6],
   },
   {
     id: "trader-3",
@@ -68,6 +72,8 @@ const demoTraders = [
     monthlyFee: 39,
     monthlyReturn: 15.7,
     avatarBg: "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400",
+    color: "#f59e0b",
+    sparkline: [4.5, -1.2, 5.8, 2.3, 6.1, 3.4, 7.2, -0.8],
   },
   {
     id: "trader-4",
@@ -82,6 +88,8 @@ const demoTraders = [
     monthlyFee: 35,
     monthlyReturn: 10.1,
     avatarBg: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400",
+    color: "#10b981",
+    sparkline: [1.8, 2.4, 3.1, 1.5, 4.2, 2.8, 3.5, 4.1],
   },
 ];
 
@@ -184,7 +192,7 @@ export default function CopyTradingPage() {
           { label: "Total Followers", value: "1,532", trend: "+120 this week", icon: <Users className="w-5 h-5" />, iconBg: "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400" },
           { label: "Best Monthly", value: "+15.7%", trend: "Marcus Webb", icon: <TrendingUp className="w-5 h-5" />, iconBg: "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400" },
         ].map((card) => (
-          <div key={card.label} className="bg-card rounded-xl border shadow-sm hover:shadow-md transition-all p-6" data-testid={`stat-card-${card.label.toLowerCase().replace(/\s+/g, '-')}`}>
+          <div key={card.label} className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6" data-testid={`stat-card-${card.label.toLowerCase().replace(/\s+/g, '-')}`}>
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{card.label}</p>
@@ -205,7 +213,7 @@ export default function CopyTradingPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4" data-testid="text-performance-heading">Trader Performance</h2>
-          <div className="bg-card rounded-xl border shadow-sm p-6">
+          <div className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6">
             <ResponsiveContainer width="100%" height={280}>
               <LineChart data={performanceData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.2} />
@@ -236,7 +244,7 @@ export default function CopyTradingPage() {
 
         <div>
           <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4" data-testid="text-allocation-heading">Portfolio Allocation</h2>
-          <div className="bg-card rounded-xl border shadow-sm p-6">
+          <div className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6">
             <div className="flex justify-center mb-4">
               <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
@@ -280,7 +288,7 @@ export default function CopyTradingPage() {
         <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4" data-testid="text-traders-heading">Top Traders</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {(displayProviders ? displayProviders.map(provider => (
-            <div key={provider.id} className="bg-card rounded-xl border shadow-sm hover:shadow-md transition-all p-6" data-testid={`card-provider-${provider.id}`}>
+            <div key={provider.id} className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6" data-testid={`card-provider-${provider.id}`}>
               <div className="flex items-center justify-between gap-2 mb-4">
                 <div className="flex items-center gap-3">
                   <Avatar className="w-12 h-12">
@@ -324,7 +332,7 @@ export default function CopyTradingPage() {
               </Button>
             </div>
           )) : demoTraders.map(trader => (
-            <div key={trader.id} className="bg-card rounded-xl border shadow-sm hover:shadow-md transition-all p-6" data-testid={`card-provider-${trader.id}`}>
+            <div key={trader.id} className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6" data-testid={`card-provider-${trader.id}`}>
               <div className="flex items-center justify-between gap-2 mb-4">
                 <div className="flex items-center gap-3">
                   <Avatar className="w-12 h-12">
@@ -358,6 +366,14 @@ export default function CopyTradingPage() {
                   <p className="font-bold text-sm text-gray-900 dark:text-white" data-testid={`text-risk-${trader.id}`}>{trader.riskScore}/10</p>
                 </div>
               </div>
+              <div className="mb-4">
+                <ResponsiveContainer width="100%" height={60}>
+                  <LineChart data={trader.sparkline.map((v, i) => ({ idx: i, val: v }))}>
+                    <Line type="monotone" dataKey="val" stroke={trader.color} strokeWidth={2} dot={false} />
+                    <Tooltip contentStyle={chartTooltipStyle} formatter={(value: number) => [`${value}%`, "Return"]} labelFormatter={() => ""} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
               <div className="flex items-center justify-between gap-2 text-sm text-gray-500 dark:text-gray-400 mb-4">
                 <span>{trader.totalTrades} total trades</span>
                 <span>${trader.monthlyFee}/month</span>
@@ -374,7 +390,7 @@ export default function CopyTradingPage() {
       {myRelationships && myRelationships.length > 0 && (
         <div>
           <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4" data-testid="text-copies-heading">My Active Copies</h2>
-          <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
+          <div className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>

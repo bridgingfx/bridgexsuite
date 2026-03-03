@@ -108,7 +108,7 @@ export default function ForexDashboard() {
         {kpis.map((card) => (
           <Link key={card.label} href={card.href}>
             <div
-              className="bg-white dark:bg-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all cursor-pointer h-full"
+              className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all cursor-pointer h-full"
               data-testid={`stat-card-${card.label.toLowerCase().replace(/\s+/g, '-')}`}
             >
               <div className="flex justify-between items-start">
@@ -145,7 +145,7 @@ export default function ForexDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all">
+        <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all">
           <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
             <div>
               <h2 className="text-lg font-bold text-gray-900 dark:text-white" data-testid="text-recent-trades-title">Recent Trades</h2>
@@ -200,7 +200,7 @@ export default function ForexDashboard() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all">
+        <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all">
           <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
             <div>
               <h2 className="text-lg font-bold text-gray-900 dark:text-white" data-testid="text-market-overview-title">Market Overview</h2>

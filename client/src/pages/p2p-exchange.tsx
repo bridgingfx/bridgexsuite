@@ -110,7 +110,7 @@ export default function P2PExchangePage() {
           { label: "Total Volume", value: "$0.00", icon: <DollarSign className="w-5 h-5" />, iconBg: "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400" },
           { label: "Avg. Completion", value: "0 min", icon: <Clock className="w-5 h-5" />, iconBg: "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400" },
         ].map((card) => (
-          <div key={card.label} className="bg-card rounded-xl border shadow-sm p-6" data-testid={`stat-card-${card.label.toLowerCase().replace(/\s+/g, '-')}`}>
+          <div key={card.label} className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6" data-testid={`stat-card-${card.label.toLowerCase().replace(/\s+/g, '-')}`}>
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{card.label}</p>
@@ -124,7 +124,7 @@ export default function P2PExchangePage() {
         ))}
       </div>
 
-      <div className="bg-card rounded-xl border shadow-sm p-6">
+      <div className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-2">
             <Button

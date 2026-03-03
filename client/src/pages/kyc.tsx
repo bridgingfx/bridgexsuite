@@ -120,8 +120,8 @@ export default function KycPage() {
       data-testid={`row-document-${doc.id}`}
     >
       <div className="flex items-center gap-3 min-w-0">
-        <div className="p-3 bg-sky-50 dark:bg-sky-900/20 rounded-lg shrink-0">
-          <FileText className="w-4 h-4 text-sky-600" />
+        <div className="p-3 bg-brand-50 dark:bg-brand-900/20 rounded-lg shrink-0">
+          <FileText className="w-4 h-4 text-brand-600 dark:text-brand-400" />
         </div>
         <div className="min-w-0">
           <p className="font-medium text-sm text-gray-900 dark:text-white">{formatDocType(doc.documentType)}</p>
@@ -147,8 +147,8 @@ export default function KycPage() {
 
   const emptyState = (
     <div className="flex flex-col items-center justify-center py-16 gap-3">
-      <div className="p-3 bg-sky-50 dark:bg-sky-900/20 rounded-lg">
-        <Shield className="w-6 h-6 text-sky-600" />
+      <div className="p-3 bg-brand-50 dark:bg-brand-900/20 rounded-lg">
+        <Shield className="w-6 h-6 text-brand-600 dark:text-brand-400" />
       </div>
       <p className="text-sm text-gray-500 dark:text-gray-400">No documents uploaded yet</p>
       <Button variant="outline" onClick={() => setUploadOpen(true)} data-testid="button-upload-empty">
@@ -171,7 +171,7 @@ export default function KycPage() {
         </Button>
       </div>
 
-      <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6" data-testid="card-verification-status">
+      <div className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6" data-testid="card-verification-status">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
             <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg shrink-0">
@@ -190,7 +190,7 @@ export default function KycPage() {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6" data-testid="card-verification-steps">
+      <div className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6" data-testid="card-verification-steps">
         <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Verification Steps</h3>
         <div className="flex flex-col md:flex-row gap-6">
           {verificationSteps.map((step, idx) => (
@@ -215,7 +215,7 @@ export default function KycPage() {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all overflow-visible">
+      <div className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all overflow-visible">
         <Tabs defaultValue="all">
           <div className="border-b border-gray-100 dark:border-gray-800 px-6 pt-4">
             <TabsList>
@@ -239,8 +239,8 @@ export default function KycPage() {
               <div className="py-12 text-center text-sm text-gray-500 dark:text-gray-400">Loading documents...</div>
             ) : pendingDocs.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 gap-3">
-                <div className="p-3 bg-sky-50 dark:bg-sky-900/20 rounded-lg">
-                  <Clock className="w-6 h-6 text-sky-600" />
+                <div className="p-3 bg-brand-50 dark:bg-brand-900/20 rounded-lg">
+                  <Clock className="w-6 h-6 text-brand-600 dark:text-brand-400" />
                 </div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">No documents pending review</p>
               </div>
@@ -251,13 +251,13 @@ export default function KycPage() {
         </Tabs>
       </div>
 
-      <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6" data-testid="card-why-verify">
+      <div className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6" data-testid="card-why-verify">
         <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Why Verify Your Account?</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {whyVerifyBenefits.map((benefit) => (
             <div key={benefit.title} className="flex flex-col items-start gap-3">
-              <div className="p-3 bg-sky-50 dark:bg-sky-900/20 rounded-lg">
-                <benefit.icon className="w-5 h-5 text-sky-600" />
+              <div className="p-3 bg-brand-50 dark:bg-brand-900/20 rounded-lg">
+                <benefit.icon className="w-5 h-5 text-brand-600 dark:text-brand-400" />
               </div>
               <div>
                 <p className="font-semibold text-sm text-gray-900 dark:text-white">{benefit.title}</p>

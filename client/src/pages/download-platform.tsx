@@ -93,7 +93,7 @@ export default function DownloadPlatformPage() {
         {platforms.map((platform, i) => (
           <div
             key={i}
-            className={`bg-card rounded-xl border shadow-sm hover:shadow-md transition-all p-6 relative ${platform.recommended ? "border-blue-400 dark:border-blue-600 ring-2 ring-blue-500/20" : ""}`}
+            className={`bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6 relative ${platform.recommended ? "border-blue-400 dark:border-blue-600 ring-2 ring-blue-500/20" : ""}`}
             data-testid={`platform-card-${i}`}
           >
             {platform.recommended && (
@@ -132,7 +132,7 @@ export default function DownloadPlatformPage() {
         ))}
       </div>
 
-      <div className="bg-card rounded-xl border shadow-sm p-6" data-testid="system-requirements">
+      <div className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6" data-testid="system-requirements">
         <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">System Requirements</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>

@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import {
   LayoutGrid,
   BarChart3,
   Clock,
   Newspaper,
   Calculator,
-  Globe,
   TrendingUp,
   Settings,
   CheckCircle2,
@@ -62,22 +61,13 @@ const initialWidgets: Widget[] = [
     bg: "bg-purple-50 dark:bg-purple-900/20",
   },
   {
-    title: "Market Sentiment",
-    description: "See how retail and institutional traders are positioned across major currency pairs and commodities.",
+    title: "Trading Signals",
+    description: "Receive AI-powered trading signals with entry/exit points, stop-loss, and take-profit levels for major currency pairs.",
     icon: TrendingUp,
     enabled: false,
     category: "Analysis",
     color: "text-red-600 dark:text-red-400",
     bg: "bg-red-50 dark:bg-red-900/20",
-  },
-  {
-    title: "World Clock",
-    description: "Track market sessions across major financial centers — New York, London, Tokyo, Sydney — with timezone overlays.",
-    icon: Globe,
-    enabled: false,
-    category: "Tools",
-    color: "text-indigo-600 dark:text-indigo-400",
-    bg: "bg-indigo-50 dark:bg-indigo-900/20",
   },
 ];
 
@@ -119,9 +109,9 @@ export default function WidgetsPage() {
           { label: "Total Widgets", value: widgets.length.toString(), icon: <LayoutGrid className="w-5 h-5" />, iconBg: "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400" },
           { label: "Active Widgets", value: enabledCount.toString(), icon: <CheckCircle2 className="w-5 h-5" />, iconBg: "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400" },
           { label: "Inactive Widgets", value: (widgets.length - enabledCount).toString(), icon: <XCircle className="w-5 h-5" />, iconBg: "bg-gray-100 dark:bg-gray-800/40 text-gray-500 dark:text-gray-400" },
-          { label: "Categories", value: "3", icon: <Settings className="w-5 h-5" />, iconBg: "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400" },
+          { label: "Categories", value: "2", icon: <Settings className="w-5 h-5" />, iconBg: "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400" },
         ].map((card) => (
-          <div key={card.label} className="bg-card rounded-xl border shadow-sm p-6" data-testid={`stat-card-${card.label.toLowerCase().replace(/\s+/g, '-')}`}>
+          <div key={card.label} className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6" data-testid={`stat-card-${card.label.toLowerCase().replace(/\s+/g, '-')}`}>
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{card.label}</p>
@@ -139,7 +129,7 @@ export default function WidgetsPage() {
         {widgets.map((widget, i) => (
           <div
             key={i}
-            className={`bg-card rounded-xl border shadow-sm hover:shadow-md transition-all p-6 ${widget.enabled ? "border-emerald-200 dark:border-emerald-800/50" : ""}`}
+            className={`bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6 ${widget.enabled ? "border-emerald-200 dark:border-emerald-800/50" : ""}`}
             data-testid={`widget-card-${i}`}
           >
             <div className="flex items-start justify-between gap-2 mb-4">
@@ -157,24 +147,16 @@ export default function WidgetsPage() {
               </Badge>
             </div>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 leading-relaxed">{widget.description}</p>
-            <Button
-              variant={widget.enabled ? "outline" : "default"}
-              className="w-full"
-              onClick={() => toggleWidget(i)}
-              data-testid={`button-widget-toggle-${i}`}
-            >
-              {widget.enabled ? (
-                <>
-                  <XCircle className="w-4 h-4 mr-2" />
-                  Disable Widget
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className="w-4 h-4 mr-2" />
-                  Enable Widget
-                </>
-              )}
-            </Button>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {widget.enabled ? "Enabled" : "Disabled"}
+              </span>
+              <Switch
+                checked={widget.enabled}
+                onCheckedChange={() => toggleWidget(i)}
+                data-testid={`switch-widget-toggle-${i}`}
+              />
+            </div>
           </div>
         ))}
       </div>

@@ -84,7 +84,7 @@ export default function AICenterPage() {
           { label: "Risk Assessment", desc: "Portfolio risk analysis", icon: <Brain className="w-5 h-5" />, iconBg: "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400", status: "Available" },
           { label: "Strategy Builder", desc: "Create & backtest strategies", icon: <Zap className="w-5 h-5" />, iconBg: "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400", status: "Coming Soon" },
         ].map((card) => (
-          <div key={card.label} className="bg-card rounded-xl border shadow-sm hover:shadow-md transition-all p-6" data-testid={`feature-card-${card.label.toLowerCase().replace(/\s+/g, '-')}`}>
+          <div key={card.label} className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6" data-testid={`feature-card-${card.label.toLowerCase().replace(/\s+/g, '-')}`}>
             <div className="flex justify-between items-start mb-3">
               <div className={`p-3 rounded-lg ${card.iconBg}`}>
                 {card.icon}
@@ -99,7 +99,7 @@ export default function AICenterPage() {
         ))}
       </div>
 
-      <div className="bg-card rounded-xl border shadow-sm overflow-visible" data-testid="ai-chat-section">
+      <div className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-visible" data-testid="ai-chat-section">
         <div className="p-4 border-b flex items-center gap-2">
           <Bot className="w-5 h-5 text-purple-600 dark:text-purple-400" />
           <h2 className="text-lg font-bold text-gray-900 dark:text-white">Ask Avi</h2>

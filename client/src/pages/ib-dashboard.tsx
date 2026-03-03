@@ -47,6 +47,24 @@ const demoReferrals = [
   { id: 4, name: "Emily Davis", email: "emily.d@email.com", status: "pending", joinedDate: "2026-02-08", deposits: 0, commission: 0, tier: "Bronze" },
   { id: 5, name: "Robert Taylor", email: "r.taylor@email.com", status: "active", joinedDate: "2026-02-10", deposits: 2100, commission: 63, tier: "Silver" },
   { id: 6, name: "Lisa Anderson", email: "l.ander@email.com", status: "inactive", joinedDate: "2025-12-20", deposits: 1500, commission: 45, tier: "Bronze" },
+  { id: 7, name: "David Kim", email: "d.kim@email.com", status: "active", joinedDate: "2025-11-05", deposits: 4200, commission: 126, tier: "Gold" },
+  { id: 8, name: "Anna Martinez", email: "a.martinez@email.com", status: "active", joinedDate: "2025-11-18", deposits: 6800, commission: 204, tier: "Platinum" },
+  { id: 9, name: "Chris Evans", email: "c.evans@email.com", status: "active", joinedDate: "2025-12-03", deposits: 3100, commission: 93, tier: "Silver" },
+  { id: 10, name: "Sophia Lee", email: "s.lee@email.com", status: "active", joinedDate: "2025-12-15", deposits: 7500, commission: 225, tier: "Gold" },
+  { id: 11, name: "Daniel Park", email: "d.park@email.com", status: "active", joinedDate: "2026-01-02", deposits: 2800, commission: 84, tier: "Silver" },
+  { id: 12, name: "Olivia White", email: "o.white@email.com", status: "active", joinedDate: "2026-01-08", deposits: 4500, commission: 135, tier: "Gold" },
+  { id: 13, name: "Ethan Clark", email: "e.clark@email.com", status: "active", joinedDate: "2026-01-12", deposits: 1900, commission: 57, tier: "Bronze" },
+  { id: 14, name: "Isabella Jones", email: "i.jones@email.com", status: "pending", joinedDate: "2026-02-05", deposits: 0, commission: 0, tier: "Bronze" },
+  { id: 15, name: "Liam Scott", email: "l.scott@email.com", status: "active", joinedDate: "2025-10-20", deposits: 9200, commission: 276, tier: "Platinum" },
+  { id: 16, name: "Mia Thompson", email: "m.thompson@email.com", status: "active", joinedDate: "2025-10-28", deposits: 3600, commission: 108, tier: "Silver" },
+  { id: 17, name: "Noah Harris", email: "n.harris@email.com", status: "active", joinedDate: "2025-11-10", deposits: 5100, commission: 153, tier: "Gold" },
+  { id: 18, name: "Ava Robinson", email: "a.robinson@email.com", status: "inactive", joinedDate: "2025-09-15", deposits: 800, commission: 24, tier: "Bronze" },
+  { id: 19, name: "William King", email: "w.king@email.com", status: "active", joinedDate: "2025-12-22", deposits: 6200, commission: 186, tier: "Gold" },
+  { id: 20, name: "Charlotte Adams", email: "c.adams@email.com", status: "active", joinedDate: "2026-01-05", deposits: 2500, commission: 75, tier: "Silver" },
+  { id: 21, name: "Benjamin Wright", email: "b.wright@email.com", status: "pending", joinedDate: "2026-02-12", deposits: 0, commission: 0, tier: "Bronze" },
+  { id: 22, name: "Harper Green", email: "h.green@email.com", status: "active", joinedDate: "2025-11-25", deposits: 4800, commission: 144, tier: "Gold" },
+  { id: 23, name: "Mason Baker", email: "m.baker@email.com", status: "inactive", joinedDate: "2025-08-30", deposits: 600, commission: 18, tier: "Bronze" },
+  { id: 24, name: "Ella Turner", email: "e.turner@email.com", status: "active", joinedDate: "2026-01-28", deposits: 3400, commission: 102, tier: "Silver" },
 ];
 
 export default function IBDashboard() {
@@ -65,8 +83,8 @@ export default function IBDashboard() {
   const allReferrals = referrals?.length ? referrals : demoReferrals;
   const totalReferrals = allReferrals.length;
   const activeClients = allReferrals.filter((r: any) => r.status === "active").length;
-  const totalCommission = commissions?.reduce((s: number, c: any) => s + Number(c.amount), 0) || 1910;
-  const pendingCommission = commissions?.filter((c: any) => c.status === "pending")?.reduce((s: number, c: any) => s + Number(c.amount), 0) || 285;
+  const totalCommission = commissions?.reduce((s: number, c: any) => s + Number(c.amount), 0) || 3450;
+  const pendingCommission = commissions?.filter((c: any) => c.status === "pending")?.reduce((s: number, c: any) => s + Number(c.amount), 0) || 280;
 
   const referralLink = `${window.location.origin}/?ref=IB-001`;
 

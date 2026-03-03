@@ -1,24 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import {
@@ -29,60 +11,48 @@ import {
   Landmark,
   CreditCard,
   Bitcoin,
-  Smartphone,
   TrendingUp,
-  Shield,
-  Inbox,
-  Check,
+  Plus,
+  Send,
+  Download,
+  Gift,
 } from "lucide-react";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
 import type { Transaction } from "@shared/schema";
-import { useLocation } from "wouter";
 
-const walletHistory = [
-  { month: "Jan", balance: 15000 },
-  { month: "Feb", balance: 18200 },
-  { month: "Mar", balance: 16800 },
-  { month: "Apr", balance: 21500 },
-  { month: "May", balance: 19800 },
-  { month: "Jun", balance: 23100 },
-  { month: "Jul", balance: 24592 },
+const depositMethods = [
+  { id: "crypto", name: "Crypto (USDT)", icon: Bitcoin, desc: "Instant \u2022 Zero Fees" },
+  { id: "credit_card", name: "Credit/Debit Card", icon: CreditCard, desc: "Visa/Mastercard \u2022 Instant" },
+  { id: "bank_transfer", name: "Bank Transfer", icon: Landmark, desc: "1-3 Business Days" },
 ];
 
-const paymentMethods = [
-  { id: "bank_transfer", label: "Bank Transfer", icon: Landmark, description: "1-3 business days", color: "text-sky-500 dark:text-sky-400", bg: "bg-sky-500/10 dark:bg-sky-400/10" },
-  { id: "credit_card", label: "Credit Card", icon: CreditCard, description: "Instant", color: "text-violet-500 dark:text-violet-400", bg: "bg-violet-500/10 dark:bg-violet-400/10" },
-  { id: "crypto", label: "Crypto", icon: Bitcoin, description: "~30 minutes", color: "text-amber-500 dark:text-amber-400", bg: "bg-amber-500/10 dark:bg-amber-400/10" },
-  { id: "e_wallet", label: "E-Wallet", icon: Smartphone, description: "Instant", color: "text-emerald-500 dark:text-emerald-400", bg: "bg-emerald-500/10 dark:bg-emerald-400/10" },
+const withdrawMethods = [
+  { id: "bank_transfer", name: "To Bank Account", icon: Landmark, desc: "Withdraw to local bank" },
+  { id: "crypto", name: "To Crypto Wallet", icon: Bitcoin, desc: "Withdraw USDT/BTC" },
 ];
 
-function TransactionDialog({
-  open,
-  onOpenChange,
-  type,
-}: {
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
-  type: "deposit" | "withdrawal";
-}) {
+const demoTransactions = [
+  { id: "TXN-1001", type: "deposit", amount: 5000, currency: "USD", status: "completed", date: "2023-10-25", description: "Bank Transfer" },
+  { id: "TXN-1002", type: "profit", amount: 125.50, currency: "USD", status: "completed", date: "2023-10-26", description: "Prop Account Payout" },
+  { id: "TXN-1003", type: "withdrawal", amount: 1000, currency: "USD", status: "pending", date: "2023-10-27", description: "USDT Withdrawal" },
+  { id: "TXN-1004", type: "transfer", amount: 500, currency: "USD", status: "completed", date: "2023-10-28", description: "To MT5 Account 88921" },
+];
+
+export default function WalletPage() {
   const { toast } = useToast();
-  const [amount, setAmount] = useState("");
-  const [method, setMethod] = useState("bank_transfer");
+  const [activeTab, setActiveTab] = useState<"overview" | "deposit" | "withdraw">("overview");
+  const [depositForm, setDepositForm] = useState({ method: "", amount: "" });
+  const [withdrawForm, setWithdrawForm] = useState({ method: "", amount: "", details: "" });
 
-  const mutation = useMutation({
+  const { data: transactions, isLoading } = useQuery<Transaction[]>({
+    queryKey: ["/api/transactions"],
+  });
+
+  const depositMutation = useMutation({
     mutationFn: async () => {
       return apiRequest("POST", "/api/transactions", {
-        type,
-        amount,
-        method,
+        type: "deposit",
+        amount: depositForm.amount,
+        method: depositForm.method,
         currency: "USD",
       });
     },
@@ -90,84 +60,35 @@ function TransactionDialog({
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
       queryClient.invalidateQueries({ queryKey: ["/api/transactions/recent"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      toast({ title: `${type === "deposit" ? "Deposit" : "Withdrawal"} request submitted` });
-      onOpenChange(false);
-      setAmount("");
+      toast({ title: "Deposit request submitted successfully" });
+      setDepositForm({ method: "", amount: "" });
+      setActiveTab("overview");
     },
     onError: () => {
-      toast({ title: "Request failed", variant: "destructive" });
+      toast({ title: "Deposit request failed", variant: "destructive" });
     },
   });
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>{type === "deposit" ? "Make a Deposit" : "Request Withdrawal"}</DialogTitle>
-          <DialogDescription>{type === "deposit" ? "Add funds to your wallet balance." : "Request a withdrawal from your wallet."}</DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>Amount (USD)</Label>
-            <Input
-              type="number"
-              placeholder="Enter amount"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              data-testid={`input-${type}-amount`}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Payment Method</Label>
-            <Select value={method} onValueChange={setMethod}>
-              <SelectTrigger data-testid={`select-${type}-method`}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                <SelectItem value="credit_card">Credit Card</SelectItem>
-                <SelectItem value="crypto">Cryptocurrency</SelectItem>
-                <SelectItem value="e_wallet">E-Wallet</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid grid-cols-4 gap-2">
-            {["100", "500", "1000", "5000"].map((v) => (
-              <Button
-                key={v}
-                variant="outline"
-                size="sm"
-                onClick={() => setAmount(v)}
-                className={amount === v ? "border-primary" : ""}
-                data-testid={`button-amount-${v}`}
-              >
-                ${v}
-              </Button>
-            ))}
-          </div>
-          <Button
-            className="w-full"
-            onClick={() => mutation.mutate()}
-            disabled={mutation.isPending || !amount}
-            data-testid={`button-submit-${type}`}
-          >
-            {mutation.isPending ? "Processing..." : type === "deposit" ? "Deposit Now" : "Request Withdrawal"}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-export default function WalletPage() {
-  const [depositOpen, setDepositOpen] = useState(false);
-  const [withdrawOpen, setWithdrawOpen] = useState(false);
-  const [selectedPayment, setSelectedPayment] = useState("bank_transfer");
-  const [txFilter, setTxFilter] = useState<"all" | "deposit" | "withdrawal">("all");
-  const [, setLocation] = useLocation();
-
-  const { data: transactions, isLoading } = useQuery<Transaction[]>({
-    queryKey: ["/api/transactions"],
+  const withdrawMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("POST", "/api/transactions", {
+        type: "withdrawal",
+        amount: withdrawForm.amount,
+        method: withdrawForm.method,
+        currency: "USD",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions/recent"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      toast({ title: "Withdrawal request submitted successfully" });
+      setWithdrawForm({ method: "", amount: "", details: "" });
+      setActiveTab("overview");
+    },
+    onError: () => {
+      toast({ title: "Withdrawal request failed", variant: "destructive" });
+    },
   });
 
   const deposits = (transactions || []).filter((t) => t.type === "deposit");
@@ -175,244 +96,290 @@ export default function WalletPage() {
   const totalDeposits = deposits.reduce((sum, d) => sum + Number(d.amount), 0);
   const totalWithdrawals = withdrawals.reduce((sum, w) => sum + Number(w.amount), 0);
   const walletBalance = totalDeposits - totalWithdrawals || 24592.50;
-  const availableBalance = walletBalance * 0.85;
-  const reservedMargin = walletBalance * 0.15;
 
-  const filteredTransactions = txFilter === "all"
-    ? (transactions || [])
-    : (transactions || []).filter((t) => t.type === txFilter);
+  const allTx = transactions && transactions.length > 0 ? transactions : demoTransactions;
 
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto">
-      <div className="bg-gradient-to-br from-sky-600 to-sky-800 dark:from-sky-700 dark:to-sky-900 p-6 rounded-xl text-white shadow-lg" data-testid="wallet-hero">
-        <div className="flex items-center justify-between gap-4 flex-wrap mb-6">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-white/15 rounded-lg">
-              <WalletIcon className="w-6 h-6" />
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white" data-testid="text-wallet-title">My Wallet</h1>
+        <div className="flex gap-2" data-testid="wallet-tabs">
+          <button
+            onClick={() => setActiveTab("overview")}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === "overview" ? "bg-brand-600 text-white" : "bg-white dark:bg-dark-card text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700"}`}
+            data-testid="button-tab-overview"
+          >
+            Overview
+          </button>
+          <button
+            onClick={() => setActiveTab("deposit")}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === "deposit" ? "bg-brand-600 text-white" : "bg-white dark:bg-dark-card text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700"}`}
+            data-testid="button-tab-deposit"
+          >
+            Deposit
+          </button>
+          <button
+            onClick={() => setActiveTab("withdraw")}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === "withdraw" ? "bg-brand-600 text-white" : "bg-white dark:bg-dark-card text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700"}`}
+            data-testid="button-tab-withdraw"
+          >
+            Withdraw
+          </button>
+        </div>
+      </div>
+
+      {activeTab === "overview" && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in" data-testid="wallet-overview">
+          <div className="bg-gradient-to-br from-brand-600 to-brand-800 p-6 rounded-2xl text-white shadow-lg" data-testid="wallet-hero">
+            <p className="text-brand-100 text-sm font-medium mb-1">Total Balance</p>
+            <h2 className="text-3xl font-bold mb-4" data-testid="text-total-balance">
+              ${walletBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+            </h2>
+            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-brand-500/50">
+              <div>
+                <p className="text-xs text-brand-200 uppercase">Available</p>
+                <p className="font-semibold text-lg" data-testid="text-available-balance">
+                  ${(walletBalance * 0.74).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-brand-200 uppercase">Locked</p>
+                <p className="font-semibold text-lg" data-testid="text-locked-balance">
+                  ${(walletBalance * 0.26).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                </p>
+              </div>
             </div>
+          </div>
+
+          <div className="bg-white dark:bg-dark-card p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm flex items-center justify-between" data-testid="card-trading-credits">
             <div>
-              <p className="text-sm text-sky-100">Total Balance</p>
-              <h1 className="text-3xl font-bold tracking-tight" data-testid="text-total-balance">
-                ${walletBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-              </h1>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">Trading Credits</p>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">$0.00</h3>
+            </div>
+            <div className="p-3 bg-purple-50 dark:bg-purple-900/20 text-purple-600 rounded-lg">
+              <Gift size={24} />
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge className="bg-white/15 text-white border-0 no-default-hover-elevate no-default-active-elevate">
-              <Shield className="w-3 h-3 mr-1" />
-              Secured
-            </Badge>
-          </div>
-        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="bg-white/10 rounded-lg p-4" data-testid="text-available-balance">
-            <p className="text-sm text-sky-100 mb-1">Available Balance</p>
-            <p className="text-xl font-bold">${availableBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}</p>
-          </div>
-          <div className="bg-white/10 rounded-lg p-4" data-testid="text-reserved-margin">
-            <p className="text-sm text-sky-100 mb-1">Reserved Margin</p>
-            <p className="text-xl font-bold">${reservedMargin.toLocaleString("en-US", { minimumFractionDigits: 2 })}</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Button
-          className="bg-emerald-600 text-white border-emerald-600"
-          onClick={() => setDepositOpen(true)}
-          data-testid="button-deposit"
-        >
-          <ArrowUpRight className="w-4 h-4 mr-2" />
-          Deposit
-        </Button>
-        <Button
-          className="bg-red-500 text-white border-red-500"
-          onClick={() => setWithdrawOpen(true)}
-          data-testid="button-withdraw"
-        >
-          <ArrowDownRight className="w-4 h-4 mr-2" />
-          Withdraw
-        </Button>
-        <Button
-          className="bg-sky-600 text-white border-sky-600"
-          onClick={() => setLocation("/trading-accounts")}
-          data-testid="button-transfer"
-        >
-          <ArrowLeftRight className="w-4 h-4 mr-2" />
-          Transfer
-        </Button>
-      </div>
-
-      <div>
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4" data-testid="text-payment-methods-title">Payment Methods</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {paymentMethods.map((pm) => {
-            const isSelected = selectedPayment === pm.id;
-            return (
-              <Card
-                key={pm.id}
-                className={`cursor-pointer transition-all rounded-xl ${isSelected ? "ring-2 ring-sky-500/40 border-sky-500 dark:border-sky-400" : "border-gray-100 dark:border-gray-800"}`}
-                onClick={() => setSelectedPayment(pm.id)}
-                data-testid={`card-payment-${pm.id}`}
+          <div className="bg-white dark:bg-dark-card p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm flex items-center justify-between" data-testid="card-ib-commissions">
+            <div>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">IB Commissions</p>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">$450.25</h3>
+              <button
+                className="text-xs text-brand-600 dark:text-brand-400 font-medium mt-1"
+                data-testid="button-transfer-to-wallet"
               >
-                <CardContent className="p-4 flex items-center gap-3">
-                  <div className={`p-3 rounded-lg ${pm.bg}`}>
-                    <pm.icon className={`w-5 h-5 ${pm.color}`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">{pm.label}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{pm.description}</p>
-                  </div>
-                  {isSelected && (
-                    <div className="w-5 h-5 rounded-full bg-sky-500 flex items-center justify-center shrink-0">
-                      <Check className="w-3 h-3 text-white" />
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
-        <div className="flex items-center justify-between gap-2 mb-4">
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white">Wallet Balance Growth</h2>
-          <Badge variant="secondary" className="text-xs font-normal">Last 7 months</Badge>
-        </div>
-        <div className="h-[240px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={walletHistory}>
-              <defs>
-                <linearGradient id="walletGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.25} />
-                  <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
-              <XAxis dataKey="month" tick={{ fill: "#94a3b8", fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "#1e293b",
-                  borderColor: "#334155",
-                  borderRadius: "8px",
-                  color: "#fff",
-                }}
-                itemStyle={{ color: "#fff" }}
-                formatter={(value: number) => [`$${value.toLocaleString()}`, "Balance"]}
-              />
-              <Area type="monotone" dataKey="balance" stroke="#0ea5e9" fill="url(#walletGrad)" strokeWidth={2.5} dot={false} activeDot={{ r: 5, strokeWidth: 2, stroke: "#0ea5e9", fill: "#0f172a" }} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      <div className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
-        <div className="flex items-center justify-between gap-2 p-6 pb-4 flex-wrap">
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white">Transaction History</h2>
-          <div className="flex items-center gap-1">
-            {([
-              { key: "all", label: "All" },
-              { key: "deposit", label: `Deposits (${deposits.length})` },
-              { key: "withdrawal", label: `Withdrawals (${withdrawals.length})` },
-            ] as const).map((tab) => (
-              <Button
-                key={tab.key}
-                variant={txFilter === tab.key ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setTxFilter(tab.key)}
-                data-testid={`button-filter-${tab.key}`}
-              >
-                {tab.label}
-              </Button>
-            ))}
+                Transfer to Wallet
+              </button>
+            </div>
+            <div className="p-3 bg-green-50 dark:bg-green-900/20 text-green-600 rounded-lg">
+              <TrendingUp size={24} />
+            </div>
           </div>
         </div>
-        <div className="px-0">
-          <TransactionTable transactions={filteredTransactions} isLoading={isLoading} />
-        </div>
-      </div>
+      )}
 
-      <TransactionDialog open={depositOpen} onOpenChange={setDepositOpen} type="deposit" />
-      <TransactionDialog open={withdrawOpen} onOpenChange={setWithdrawOpen} type="withdrawal" />
-    </div>
-  );
-}
+      {activeTab === "deposit" && (
+        <div className="bg-white dark:bg-dark-card rounded-xl p-6 border border-gray-100 dark:border-gray-800 animate-fade-in space-y-6" data-testid="deposit-form">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <ArrowUpRight className="text-green-500" /> Add Funds to Wallet
+          </h3>
 
-function TransactionTable({ transactions, isLoading }: { transactions: Transaction[]; isLoading: boolean }) {
-  return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-gray-100 dark:border-gray-800">
-            <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400 text-xs">Type</th>
-            <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400 text-xs">Amount</th>
-            <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400 text-xs">Method</th>
-            <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400 text-xs">Date</th>
-            <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400 text-xs">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {isLoading ? (
-            <tr><td colSpan={5} className="py-12 text-center text-gray-500 dark:text-gray-400">Loading...</td></tr>
-          ) : transactions.length === 0 ? (
-            <tr>
-              <td colSpan={5} className="py-16 text-center">
-                <div className="flex flex-col items-center gap-3">
-                  <div className="w-12 h-12 rounded-lg bg-sky-500/10 dark:bg-sky-400/10 flex items-center justify-center">
-                    <Inbox className="w-6 h-6 text-sky-500 dark:text-sky-400" />
+          <div>
+            <h4 className="text-sm font-medium text-gray-500 uppercase mb-3">Select Payment Method</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {depositMethods.map((m) => (
+                <div
+                  key={m.id}
+                  onClick={() => setDepositForm({ ...depositForm, method: m.id })}
+                  className={`p-4 border rounded-xl cursor-pointer flex flex-col items-center text-center gap-3 transition-all ${
+                    depositForm.method === m.id
+                      ? "border-brand-500 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500 text-brand-700 dark:text-brand-300"
+                      : "border-gray-200 dark:border-gray-700 hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                  }`}
+                  data-testid={`card-deposit-method-${m.id}`}
+                >
+                  <div className={depositForm.method === m.id ? "text-brand-600" : "text-gray-500"}>
+                    <m.icon size={24} />
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">No transactions found</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Your transactions will appear here</p>
+                  <div>
+                    <span className="block font-bold text-sm">{m.name}</span>
+                    <span className="text-xs text-gray-500 mt-1">{m.desc}</span>
                   </div>
                 </div>
-              </td>
-            </tr>
-          ) : (
-            transactions.map((tx) => (
-              <tr key={tx.id} className="border-b border-gray-100 dark:border-gray-800 last:border-0" data-testid={`row-transaction-${tx.id}`}>
-                <td className="py-3 px-4">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${tx.type === "deposit" ? "bg-emerald-500/10 dark:bg-emerald-400/10" : "bg-red-500/10 dark:bg-red-400/10"}`}>
-                      {tx.type === "deposit" ? (
-                        <ArrowUpRight className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
-                      ) : (
-                        <ArrowDownRight className="w-4 h-4 text-red-500 dark:text-red-400" />
-                      )}
-                    </div>
-                    <span className="capitalize font-medium text-gray-900 dark:text-white">{tx.type}</span>
-                  </div>
-                </td>
-                <td className="py-3 px-4">
-                  <span className={`font-semibold ${tx.type === "deposit" ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
-                    {tx.type === "deposit" ? "+" : "-"}${Math.abs(Number(tx.amount)).toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                  </span>
-                </td>
-                <td className="py-3 px-4 text-gray-500 dark:text-gray-400 capitalize">{(tx.method || "-").replace(/_/g, " ")}</td>
-                <td className="py-3 px-4 text-gray-500 dark:text-gray-400">
-                  {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "N/A"}
-                </td>
-                <td className="py-3 px-4">
-                  <Badge
-                    variant="secondary"
-                    className={`text-[10px] font-medium capitalize ${
-                      tx.status === "completed" || tx.status === "approved" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" :
-                      tx.status === "pending" ? "bg-amber-500/10 text-amber-600 dark:text-amber-400" :
-                      tx.status === "rejected" ? "bg-red-500/10 text-red-500 dark:text-red-400" : ""
-                    }`}
-                    data-testid={`badge-status-${tx.id}`}
-                  >
-                    {tx.status}
-                  </Badge>
-                </td>
-              </tr>
-            ))
+              ))}
+            </div>
+          </div>
+
+          {depositForm.method && (
+            <div className="animate-fade-in max-w-md">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount (USD)</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">$</span>
+                <input
+                  type="number"
+                  placeholder="0.00"
+                  value={depositForm.amount}
+                  onChange={(e) => setDepositForm({ ...depositForm, amount: e.target.value })}
+                  className="w-full pl-8 p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none text-lg font-bold"
+                  data-testid="input-deposit-amount"
+                />
+              </div>
+            </div>
           )}
-        </tbody>
-      </table>
+
+          <div className="flex justify-end pt-4 border-t border-gray-100 dark:border-gray-800">
+            <button
+              disabled={!depositForm.method || !depositForm.amount || depositMutation.isPending}
+              onClick={() => depositMutation.mutate()}
+              className="px-8 py-3 bg-brand-600 hover:bg-brand-700 disabled:bg-gray-300 dark:disabled:bg-gray-800 disabled:text-gray-500 text-white rounded-lg font-bold shadow-lg shadow-brand-500/20 transition-all flex items-center gap-2"
+              data-testid="button-process-deposit"
+            >
+              <Plus size={18} /> {depositMutation.isPending ? "Processing..." : "Process Deposit"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "withdraw" && (
+        <div className="bg-white dark:bg-dark-card rounded-xl p-6 border border-gray-100 dark:border-gray-800 animate-fade-in space-y-6" data-testid="withdraw-form">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <ArrowDownRight className="text-red-500" /> Withdraw Funds
+          </h3>
+
+          <div>
+            <h4 className="text-sm font-medium text-gray-500 uppercase mb-3">Select Withdrawal Method</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {withdrawMethods.map((m) => (
+                <div
+                  key={m.id}
+                  onClick={() => setWithdrawForm({ ...withdrawForm, method: m.id })}
+                  className={`p-4 border rounded-xl cursor-pointer flex flex-col items-center text-center gap-3 transition-all ${
+                    withdrawForm.method === m.id
+                      ? "border-brand-500 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500 text-brand-700 dark:text-brand-300"
+                      : "border-gray-200 dark:border-gray-700 hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                  }`}
+                  data-testid={`card-withdraw-method-${m.id}`}
+                >
+                  <div className={withdrawForm.method === m.id ? "text-brand-600" : "text-gray-500"}>
+                    <m.icon size={24} />
+                  </div>
+                  <div>
+                    <span className="block font-bold text-sm">{m.name}</span>
+                    <span className="text-xs text-gray-500 mt-1">{m.desc}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {withdrawForm.method && (
+            <div className="animate-fade-in max-w-md space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount to Withdraw (USD)</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">$</span>
+                  <input
+                    type="number"
+                    placeholder="0.00"
+                    value={withdrawForm.amount}
+                    onChange={(e) => setWithdrawForm({ ...withdrawForm, amount: e.target.value })}
+                    className="w-full pl-8 p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none text-lg font-bold"
+                    data-testid="input-withdraw-amount"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  {withdrawForm.method === "crypto" ? "Wallet Address (TRC20)" : "Account Number / IBAN"}
+                </label>
+                <input
+                  type="text"
+                  placeholder={withdrawForm.method === "crypto" ? "Enter wallet address" : "Enter account details"}
+                  value={withdrawForm.details}
+                  onChange={(e) => setWithdrawForm({ ...withdrawForm, details: e.target.value })}
+                  className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none"
+                  data-testid="input-withdraw-details"
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end pt-4 border-t border-gray-100 dark:border-gray-800">
+            <button
+              disabled={!withdrawForm.method || !withdrawForm.amount || !withdrawForm.details || withdrawMutation.isPending}
+              onClick={() => withdrawMutation.mutate()}
+              className="px-8 py-3 bg-brand-600 hover:bg-brand-700 disabled:bg-gray-300 dark:disabled:bg-gray-800 disabled:text-gray-500 text-white rounded-lg font-bold shadow-lg shadow-brand-500/20 transition-all flex items-center gap-2"
+              data-testid="button-submit-withdrawal"
+            >
+              <Send size={18} /> {withdrawMutation.isPending ? "Processing..." : "Submit Request"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden" data-testid="transaction-history">
+        <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
+          <h3 className="font-bold text-gray-900 dark:text-white">Transaction History</h3>
+          <button className="text-sm text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1" data-testid="button-export">
+            <Download size={16} /> Export
+          </button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left" data-testid="table-transactions">
+            <thead className="bg-gray-50 dark:bg-gray-800/50">
+              <tr>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">ID</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Amount</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+              {isLoading ? (
+                <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">Loading...</td></tr>
+              ) : (allTx as any[]).map((tx: any, i: number) => (
+                <tr key={tx.id || i} className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors" data-testid={`row-transaction-${i}`}>
+                  <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 font-mono">
+                    {tx.reference || tx.id}
+                  </td>
+                  <td className="px-6 py-4 text-sm">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
+                      tx.type === "deposit" ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" :
+                      tx.type === "withdrawal" ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" :
+                      "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
+                    }`}>
+                      {tx.type}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                    {tx.description || tx.method?.replace(/_/g, " ") || "-"}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                    {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : tx.date || "N/A"}
+                  </td>
+                  <td className={`px-6 py-4 text-sm font-bold ${
+                    tx.type === "withdrawal" ? "text-red-500" : "text-green-500"
+                  }`}>
+                    {tx.type === "withdrawal" ? "-" : "+"}${Math.abs(Number(tx.amount)).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                  </td>
+                  <td className="px-6 py-4 text-sm">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
+                      tx.status === "completed" || tx.status === "approved" ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" :
+                      tx.status === "pending" ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" :
+                      "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+                    }`}>
+                      {tx.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

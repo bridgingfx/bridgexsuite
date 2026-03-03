@@ -63,10 +63,10 @@ const demoPlanData = [
 ];
 
 const demoPortfolio = [
-  { name: "Fixed Yield", allocation: 35, color: "#3b82f6" },
+  { name: "Fixed Yield", allocation: 40, color: "#3b82f6" },
   { name: "Variable", allocation: 25, color: "#10b981" },
-  { name: "Real Estate", allocation: 22, color: "#f59e0b" },
-  { name: "Crypto Fund", allocation: 18, color: "#8b5cf6" },
+  { name: "Real Estate", allocation: 20, color: "#f59e0b" },
+  { name: "Crypto Fund", allocation: 15, color: "#8b5cf6" },
 ];
 
 const portfolioColorMap: Record<string, string> = {
@@ -192,7 +192,7 @@ export default function InvestmentPage() {
           { label: "Total Profit", value: `$${totalProfit.toLocaleString("en-US", { minimumFractionDigits: 2 })}`, trend: `+${profitPercent}%`, isPositive: totalProfit >= 0, icon: <TrendingUp className="w-5 h-5" />, iconBg: "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400" },
           { label: "Active Plans", value: "3", trend: "All performing", isPositive: true, icon: <PiggyBank className="w-5 h-5" />, iconBg: "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400" },
         ].map((card) => (
-          <div key={card.label} className="bg-card rounded-xl border shadow-sm hover:shadow-md transition-all p-6" data-testid={`stat-card-${card.label.toLowerCase().replace(/\s+/g, '-')}`}>
+          <div key={card.label} className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6" data-testid={`stat-card-${card.label.toLowerCase().replace(/\s+/g, '-')}`}>
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{card.label}</p>
@@ -219,7 +219,7 @@ export default function InvestmentPage() {
           {plansLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-card rounded-xl border shadow-sm p-6">
+                <div key={i} className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6">
                   <div className="h-48 animate-pulse rounded-md bg-muted" />
                 </div>
               ))}
@@ -230,7 +230,7 @@ export default function InvestmentPage() {
                 const demo = demoPlanData.find(d => d.name === plan.name) || demoPlanData[0];
                 const IconComp = demo.icon;
                 return (
-                  <div key={plan.id} className="bg-card rounded-xl border shadow-sm hover:shadow-md transition-all p-6 flex flex-col" data-testid={`card-plan-${plan.id}`}>
+                  <div key={plan.id} className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6 flex flex-col" data-testid={`card-plan-${plan.id}`}>
                     <div className="flex items-center gap-3 mb-4">
                       <div className={`p-3 rounded-lg ${demo.iconBg}`}>
                         <IconComp className="w-5 h-5" />
@@ -262,7 +262,7 @@ export default function InvestmentPage() {
               }) : demoPlanData.map((plan) => {
                 const IconComp = plan.icon;
                 return (
-                  <div key={plan.id} className="bg-card rounded-xl border shadow-sm hover:shadow-md transition-all p-6 flex flex-col" data-testid={`card-plan-${plan.id}`}>
+                  <div key={plan.id} className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6 flex flex-col" data-testid={`card-plan-${plan.id}`}>
                     <div className="flex items-center gap-3 mb-4">
                       <div className={`p-3 rounded-lg ${plan.iconBg}`}>
                         <IconComp className="w-5 h-5" />
@@ -298,7 +298,7 @@ export default function InvestmentPage() {
 
         <div>
           <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4" data-testid="text-portfolio-heading">Portfolio Allocation</h2>
-          <div className="bg-card rounded-xl border shadow-sm p-6">
+          <div className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6">
             <div className="flex justify-center mb-4">
               <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
@@ -346,7 +346,7 @@ export default function InvestmentPage() {
 
       <div>
         <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4" data-testid="text-growth-heading">Portfolio Growth</h2>
-        <div className="bg-card rounded-xl border shadow-sm p-6">
+        <div className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6">
           <ResponsiveContainer width="100%" height={280}>
             <AreaChart data={portfolioGrowthData}>
               <defs>
@@ -368,11 +368,11 @@ export default function InvestmentPage() {
       <div>
         <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4" data-testid="text-investments-heading">My Investments</h2>
         {investmentsLoading ? (
-          <div className="bg-card rounded-xl border shadow-sm p-6">
+          <div className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6">
             <div className="h-48 animate-pulse rounded-md bg-muted" />
           </div>
         ) : (
-          <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
+          <div className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>

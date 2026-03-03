@@ -18,15 +18,15 @@ import { Progress } from "@/components/ui/progress";
 const tiers = [
   { name: "Bronze", minPoints: 0, icon: Star, color: "text-amber-700 dark:text-amber-500", bg: "bg-amber-50 dark:bg-amber-900/20" },
   { name: "Silver", minPoints: 1000, icon: Trophy, color: "text-gray-500 dark:text-gray-400", bg: "bg-gray-100 dark:bg-gray-800/40" },
-  { name: "Gold", minPoints: 3000, icon: Crown, color: "text-yellow-600 dark:text-yellow-400", bg: "bg-yellow-50 dark:bg-yellow-900/20" },
-  { name: "Platinum", minPoints: 10000, icon: Gem, color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-900/20" },
+  { name: "Gold", minPoints: 5000, icon: Crown, color: "text-yellow-600 dark:text-yellow-400", bg: "bg-yellow-50 dark:bg-yellow-900/20" },
+  { name: "Platinum", minPoints: 15000, icon: Gem, color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-900/20" },
 ];
 
 const rewards = [
   { name: "$10 Trading Credit", points: 1000, description: "Get $10 bonus credited directly to your trading wallet.", icon: Gift, redeemed: false },
+  { name: "Free VPS", points: 2500, description: "One month of premium VPS hosting for your trading bots and EAs.", icon: Sparkles, redeemed: false },
   { name: "Free Prop Challenge", points: 5000, description: "Receive a free entry to any Prop Firm challenge of your choice.", icon: Trophy, redeemed: false },
-  { name: "VPS Hosting (1 Month)", points: 2500, description: "One month of premium VPS hosting for your trading bots and EAs.", icon: Sparkles, redeemed: false },
-  { name: "Reduced Spreads (30 Days)", points: 1500, description: "Enjoy tighter spreads on all major pairs for 30 days.", icon: Star, redeemed: false },
+  { name: "Premium Signal Access", points: 3000, description: "Get exclusive access to premium AI-powered trading signals for 30 days.", icon: Star, redeemed: false },
 ];
 
 const pointsHistory = [
@@ -39,7 +39,7 @@ const pointsHistory = [
 ];
 
 export default function LoyaltyPointsPage() {
-  const totalPoints = 2450;
+  const totalPoints = 3250;
   const currentTierIndex = 1;
   const currentTier = tiers[currentTierIndex];
   const nextTier = tiers[currentTierIndex + 1];
@@ -68,7 +68,7 @@ export default function LoyaltyPointsPage() {
         </div>
       </div>
 
-      <div className="bg-card rounded-xl border shadow-sm p-6" data-testid="tier-progress-section">
+      <div className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6" data-testid="tier-progress-section">
         <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
           <div>
             <h2 className="text-lg font-bold text-gray-900 dark:text-white">Tier Progress</h2>
@@ -109,7 +109,7 @@ export default function LoyaltyPointsPage() {
             return (
               <div
                 key={i}
-                className="bg-card rounded-xl border shadow-sm hover:shadow-md transition-all p-6"
+                className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6"
                 data-testid={`reward-card-${i}`}
               >
                 <div className="flex items-center justify-between mb-3">
@@ -134,7 +134,7 @@ export default function LoyaltyPointsPage() {
         </div>
       </div>
 
-      <div className="bg-card rounded-xl border shadow-sm p-6" data-testid="points-history-section">
+      <div className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6" data-testid="points-history-section">
         <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Points History</h2>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -166,7 +166,7 @@ export default function LoyaltyPointsPage() {
         </div>
       </div>
 
-      <div className="bg-card rounded-xl border shadow-sm p-6" data-testid="tier-benefits-section">
+      <div className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6" data-testid="tier-benefits-section">
         <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Tier Benefits Comparison</h2>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">

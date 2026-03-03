@@ -64,7 +64,7 @@ export default function FinancePage() {
   ];
 
   const filteredTxns = allTxns.filter(t => {
-    if (activeTab !== "all" && activeTab === "deposits" && t.type !== "deposit") return false;
+    if (activeTab === "deposits" && t.type !== "deposit") return false;
     if (activeTab === "withdrawals" && t.type !== "withdrawal") return false;
     if (activeTab === "internal" && t.type !== "internal") return false;
     if (searchQuery) {

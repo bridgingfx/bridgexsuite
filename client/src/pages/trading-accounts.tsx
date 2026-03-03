@@ -227,7 +227,7 @@ export default function TradingAccounts() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white dark:bg-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all" data-testid="stat-total-accounts">
+        <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all" data-testid="stat-total-accounts">
           <div className="flex justify-between items-start">
             <div>
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Total Accounts</p>
@@ -240,7 +240,7 @@ export default function TradingAccounts() {
           <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">{activeAccounts} active</div>
         </div>
 
-        <div className="bg-white dark:bg-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all" data-testid="stat-total-balance">
+        <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all" data-testid="stat-total-balance">
           <div className="flex justify-between items-start">
             <div>
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Total Balance</p>
@@ -255,7 +255,7 @@ export default function TradingAccounts() {
           <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">Across all accounts</div>
         </div>
 
-        <div className="bg-white dark:bg-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all" data-testid="stat-total-equity">
+        <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all" data-testid="stat-total-equity">
           <div className="flex justify-between items-start">
             <div>
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Total Equity</p>
@@ -270,7 +270,7 @@ export default function TradingAccounts() {
           <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">Current market value</div>
         </div>
 
-        <div className="bg-white dark:bg-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all" data-testid="stat-unrealized-pnl">
+        <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all" data-testid="stat-unrealized-pnl">
           <div className="flex justify-between items-start">
             <div>
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Unrealized P&L</p>
@@ -302,7 +302,7 @@ export default function TradingAccounts() {
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white dark:bg-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
+            <div key={i} className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
               <Skeleton className="h-6 w-32 mb-4" />
               <Skeleton className="h-10 w-full mb-3" />
               <Skeleton className="h-4 w-24 mb-3" />
@@ -311,7 +311,7 @@ export default function TradingAccounts() {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="bg-white dark:bg-card p-12 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm text-center">
+        <div className="bg-white dark:bg-dark-card p-12 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm text-center">
           <div className="w-14 h-14 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-4">
             <CandlestickChart className="w-7 h-7 text-gray-400" />
           </div>
@@ -332,7 +332,7 @@ export default function TradingAccounts() {
             return (
               <div
                 key={account.id}
-                className="bg-white dark:bg-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all"
+                className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all"
                 data-testid={`card-account-${account.id}`}
               >
                 <div className="flex items-start justify-between gap-2 mb-4">
@@ -472,6 +472,18 @@ export default function TradingAccounts() {
               </div>
             );
           })}
+
+          <button
+            onClick={() => { setAddOpen(true); setWizardStep(0); setFormData({ platform: "", type: "", leverage: "", currency: "" }); }}
+            className="flex flex-col items-center justify-center gap-3 p-6 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 bg-transparent cursor-pointer transition-all min-h-[280px]"
+            data-testid="card-open-new-account"
+          >
+            <div className="p-3 rounded-lg bg-gray-100 dark:bg-gray-800">
+              <Plus className="w-6 h-6 text-gray-400" />
+            </div>
+            <p className="font-semibold text-gray-900 dark:text-white">Open New Account</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 text-center">Create a new MT4, MT5, or cTrader trading account</p>
+          </button>
         </div>
       )}
 
@@ -521,7 +533,7 @@ export default function TradingAccounts() {
                     "p-4 rounded-xl border-2 text-center transition-all cursor-pointer",
                     formData.platform === p.value
                       ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                      : "border-gray-200 dark:border-gray-700 bg-white dark:bg-card"
+                      : "border-gray-200 dark:border-gray-700 bg-white dark:bg-dark-card"
                   )}
                   data-testid={`option-platform-${p.value}`}
                 >
@@ -548,7 +560,7 @@ export default function TradingAccounts() {
                     "p-4 rounded-xl border-2 text-left transition-all cursor-pointer",
                     formData.type === t.value
                       ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                      : "border-gray-200 dark:border-gray-700 bg-white dark:bg-card"
+                      : "border-gray-200 dark:border-gray-700 bg-white dark:bg-dark-card"
                   )}
                   data-testid={`option-tier-${t.value}`}
                 >
@@ -569,7 +581,7 @@ export default function TradingAccounts() {
                     "p-4 rounded-xl border-2 text-center transition-all cursor-pointer",
                     formData.leverage === lev
                       ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                      : "border-gray-200 dark:border-gray-700 bg-white dark:bg-card"
+                      : "border-gray-200 dark:border-gray-700 bg-white dark:bg-dark-card"
                   )}
                   data-testid={`option-leverage-${lev}`}
                 >
@@ -596,7 +608,7 @@ export default function TradingAccounts() {
                     "p-4 rounded-xl border-2 text-center transition-all cursor-pointer",
                     formData.currency === c.value
                       ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                      : "border-gray-200 dark:border-gray-700 bg-white dark:bg-card"
+                      : "border-gray-200 dark:border-gray-700 bg-white dark:bg-dark-card"
                   )}
                   data-testid={`option-currency-${c.value}`}
                 >

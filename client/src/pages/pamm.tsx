@@ -39,6 +39,11 @@ const demoManagers = [
     managementFee: 2,
     minInvestment: 5000,
     iconBg: "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400",
+    color: "#3b82f6",
+    perfData: [
+      { m: "Jan", v: 3.2 }, { m: "Feb", v: 4.1 }, { m: "Mar", v: 3.8 },
+      { m: "Apr", v: 5.2 }, { m: "May", v: 4.5 }, { m: "Jun", v: 4.8 },
+    ],
   },
   {
     id: "mgr-2",
@@ -54,6 +59,11 @@ const demoManagers = [
     managementFee: 2.5,
     minInvestment: 10000,
     iconBg: "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400",
+    color: "#8b5cf6",
+    perfData: [
+      { m: "Jan", v: 5.1 }, { m: "Feb", v: 6.3 }, { m: "Mar", v: 4.8 },
+      { m: "Apr", v: 7.1 }, { m: "May", v: 6.8 }, { m: "Jun", v: 7.2 },
+    ],
   },
   {
     id: "mgr-3",
@@ -69,6 +79,11 @@ const demoManagers = [
     managementFee: 3,
     minInvestment: 25000,
     iconBg: "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400",
+    color: "#10b981",
+    perfData: [
+      { m: "Jan", v: 7.8 }, { m: "Feb", v: 8.2 }, { m: "Mar", v: 9.5 },
+      { m: "Apr", v: 8.8 }, { m: "May", v: 10.2 }, { m: "Jun", v: 9.5 },
+    ],
   },
   {
     id: "mgr-4",
@@ -84,6 +99,11 @@ const demoManagers = [
     managementFee: 3,
     minInvestment: 10000,
     iconBg: "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400",
+    color: "#ef4444",
+    perfData: [
+      { m: "Jan", v: 12.4 }, { m: "Feb", v: 10.1 }, { m: "Mar", v: 15.2 },
+      { m: "Apr", v: 11.8 }, { m: "May", v: 14.5 }, { m: "Jun", v: 14.2 },
+    ],
   },
 ];
 
@@ -181,7 +201,7 @@ export default function PammPage() {
           { label: "Avg Monthly Return", value: `${avgMonthly}%`, trend: "Across all funds", icon: <TrendingUp className="w-5 h-5" />, iconBg: "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400" },
           { label: "Fund Managers", value: "4", trend: "All verified", icon: <Shield className="w-5 h-5" />, iconBg: "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400" },
         ].map((card) => (
-          <div key={card.label} className="bg-card rounded-xl border shadow-sm hover:shadow-md transition-all p-6" data-testid={`stat-card-${card.label.toLowerCase().replace(/\s+/g, '-')}`}>
+          <div key={card.label} className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6" data-testid={`stat-card-${card.label.toLowerCase().replace(/\s+/g, '-')}`}>
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{card.label}</p>
@@ -202,7 +222,7 @@ export default function PammPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div>
           <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4" data-testid="text-performance-heading">Monthly Performance (%)</h2>
-          <div className="bg-card rounded-xl border shadow-sm p-6">
+          <div className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6">
             <ResponsiveContainer width="100%" height={280}>
               <BarChart data={performanceData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.2} />
@@ -233,7 +253,7 @@ export default function PammPage() {
 
         <div>
           <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4" data-testid="text-aum-heading">AUM Growth ($M)</h2>
-          <div className="bg-card rounded-xl border shadow-sm p-6">
+          <div className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6">
             <ResponsiveContainer width="100%" height={280}>
               <AreaChart data={aumGrowthData}>
                 <defs>
@@ -255,115 +275,130 @@ export default function PammPage() {
 
       <div>
         <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4" data-testid="text-managers-heading">Fund Managers</h2>
-        <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-100 dark:border-gray-800">
-                  <th className="text-left p-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Manager</th>
-                  <th className="text-left p-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Strategy</th>
-                  <th className="text-left p-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Funds</th>
-                  <th className="text-left p-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Investors</th>
-                  <th className="text-left p-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Monthly Return</th>
-                  <th className="text-left p-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Return</th>
-                  <th className="text-left p-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Risk</th>
-                  <th className="text-left p-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(displayManagers ? displayManagers.map((manager) => (
-                  <tr key={manager.id} className="border-b border-gray-100 dark:border-gray-800 last:border-b-0" data-testid={`card-pamm-manager-${manager.id}`}>
-                    <td className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0">
-                          <Landmark className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                        </div>
-                        <span className="font-semibold text-sm text-gray-900 dark:text-white">{manager.displayName}</span>
-                      </div>
-                    </td>
-                    <td className="p-4 text-sm text-gray-600 dark:text-gray-300">{manager.strategy}</td>
-                    <td className="p-4 text-sm font-mono text-gray-900 dark:text-white">${(Number(manager.totalAum) / 1000000).toFixed(1)}M</td>
-                    <td className="p-4 text-sm text-gray-900 dark:text-white">{manager.investors}</td>
-                    <td className="p-4 text-sm font-mono text-emerald-500">+{manager.monthlyReturn}%</td>
-                    <td className="p-4 text-sm font-mono text-emerald-500">+{manager.totalReturn}%</td>
-                    <td className="p-4">
-                      <Badge variant="secondary" className={`text-xs ${getRiskColor(manager.riskLevel)}`}>{manager.riskLevel}</Badge>
-                    </td>
-                    <td className="p-4">
-                      <Button size="sm" onClick={() => openInvestDialog(manager)} data-testid={`button-pamm-invest-${manager.id}`}>
-                        Invest
-                      </Button>
-                    </td>
-                  </tr>
-                )) : demoManagers.map((manager) => (
-                  <tr key={manager.id} className="border-b border-gray-100 dark:border-gray-800 last:border-b-0" data-testid={`card-pamm-manager-${manager.id}`}>
-                    <td className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-lg ${manager.iconBg} flex items-center justify-center shrink-0`}>
-                          <Landmark className="w-5 h-5" />
-                        </div>
-                        <span className="font-semibold text-sm text-gray-900 dark:text-white">{manager.displayName}</span>
-                      </div>
-                    </td>
-                    <td className="p-4 text-sm text-gray-600 dark:text-gray-300">{manager.strategy}</td>
-                    <td className="p-4 text-sm font-mono text-gray-900 dark:text-white">${(manager.totalAum / 1000000).toFixed(1)}M</td>
-                    <td className="p-4 text-sm text-gray-900 dark:text-white">{manager.investors}</td>
-                    <td className="p-4 text-sm font-mono text-emerald-500">+{manager.monthlyReturn}%</td>
-                    <td className="p-4 text-sm font-mono text-emerald-500">+{manager.totalReturn}%</td>
-                    <td className="p-4">
-                      <Badge variant="secondary" className={`text-xs ${getRiskColor(manager.riskLevel)}`}>{manager.riskLevel}</Badge>
-                    </td>
-                    <td className="p-4">
-                      <Button size="sm" onClick={() => openDemoInvestDialog(manager)} data-testid={`button-pamm-invest-${manager.id}`}>
-                        Invest
-                      </Button>
-                    </td>
-                  </tr>
-                )))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {(displayManagers || demoManagers).map((manager) => {
-          const mgr = manager as any;
-          return (
-            <div key={mgr.id} className="bg-card rounded-xl border shadow-sm hover:shadow-md transition-all p-6" data-testid={`card-pamm-detail-${mgr.id}`}>
-              <div className="flex items-center gap-3 mb-4">
-                <div className={`p-3 rounded-lg ${mgr.iconBg || "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"}`}>
-                  <BarChart3 className="w-5 h-5" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {(displayManagers ? displayManagers.map((manager) => {
+            const demoMatch = demoManagers.find(d => d.displayName === manager.displayName) || demoManagers[0];
+            return (
+              <div key={manager.id} className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6" data-testid={`card-pamm-manager-${manager.id}`}>
+                <div className="flex items-center justify-between gap-2 mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0">
+                      <Landmark className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900 dark:text-white">{manager.displayName}</h3>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{manager.strategy}</p>
+                    </div>
+                  </div>
+                  <Badge variant="secondary" className={`text-xs ${getRiskColor(manager.riskLevel)}`}>{manager.riskLevel}</Badge>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-sm text-gray-900 dark:text-white">{mgr.displayName}</h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{mgr.strategy}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{manager.description}</p>
+                <div className="grid grid-cols-4 gap-3 mb-4">
+                  <div className="rounded-lg bg-gray-50 dark:bg-gray-800/50 p-3 text-center">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Total Funds</p>
+                    <p className="font-bold text-sm text-gray-900 dark:text-white">${(Number(manager.totalAum) / 1000000).toFixed(1)}M</p>
+                  </div>
+                  <div className="rounded-lg bg-gray-50 dark:bg-gray-800/50 p-3 text-center">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Investors</p>
+                    <p className="font-bold text-sm text-gray-900 dark:text-white">{manager.investors}</p>
+                  </div>
+                  <div className="rounded-lg bg-gray-50 dark:bg-gray-800/50 p-3 text-center">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Monthly</p>
+                    <p className="font-bold text-sm text-emerald-500">+{manager.monthlyReturn}%</p>
+                  </div>
+                  <div className="rounded-lg bg-gray-50 dark:bg-gray-800/50 p-3 text-center">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Total</p>
+                    <p className="font-bold text-sm text-emerald-500">+{manager.totalReturn}%</p>
+                  </div>
+                </div>
+                <div className="mb-4">
+                  <ResponsiveContainer width="100%" height={80}>
+                    <AreaChart data={demoMatch.perfData}>
+                      <defs>
+                        <linearGradient id={`grad-${manager.id}`} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={demoMatch.color} stopOpacity={0.3} />
+                          <stop offset="95%" stopColor={demoMatch.color} stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <Area type="monotone" dataKey="v" stroke={demoMatch.color} strokeWidth={2} fill={`url(#grad-${manager.id})`} />
+                      <Tooltip contentStyle={chartTooltipStyle} formatter={(value: number) => [`${value}%`, "Return"]} labelFormatter={() => ""} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="flex items-center justify-between gap-2 text-sm text-gray-500 dark:text-gray-400 mb-4">
+                  <span>Min: ${Number(manager.minInvestment).toLocaleString()}</span>
+                  <span>Perf Fee: {manager.performanceFee}%</span>
+                </div>
+                <Button className="w-full" onClick={() => openInvestDialog(manager)} data-testid={`button-pamm-invest-${manager.id}`}>
+                  <ArrowUpRight className="w-4 h-4 mr-2" />
+                  Invest
+                </Button>
+              </div>
+            );
+          }) : demoManagers.map((manager) => (
+            <div key={manager.id} className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all p-6" data-testid={`card-pamm-manager-${manager.id}`}>
+              <div className="flex items-center justify-between gap-2 mb-4">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-lg ${manager.iconBg} flex items-center justify-center shrink-0`}>
+                    <Landmark className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 dark:text-white">{manager.displayName}</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{manager.strategy}</p>
+                  </div>
+                </div>
+                <Badge variant="secondary" className={`text-xs ${getRiskColor(manager.riskLevel)}`}>{manager.riskLevel}</Badge>
+              </div>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{manager.description}</p>
+              <div className="grid grid-cols-4 gap-3 mb-4">
+                <div className="rounded-lg bg-gray-50 dark:bg-gray-800/50 p-3 text-center">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Total Funds</p>
+                  <p className="font-bold text-sm text-gray-900 dark:text-white">${(manager.totalAum / 1000000).toFixed(1)}M</p>
+                </div>
+                <div className="rounded-lg bg-gray-50 dark:bg-gray-800/50 p-3 text-center">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Investors</p>
+                  <p className="font-bold text-sm text-gray-900 dark:text-white">{manager.investors}</p>
+                </div>
+                <div className="rounded-lg bg-gray-50 dark:bg-gray-800/50 p-3 text-center">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Monthly</p>
+                  <p className="font-bold text-sm text-emerald-500">+{manager.monthlyReturn}%</p>
+                </div>
+                <div className="rounded-lg bg-gray-50 dark:bg-gray-800/50 p-3 text-center">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Total</p>
+                  <p className="font-bold text-sm text-emerald-500">+{manager.totalReturn}%</p>
                 </div>
               </div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{mgr.description}</p>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between gap-2 text-sm">
-                  <span className="text-gray-500 dark:text-gray-400">Performance Fee</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">{mgr.performanceFee}%</span>
-                </div>
-                <div className="flex items-center justify-between gap-2 text-sm">
-                  <span className="text-gray-500 dark:text-gray-400">Management Fee</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">{mgr.managementFee}%</span>
-                </div>
-                <div className="flex items-center justify-between gap-2 text-sm">
-                  <span className="text-gray-500 dark:text-gray-400">Min Investment</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">${Number(mgr.minInvestment).toLocaleString()}</span>
-                </div>
+              <div className="mb-4">
+                <ResponsiveContainer width="100%" height={80}>
+                  <AreaChart data={manager.perfData}>
+                    <defs>
+                      <linearGradient id={`grad-${manager.id}`} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={manager.color} stopOpacity={0.3} />
+                        <stop offset="95%" stopColor={manager.color} stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <Area type="monotone" dataKey="v" stroke={manager.color} strokeWidth={2} fill={`url(#grad-${manager.id})`} />
+                    <Tooltip contentStyle={chartTooltipStyle} formatter={(value: number) => [`${value}%`, "Return"]} labelFormatter={() => ""} />
+                  </AreaChart>
+                </ResponsiveContainer>
               </div>
+              <div className="flex items-center justify-between gap-2 text-sm text-gray-500 dark:text-gray-400 mb-4">
+                <span>Min: ${manager.minInvestment.toLocaleString()}</span>
+                <span>Perf Fee: {manager.performanceFee}%</span>
+              </div>
+              <Button className="w-full" onClick={() => openDemoInvestDialog(manager)} data-testid={`button-pamm-invest-${manager.id}`}>
+                <ArrowUpRight className="w-4 h-4 mr-2" />
+                Invest
+              </Button>
             </div>
-          );
-        })}
+          )))}
+        </div>
       </div>
 
       {myInvestments && myInvestments.length > 0 && (
         <div>
           <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4" data-testid="text-my-investments-heading">My PAMM Investments</h2>
-          <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
+          <div className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
