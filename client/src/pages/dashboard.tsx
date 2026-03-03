@@ -1,18 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Wallet,
   ArrowUpRight,
   ArrowDownRight,
   TrendingUp,
-  Plus,
-  HelpCircle,
-  Shield,
-  Eye,
+  TrendingDown,
   CandlestickChart,
-  ChevronRight,
-  Activity,
+  Trophy,
+  PiggyBank,
+  Headphones,
+  Users,
+  UserPlus,
+  Gift,
+  Star,
+  DollarSign,
 } from "lucide-react";
 import {
   AreaChart,
@@ -49,12 +51,60 @@ const balanceGrowthData = [
   { month: "Jul", balance: 24592 },
 ];
 
+interface StatCardProps {
+  title: string;
+  value: string;
+  trend?: string;
+  subtext?: string;
+  isPositive?: boolean;
+  icon: JSX.Element;
+  iconBg: string;
+  href: string;
+  testId: string;
+}
+
+function StatCard({ title, value, trend, subtext, isPositive = true, icon, iconBg, href, testId }: StatCardProps) {
+  return (
+    <Link href={href}>
+      <div
+        className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all cursor-pointer h-full p-6"
+        data-testid={testId}
+      >
+        <div className="flex justify-between items-start">
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{title}</p>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white truncate">{value}</h3>
+          </div>
+          <div className={`p-3 rounded-lg shrink-0 ${iconBg}`}>
+            {icon}
+          </div>
+        </div>
+        {(trend || subtext) && (
+          <div className="mt-4 flex items-center gap-1 text-sm flex-wrap">
+            {trend && (
+              <>
+                {isPositive ? (
+                  <TrendingUp size={16} className="text-emerald-500" />
+                ) : (
+                  <TrendingDown size={16} className="text-red-500" />
+                )}
+                <span className={isPositive ? "text-emerald-500 font-medium" : "text-red-500 font-medium"}>
+                  {trend}
+                </span>
+              </>
+            )}
+            {subtext && (
+              <span className="text-gray-500 dark:text-gray-400 ml-1">{subtext}</span>
+            )}
+          </div>
+        )}
+      </div>
+    </Link>
+  );
+}
+
 export default function Dashboard() {
   const { user } = useAuth();
-
-  const { data: recentTransactions } = useQuery<Transaction[]>({
-    queryKey: ["/api/transactions/recent"],
-  });
 
   const { data: stats } = useQuery<{
     walletBalance: number;
@@ -70,128 +120,184 @@ export default function Dashboard() {
 
   const firstName = user?.fullName?.split(" ")[0] || "Trader";
 
+  const row1Cards: StatCardProps[] = [
+    {
+      title: "Wallet Balance",
+      value: `$${(stats?.walletBalance ?? 24592.5).toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
+      trend: "+12.5%",
+      subtext: "vs last month",
+      isPositive: true,
+      icon: <Wallet className="w-5 h-5" />,
+      iconBg: "bg-sky-50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400",
+      href: "/wallet",
+      testId: "stat-card-wallet-balance",
+    },
+    {
+      title: "Wallet Deposit",
+      value: `$${(stats?.totalDeposits ?? 12500).toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
+      trend: "+8.4%",
+      subtext: "vs last month",
+      isPositive: true,
+      icon: <ArrowUpRight className="w-5 h-5" />,
+      iconBg: "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400",
+      href: "/wallet",
+      testId: "stat-card-wallet-deposit",
+    },
+    {
+      title: "Wallet Withdrawal",
+      value: `$${(stats?.totalWithdrawals ?? 8450).toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
+      trend: "+5.2%",
+      subtext: "vs last month",
+      isPositive: false,
+      icon: <ArrowDownRight className="w-5 h-5" />,
+      iconBg: "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400",
+      href: "/wallet",
+      testId: "stat-card-wallet-withdrawal",
+    },
+    {
+      title: "Commissions",
+      value: `$${(stats?.totalCommissions ?? 2121.25).toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
+      trend: "+$340.00",
+      subtext: "this month",
+      isPositive: true,
+      icon: <DollarSign className="w-5 h-5" />,
+      iconBg: "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400",
+      href: "/forex/ib-dashboard",
+      testId: "stat-card-commissions",
+    },
+  ];
+
+  const row2Cards: StatCardProps[] = [
+    {
+      title: "Trading Accounts",
+      value: `${stats?.tradingAccounts ?? 4}`,
+      subtext: "All accounts active",
+      icon: <CandlestickChart className="w-5 h-5" />,
+      iconBg: "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400",
+      href: "/forex/accounts",
+      testId: "stat-card-trading-accounts",
+    },
+    {
+      title: "Prop Accounts",
+      value: "2",
+      subtext: "Active",
+      icon: <Trophy className="w-5 h-5" />,
+      iconBg: "bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400",
+      href: "/prop-trading",
+      testId: "stat-card-prop-accounts",
+    },
+    {
+      title: "Total Investments",
+      value: "$5,200.00",
+      subtext: "Across all plans",
+      icon: <PiggyBank className="w-5 h-5" />,
+      iconBg: "bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400",
+      href: "/investment",
+      testId: "stat-card-total-investments",
+    },
+    {
+      title: "Support Tickets",
+      value: `${stats?.openTickets ?? 1}`,
+      subtext: "Open",
+      icon: <Headphones className="w-5 h-5" />,
+      iconBg: "bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400",
+      href: "/support",
+      testId: "stat-card-support-tickets",
+    },
+  ];
+
+  const row3Cards: StatCardProps[] = [
+    {
+      title: "IB Earnings",
+      value: "$1,250.50",
+      trend: "+15%",
+      subtext: "vs last month",
+      isPositive: true,
+      icon: <Users className="w-5 h-5" />,
+      iconBg: "bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400",
+      href: "/forex/ib-dashboard",
+      testId: "stat-card-ib-earnings",
+    },
+    {
+      title: "Affiliate Earnings",
+      value: "$550.00",
+      trend: "+5%",
+      subtext: "vs last month",
+      isPositive: true,
+      icon: <UserPlus className="w-5 h-5" />,
+      iconBg: "bg-cyan-50 dark:bg-cyan-900/20 text-cyan-600 dark:text-cyan-400",
+      href: "/forex/ib-dashboard",
+      testId: "stat-card-affiliate-earnings",
+    },
+    {
+      title: "Inv. Referral Earnings",
+      value: "$320.75",
+      trend: "+8%",
+      subtext: "vs last month",
+      isPositive: true,
+      icon: <Gift className="w-5 h-5" />,
+      iconBg: "bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400",
+      href: "/forex/ib-dashboard",
+      testId: "stat-card-inv-referral-earnings",
+    },
+    {
+      title: "Loyalty Points",
+      value: "1,250 Pts",
+      trend: "+150",
+      subtext: "this month",
+      isPositive: true,
+      icon: <Star className="w-5 h-5" />,
+      iconBg: "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400",
+      href: "/loyalty-points",
+      testId: "stat-card-loyalty-points",
+    },
+  ];
+
   return (
-    <div className="space-y-6 max-w-[1600px] mx-auto">
-      <div className="bg-gradient-to-br from-blue-600 to-blue-800 dark:from-blue-700 dark:to-blue-900 rounded-2xl p-6 md:p-8 text-white shadow-lg" data-testid="dashboard-hero">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div>
-            <p className="text-white/60 text-sm mb-1">
-              Good {new Date().getHours() < 12 ? "morning" : new Date().getHours() < 18 ? "afternoon" : "evening"},
-            </p>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight" data-testid="text-dashboard-title">
-              {firstName}
-            </h1>
-            <p className="text-white/70 text-sm mt-1">Here's your portfolio overview for today</p>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <Link href="/wallet">
-              <Button size="sm" variant="outline" className="border-white/30 text-white bg-white/10 backdrop-blur-sm" data-testid="button-quick-deposit">
-                <ArrowUpRight className="w-4 h-4 mr-2" />
-                Quick Deposit
-              </Button>
-            </Link>
-            <Link href="/forex/accounts">
-              <Button size="sm" variant="outline" className="border-white/20 text-white bg-white/10 backdrop-blur-sm" data-testid="button-new-account">
-                <Plus className="w-4 h-4 mr-2" />
-                New Account
-              </Button>
-            </Link>
-          </div>
-        </div>
+    <div className="space-y-6 max-w-[1600px] mx-auto" data-testid="dashboard-page">
+      <div>
+        <h1 className="text-lg font-bold text-gray-900 dark:text-white" data-testid="text-dashboard-title">
+          Welcome back, {firstName}
+        </h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400">Here's your portfolio overview for today</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          {
-            label: "Wallet Balance",
-            value: `$${(stats?.walletBalance ?? 24592.5).toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
-            trend: "+12.5%",
-            isPositive: true,
-            icon: <Wallet className="w-5 h-5" />,
-            iconBg: "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400",
-            href: "/wallet",
-          },
-          {
-            label: "Total Deposits",
-            value: `$${(stats?.totalDeposits ?? 12500).toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
-            trend: "+8.3%",
-            isPositive: true,
-            icon: <ArrowUpRight className="w-5 h-5" />,
-            iconBg: "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400",
-            href: "/wallet",
-          },
-          {
-            label: "Total Withdrawals",
-            value: `$${(stats?.totalWithdrawals ?? 8450).toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
-            trend: "-3.2%",
-            isPositive: false,
-            icon: <ArrowDownRight className="w-5 h-5" />,
-            iconBg: "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400",
-            href: "/wallet",
-          },
-          {
-            label: "Trading Accounts",
-            value: stats?.tradingAccounts ?? 4,
-            trend: null,
-            isPositive: true,
-            icon: <CandlestickChart className="w-5 h-5" />,
-            iconBg: "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400",
-            href: "/forex/accounts",
-          },
-        ].map((card) => (
-          <Link key={card.label} href={card.href}>
-            <div className="bg-card rounded-xl border shadow-sm hover:shadow-md transition-all cursor-pointer h-full p-6" data-testid={`stat-card-${card.label.toLowerCase().replace(/\s+/g, '-')}`}>
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">{card.label}</p>
-                  <h3 className="text-2xl font-bold">{card.value}</h3>
-                </div>
-                <div className={`p-3 rounded-lg ${card.iconBg}`}>
-                  {card.icon}
-                </div>
-              </div>
-              {card.trend && (
-                <div className="mt-4 flex items-center gap-1 text-sm">
-                  {card.isPositive ? (
-                    <TrendingUp size={16} className="text-emerald-500" />
-                  ) : (
-                    <ArrowDownRight size={16} className="text-red-500" />
-                  )}
-                  <span className={card.isPositive ? "text-emerald-500 font-medium" : "text-red-500 font-medium"}>
-                    {card.trend}
-                  </span>
-                  <span className="text-muted-foreground ml-1">vs last month</span>
-                </div>
-              )}
-              {!card.trend && (
-                <div className="mt-4 flex items-center gap-1 text-sm">
-                  <Activity size={16} className="text-emerald-500" />
-                  <span className="text-muted-foreground">All accounts active</span>
-                </div>
-              )}
-            </div>
-          </Link>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" data-testid="stat-row-1">
+        {row1Cards.map((card) => (
+          <StatCard key={card.testId} {...card} />
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="bg-card rounded-xl border shadow-sm p-6">
-          <div className="flex items-center justify-between gap-2 mb-4">
-            <h3 className="text-sm font-medium">Account Balance History</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" data-testid="stat-row-2">
+        {row2Cards.map((card) => (
+          <StatCard key={card.testId} {...card} />
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" data-testid="stat-row-3">
+        {row3Cards.map((card) => (
+          <StatCard key={card.testId} {...card} />
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6">
+          <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Wallet Balance Growth</h3>
             <Badge variant="secondary" className="text-xs font-normal">Last 7 months</Badge>
           </div>
-          <div className="h-[260px]" data-testid="chart-balance-growth">
+          <div className="h-[280px]" data-testid="chart-balance-growth">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={balanceGrowthData}>
                 <defs>
                   <linearGradient id="balanceGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.25} />
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
-                <XAxis dataKey="month" className="text-xs" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis className="text-xs" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
+                <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" vertical={false} />
+                <XAxis dataKey="month" tick={{ fill: "#9ca3af", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: "#9ca3af", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "hsl(var(--card))",
@@ -202,32 +308,32 @@ export default function Dashboard() {
                   }}
                   formatter={(value: number) => [`$${value.toLocaleString()}`, "Balance"]}
                 />
-                <Area type="monotone" dataKey="balance" stroke="hsl(var(--primary))" fill="url(#balanceGradient)" strokeWidth={2.5} dot={false} activeDot={{ r: 5, strokeWidth: 2, stroke: "hsl(var(--primary))", fill: "hsl(var(--background))" }} />
+                <Area type="monotone" dataKey="balance" stroke="#0ea5e9" fill="url(#balanceGradient)" strokeWidth={2.5} dot={false} activeDot={{ r: 5, strokeWidth: 2, stroke: "#0ea5e9", fill: "hsl(var(--background))" }} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        <div className="bg-card rounded-xl border shadow-sm p-6">
-          <div className="flex items-center justify-between gap-2 mb-4">
-            <h3 className="text-sm font-medium">Cash Flow</h3>
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6">
+          <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Cash Flow</h3>
             <div className="flex items-center gap-3 flex-wrap">
               <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                <span className="text-xs text-muted-foreground">Deposits</span>
+                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                <span className="text-xs text-gray-500 dark:text-gray-400">Deposits</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-red-400" />
-                <span className="text-xs text-muted-foreground">Withdrawals</span>
+                <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
+                <span className="text-xs text-gray-500 dark:text-gray-400">Withdrawals</span>
               </div>
             </div>
           </div>
-          <div className="h-[260px]" data-testid="chart-cashflow">
+          <div className="h-[280px]" data-testid="chart-cashflow">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={cashFlowData} barGap={4}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
-                <XAxis dataKey="month" className="text-xs" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis className="text-xs" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
+                <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" vertical={false} />
+                <XAxis dataKey="month" tick={{ fill: "#9ca3af", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: "#9ca3af", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "hsl(var(--card))",
@@ -242,113 +348,6 @@ export default function Dashboard() {
                 <Bar dataKey="withdrawals" fill="rgb(248, 113, 113)" radius={[4, 4, 0, 0]} maxBarSize={32} />
               </BarChart>
             </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="bg-card rounded-xl border shadow-sm p-6 lg:col-span-1">
-          <h3 className="text-sm font-medium mb-4">Quick Actions</h3>
-          <div className="space-y-1.5">
-            {[
-              { href: "/wallet", icon: ArrowUpRight, label: "Make a Deposit", color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/20", testId: "button-action-deposit" },
-              { href: "/wallet", icon: ArrowDownRight, label: "Request Withdrawal", color: "text-red-600 dark:text-red-400", bg: "bg-red-50 dark:bg-red-900/20", testId: "button-action-withdraw" },
-              { href: "/forex/accounts", icon: Plus, label: "Open Trading Account", color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-900/20", testId: "button-action-new-account" },
-              { href: "/kyc", icon: Shield, label: "Verify Identity", color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-900/20", testId: "button-action-kyc" },
-              { href: "/support", icon: HelpCircle, label: "Get Support", color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-900/20", testId: "button-action-support" },
-            ].map((action) => (
-              <Link key={action.testId} href={action.href}>
-                <div className="flex items-center justify-between px-3 py-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer group" data-testid={action.testId}>
-                  <div className="flex items-center gap-3">
-                    <div className={`w-9 h-9 rounded-lg ${action.bg} flex items-center justify-center shrink-0`}>
-                      <action.icon className={`w-4 h-4 ${action.color}`} />
-                    </div>
-                    <span className="text-sm font-medium">{action.label}</span>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        <div className="bg-card rounded-xl border shadow-sm overflow-hidden lg:col-span-2">
-          <div className="flex items-center justify-between gap-2 p-6 pb-3">
-            <h3 className="text-sm font-medium">Recent Transactions</h3>
-            <Link href="/transactions">
-              <Button variant="ghost" size="sm" className="text-xs" data-testid="button-view-all-transactions">
-                View All
-                <ChevronRight className="w-3.5 h-3.5 ml-1" />
-              </Button>
-            </Link>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm" data-testid="table-recent-transactions">
-              <thead>
-                <tr className="border-b bg-muted/30">
-                  <th className="text-left py-3 px-6 font-medium text-muted-foreground text-xs">Type</th>
-                  <th className="text-left py-3 px-6 font-medium text-muted-foreground text-xs">Description</th>
-                  <th className="text-left py-3 px-6 font-medium text-muted-foreground text-xs">Date</th>
-                  <th className="text-left py-3 px-6 font-medium text-muted-foreground text-xs">Amount</th>
-                  <th className="text-left py-3 px-6 font-medium text-muted-foreground text-xs">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(recentTransactions || []).slice(0, 5).map((tx) => (
-                  <tr key={tx.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors" data-testid={`row-transaction-${tx.id}`}>
-                    <td className="py-4 px-6">
-                      <span className={`
-                        inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize
-                        ${tx.type === "deposit" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" :
-                        tx.type === "withdrawal" ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" :
-                        "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"}
-                      `}>
-                        {tx.type}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6 text-foreground">{tx.type === "deposit" ? "Wallet Deposit" : "Wallet Withdrawal"}</td>
-                    <td className="py-4 px-6 text-muted-foreground">
-                      {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "N/A"}
-                    </td>
-                    <td className={`py-4 px-6 font-semibold ${tx.type === "withdrawal" ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"}`}>
-                      {tx.type === "withdrawal" ? "-" : "+"}${Math.abs(Number(tx.amount)).toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                    </td>
-                    <td className="py-4 px-6">
-                      <Badge
-                        variant="secondary"
-                        className={`text-[10px] font-medium ${
-                          tx.status === "completed" || tx.status === "approved" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" :
-                          tx.status === "pending" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" :
-                          "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                        }`}
-                      >
-                        {tx.status}
-                      </Badge>
-                    </td>
-                  </tr>
-                ))}
-                {(!recentTransactions || recentTransactions.length === 0) && (
-                  <tr>
-                    <td colSpan={5} className="py-16 text-center">
-                      <div className="flex flex-col items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-                          <Wallet className="w-6 h-6 text-muted-foreground/50" />
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-sm font-medium">No recent transactions</p>
-                          <p className="text-xs text-muted-foreground">Your activity will appear here</p>
-                        </div>
-                        <Link href="/wallet">
-                          <Button variant="outline" size="sm" data-testid="button-first-deposit">
-                            Make your first deposit
-                          </Button>
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
           </div>
         </div>
       </div>
