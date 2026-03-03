@@ -201,6 +201,66 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/trading-accounts/internal-transfer", requireAuth, async (req, res) => {
+    try {
+      const { fromAccountId, toAccountId, amount } = z.object({
+        fromAccountId: z.string().min(1),
+        toAccountId: z.string().min(1),
+        amount: z.string().min(1),
+      }).parse(req.body);
+      const fromAcc = await storage.getTradingAccountById(fromAccountId);
+      const toAcc = await storage.getTradingAccountById(toAccountId);
+      if (!fromAcc || !toAcc) return res.status(404).json({ error: "Account not found" });
+      if (fromAcc.userId !== req.session.userId || toAcc.userId !== req.session.userId) {
+        return res.status(403).json({ error: "Not authorized" });
+      }
+      if (fromAccountId === toAccountId) return res.status(400).json({ error: "Cannot transfer to the same account" });
+      const numAmount = parseFloat(amount);
+      if (isNaN(numAmount) || numAmount <= 0) return res.status(400).json({ error: "Invalid amount" });
+      const fromBalance = parseFloat(fromAcc.balance as string);
+      if (numAmount > fromBalance) return res.status(400).json({ error: "Account does not have sufficient balance to Transfer" });
+      let conversionRate = 1;
+      if (fromAcc.currency !== toAcc.currency) {
+        const rates: Record<string, Record<string, number>> = {
+          USD: { EUR: 0.92, GBP: 0.79, JPY: 149.5 },
+          EUR: { USD: 1.09, GBP: 0.86, JPY: 162.5 },
+          GBP: { USD: 1.27, EUR: 1.16, JPY: 189.0 },
+          JPY: { USD: 0.0067, EUR: 0.0062, GBP: 0.0053 },
+        };
+        conversionRate = rates[fromAcc.currency]?.[toAcc.currency] || 1.1;
+      }
+      const convertedAmount = numAmount * conversionRate;
+      const newFromBalance = (fromBalance - numAmount).toFixed(2);
+      const newFromEquity = (parseFloat(fromAcc.equity as string) - numAmount).toFixed(2);
+      await storage.updateTradingAccount(fromAcc.id, { balance: newFromBalance, equity: newFromEquity });
+      const newToBalance = (parseFloat(toAcc.balance as string) + convertedAmount).toFixed(2);
+      const newToEquity = (parseFloat(toAcc.equity as string) + convertedAmount).toFixed(2);
+      await storage.updateTradingAccount(toAcc.id, { balance: newToBalance, equity: newToEquity });
+      await storage.createTransaction({
+        userId: req.session.userId!,
+        type: "withdrawal",
+        amount,
+        currency: fromAcc.currency,
+        method: "internal_transfer",
+        notes: `Internal transfer from ${fromAcc.accountNumber} to ${toAcc.accountNumber}${fromAcc.currency !== toAcc.currency ? ` (${fromAcc.currency}→${toAcc.currency} @ ${conversionRate.toFixed(4)})` : ""}`,
+        status: "approved",
+      });
+      await storage.createTransaction({
+        userId: req.session.userId!,
+        type: "deposit",
+        amount: convertedAmount.toFixed(2),
+        currency: toAcc.currency,
+        method: "internal_transfer",
+        notes: `Internal transfer received from ${fromAcc.accountNumber} to ${toAcc.accountNumber}${fromAcc.currency !== toAcc.currency ? ` (${fromAcc.currency}→${toAcc.currency} @ ${conversionRate.toFixed(4)})` : ""}`,
+        status: "approved",
+      });
+      res.json({ success: true, conversionRate, convertedAmount: convertedAmount.toFixed(2) });
+    } catch (error: any) {
+      if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors[0].message });
+      res.status(500).json({ error: error.message || "Internal transfer failed" });
+    }
+  });
+
   app.get("/api/trading-accounts/:id", requireAuth, async (req, res) => {
     try {
       const account = await storage.getTradingAccountById(req.params.id as string);
@@ -280,6 +340,44 @@ export async function registerRoutes(
     } catch (error: any) {
       if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors[0].message });
       res.status(500).json({ error: "Failed to deposit to account" });
+    }
+  });
+
+  app.post("/api/trading-accounts/:id/withdraw", requireAuth, async (req, res) => {
+    try {
+      const { amount } = z.object({ amount: z.string().min(1) }).parse(req.body);
+      const account = await storage.getTradingAccountById(req.params.id as string);
+      if (!account) return res.status(404).json({ error: "Account not found" });
+      if (account.userId !== req.session.userId) return res.status(403).json({ error: "Not authorized" });
+      const numAmount = parseFloat(amount);
+      if (isNaN(numAmount) || numAmount <= 0) return res.status(400).json({ error: "Invalid amount" });
+      const accBalance = parseFloat(account.balance as string);
+      if (numAmount > accBalance) return res.status(400).json({ error: `Insufficient balance. Available: $${accBalance.toFixed(2)}` });
+      await storage.createTransaction({
+        userId: req.session.userId!,
+        type: "withdrawal",
+        amount,
+        currency: account.currency,
+        method: "trading_withdrawal",
+        notes: `Withdrawal from trading account ${account.accountNumber} to wallet`,
+        status: "approved",
+      });
+      await storage.createTransaction({
+        userId: req.session.userId!,
+        type: "deposit",
+        amount,
+        currency: account.currency,
+        method: "trading_withdrawal",
+        notes: `Wallet deposit from trading account ${account.accountNumber}`,
+        status: "approved",
+      });
+      const newBalance = (accBalance - numAmount).toFixed(2);
+      const newEquity = (parseFloat(account.equity as string) - numAmount).toFixed(2);
+      await storage.updateTradingAccount(account.id, { balance: newBalance, equity: newEquity });
+      res.json({ success: true, newBalance });
+    } catch (error: any) {
+      if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors[0].message });
+      res.status(500).json({ error: "Failed to withdraw from account" });
     }
   });
 
