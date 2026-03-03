@@ -556,23 +556,37 @@ export async function registerRoutes(
       const userId = req.session.userId!;
       const userCommissions = await storage.getCommissionsByUser(userId);
       const paidCommissions = userCommissions.filter(c => c.status === "paid");
-      const totalAmount = paidCommissions.reduce((s, c) => s + Number(c.amount), 0);
-      if (totalAmount <= 0) {
+      const totalAvailable = paidCommissions.reduce((s, c) => s + Number(c.amount), 0);
+      if (totalAvailable <= 0) {
         return res.status(400).json({ error: "No commission balance available to transfer" });
       }
+      const requestedAmount = req.body.amount ? parseFloat(req.body.amount) : totalAvailable;
+      if (isNaN(requestedAmount) || requestedAmount <= 0) {
+        return res.status(400).json({ error: "Invalid transfer amount" });
+      }
+      if (requestedAmount > totalAvailable) {
+        return res.status(400).json({ error: `Amount exceeds available commission balance ($${totalAvailable.toFixed(2)})` });
+      }
+      const transferAmount = Math.min(requestedAmount, totalAvailable);
       await storage.createTransaction({
         userId,
         type: "deposit",
-        amount: totalAmount.toString(),
+        amount: transferAmount.toFixed(2),
         currency: "USD",
         method: "commission_transfer",
-        notes: `Commission transfer to wallet ($${totalAmount.toFixed(2)})`,
+        notes: `Commission transfer to wallet ($${transferAmount.toFixed(2)})`,
         status: "approved",
       });
+      let remaining = transferAmount;
       for (const comm of paidCommissions) {
-        await storage.updateCommissionStatus(comm.id, "transferred");
+        if (remaining <= 0) break;
+        const commAmt = Number(comm.amount);
+        if (commAmt <= remaining) {
+          await storage.updateCommissionStatus(comm.id, "transferred");
+          remaining -= commAmt;
+        }
       }
-      res.json({ success: true, message: `$${totalAmount.toFixed(2)} commission transferred to wallet` });
+      res.json({ success: true, message: `$${transferAmount.toFixed(2)} commission transferred to wallet` });
     } catch (error: any) {
       res.status(500).json({ error: error.message || "Commission transfer failed" });
     }

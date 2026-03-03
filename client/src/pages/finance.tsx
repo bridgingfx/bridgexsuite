@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import type { TradingAccount, Transaction } from "@shared/schema";
 import {
   ArrowUpRight,
@@ -37,6 +38,8 @@ export default function FinancePage() {
   const [depositForm, setDepositForm] = useState({ accountId: "", amount: "" });
   const [withdrawForm, setWithdrawForm] = useState({ accountId: "", amount: "" });
   const [transferForm, setTransferForm] = useState({ fromId: "", toId: "", amount: "", error: "" });
+  const [commissionDialog, setCommissionDialog] = useState(false);
+  const [commissionAmount, setCommissionAmount] = useState("");
   const { toast } = useToast();
 
   const { data: tradingAccounts, isLoading: loadingAccounts } = useQuery<TradingAccount[]>({
@@ -134,14 +137,16 @@ export default function FinancePage() {
   });
 
   const commissionTransferMutation = useMutation({
-    mutationFn: async () => {
-      return apiRequest("POST", "/api/commission-transfer", {});
+    mutationFn: async (amount: string) => {
+      return apiRequest("POST", "/api/commission-transfer", { amount });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
       queryClient.invalidateQueries({ queryKey: ["/api/commissions"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      toast({ title: `$${totalCommissions.toFixed(2)} commission transferred to wallet` });
+      toast({ title: `$${commissionAmount || totalCommissions.toFixed(2)} commission transferred to wallet` });
+      setCommissionDialog(false);
+      setCommissionAmount("");
     },
     onError: (error: any) => {
       toast({ title: error?.message || "Commission transfer failed", variant: "destructive" });
@@ -244,12 +249,15 @@ export default function FinancePage() {
               <p className="text-gray-500 dark:text-gray-400 text-sm">IB Commissions</p>
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">${totalCommissions.toLocaleString("en-US", { minimumFractionDigits: 2 })}</h3>
               <button
-                onClick={() => commissionTransferMutation.mutate()}
-                disabled={commissionTransferMutation.isPending || totalCommissions <= 0}
+                onClick={() => {
+                  setCommissionAmount(totalCommissions.toFixed(2));
+                  setCommissionDialog(true);
+                }}
+                disabled={totalCommissions <= 0}
                 className="text-xs text-brand-600 dark:text-brand-400 font-medium mt-1 disabled:opacity-50"
                 data-testid="button-transfer-commission"
               >
-                {commissionTransferMutation.isPending ? "Transferring..." : "Transfer to Wallet"}
+                Transfer to Wallet
               </button>
             </div>
             <div className="p-3 bg-green-50 dark:bg-green-900/20 text-green-600 rounded-lg">
@@ -590,6 +598,97 @@ export default function FinancePage() {
           </table>
         </div>
       </div>
+
+      <Dialog open={commissionDialog} onOpenChange={setCommissionDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Transfer Commission to Wallet</DialogTitle>
+            <DialogDescription>Transfer your earned IB commissions to your main wallet balance.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-5 pt-2">
+            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-100 dark:border-green-800/50">
+              <div>
+                <p className="text-xs text-green-600 dark:text-green-400 font-medium uppercase tracking-wide">Available Commission</p>
+                <p className="text-2xl font-bold text-green-700 dark:text-green-300 mt-1" data-testid="text-available-commission">${totalCommissions.toLocaleString("en-US", { minimumFractionDigits: 2 })}</p>
+              </div>
+              <div className="p-3 bg-green-100 dark:bg-green-800/40 rounded-lg">
+                <TrendingUp size={24} className="text-green-600 dark:text-green-400" />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Amount to Transfer (USD)</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-lg">$</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  max={totalCommissions}
+                  placeholder="0.00"
+                  value={commissionAmount}
+                  onChange={(e) => setCommissionAmount(e.target.value)}
+                  className="w-full pl-9 p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none text-lg font-bold"
+                  data-testid="input-commission-amount"
+                />
+              </div>
+              {parseFloat(commissionAmount) > totalCommissions && (
+                <p className="text-xs text-red-500 mt-1">Amount exceeds available commission balance</p>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCommissionAmount(totalCommissions.toFixed(2))}
+                className="text-xs px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700"
+                data-testid="button-commission-max"
+              >
+                Max
+              </button>
+              <button
+                onClick={() => setCommissionAmount((totalCommissions / 2).toFixed(2))}
+                className="text-xs px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700"
+                data-testid="button-commission-half"
+              >
+                50%
+              </button>
+              <button
+                onClick={() => setCommissionAmount((totalCommissions * 0.25).toFixed(2))}
+                className="text-xs px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700"
+                data-testid="button-commission-quarter"
+              >
+                25%
+              </button>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => {
+                  setCommissionDialog(false);
+                  setCommissionAmount("");
+                }}
+                className="flex-1 px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium"
+                data-testid="button-cancel-commission"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => commissionTransferMutation.mutate(commissionAmount)}
+                disabled={
+                  commissionTransferMutation.isPending ||
+                  !commissionAmount ||
+                  parseFloat(commissionAmount) <= 0 ||
+                  parseFloat(commissionAmount) > totalCommissions
+                }
+                className="flex-1 px-4 py-3 rounded-xl bg-green-600 hover:bg-green-700 disabled:bg-gray-300 dark:disabled:bg-gray-800 disabled:text-gray-500 text-white font-bold shadow-lg shadow-green-500/20 transition-all flex items-center justify-center gap-2"
+                data-testid="button-confirm-commission"
+              >
+                <Wallet size={18} /> {commissionTransferMutation.isPending ? "Transferring..." : "Transfer to Wallet"}
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
