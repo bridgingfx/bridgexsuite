@@ -1,0 +1,48 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use App\Traits\CamelCaseAttributes;
+use Illuminate\Support\Str;
+
+class BrokerSubscription extends Model
+{
+    use CamelCaseAttributes;
+
+    protected $table = 'broker_subscriptions';
+    protected $keyType = 'string';
+    public $incrementing = false;
+    const UPDATED_AT = null;
+    const CREATED_AT = 'created_at';
+
+    protected $fillable = [
+        'broker_id', 'plan_id', 'status', 'start_date', 'end_date', 'renewal_date',
+    ];
+
+    protected $casts = [
+        'start_date' => 'datetime',
+        'end_date' => 'datetime',
+        'renewal_date' => 'datetime',
+    ];
+
+    protected static function boot()
+    {
+        parent::boot();
+        static::creating(function ($model) {
+            if (empty($model->id)) {
+                $model->id = (string) Str::uuid();
+            }
+        });
+    }
+
+    public function broker()
+    {
+        return $this->belongsTo(Broker::class, 'broker_id');
+    }
+
+    public function plan()
+    {
+        return $this->belongsTo(SubscriptionPlan::class, 'plan_id');
+    }
+}
