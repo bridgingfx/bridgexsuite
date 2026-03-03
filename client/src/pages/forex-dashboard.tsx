@@ -39,10 +39,10 @@ const volumeData = [
 ];
 
 const openPositions = [
-  { symbol: "EURUSD", type: "Buy", vol: 1, open: 1.082, curr: 1.0845, profit: 250 },
-  { symbol: "GBPUSD", type: "Sell", vol: 0.5, open: 1.265, curr: 1.263, profit: 100 },
-  { symbol: "XAUUSD", type: "Buy", vol: 0.1, open: 2020, curr: 2015, profit: -50 },
-  { symbol: "USDJPY", type: "Buy", vol: 2, open: 149.5, curr: 149.8, profit: 400 },
+  { symbol: "EURUSD", accountId: "MT46468922", platform: "MT5", type: "Buy", vol: 1, open: 1.082, curr: 1.0845, profit: 250 },
+  { symbol: "GBPUSD", accountId: "MT89353096", platform: "MT5", type: "Sell", vol: 0.5, open: 1.265, curr: 1.263, profit: 100 },
+  { symbol: "XAUUSD", accountId: "MT29654448", platform: "cTrader", type: "Buy", vol: 0.1, open: 2020, curr: 2015, profit: -50 },
+  { symbol: "USDJPY", accountId: "MT46468922", platform: "MT5", type: "Buy", vol: 2, open: 149.5, curr: 149.8, profit: 400 },
 ];
 
 const chartTooltipStyle = {
@@ -224,6 +224,8 @@ export default function ForexDashboard() {
             <thead>
               <tr className="border-b border-gray-100 dark:border-gray-800">
                 <th className="text-left py-3 px-2 font-medium text-gray-500 dark:text-gray-400">Symbol</th>
+                <th className="text-left py-3 px-2 font-medium text-gray-500 dark:text-gray-400">Account ID</th>
+                <th className="text-left py-3 px-2 font-medium text-gray-500 dark:text-gray-400">Platform</th>
                 <th className="text-left py-3 px-2 font-medium text-gray-500 dark:text-gray-400">Type</th>
                 <th className="text-right py-3 px-2 font-medium text-gray-500 dark:text-gray-400">Volume</th>
                 <th className="text-right py-3 px-2 font-medium text-gray-500 dark:text-gray-400">Open Price</th>
@@ -235,6 +237,10 @@ export default function ForexDashboard() {
               {openPositions.map((pos) => (
                 <tr key={pos.symbol} className="border-b border-gray-50 dark:border-gray-800/50 last:border-0" data-testid={`row-position-${pos.symbol}`}>
                   <td className="py-3 px-2 font-medium text-gray-900 dark:text-white">{pos.symbol}</td>
+                  <td className="py-3 px-2 font-mono text-gray-600 dark:text-gray-300" data-testid={`text-position-accountid-${pos.symbol}`}>{pos.accountId}</td>
+                  <td className="py-3 px-2" data-testid={`text-position-platform-${pos.symbol}`}>
+                    <Badge variant="secondary">{pos.platform}</Badge>
+                  </td>
                   <td className="py-3 px-2">
                     <Badge
                       variant="secondary"
@@ -252,7 +258,7 @@ export default function ForexDashboard() {
                   <td className="py-3 px-2 text-right font-mono text-gray-600 dark:text-gray-300">{pos.open.toFixed(pos.open > 100 ? 1 : 4)}</td>
                   <td className="py-3 px-2 text-right font-mono text-gray-600 dark:text-gray-300">{pos.curr.toFixed(pos.curr > 100 ? 1 : 4)}</td>
                   <td className={`py-3 px-2 text-right font-medium ${pos.profit >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`} data-testid={`text-position-profit-${pos.symbol}`}>
-                    {pos.profit >= 0 ? "+" : ""}${Math.abs(pos.profit).toFixed(2)}
+                    {pos.profit >= 0 ? "+" : "-"}${Math.abs(pos.profit).toFixed(2)} USD
                   </td>
                 </tr>
               ))}

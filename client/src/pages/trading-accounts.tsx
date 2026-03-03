@@ -31,6 +31,9 @@ import {
   Wallet,
   ArrowUpRight,
   ArrowDownRight,
+  ArrowDownCircle,
+  ArrowUpCircle,
+  ArrowLeftRight,
   Settings2,
   CandlestickChart,
   Layers,
@@ -39,6 +42,8 @@ import {
   ChevronRight,
   ChevronLeft,
   Check,
+  RefreshCw,
+  Gift,
 } from "lucide-react";
 import type { TradingAccount } from "@shared/schema";
 import { useLocation } from "wouter";
@@ -53,6 +58,14 @@ const demoAccountsData = [
 ];
 
 const wizardSteps = ["Platform", "Account Tier", "Leverage", "Currency"];
+
+const conversionRates: Record<string, Record<string, number>> = {
+  USD: { EUR: 0.92, GBP: 0.79, USD: 1 },
+  EUR: { USD: 1.09, GBP: 0.86, EUR: 1 },
+  GBP: { USD: 1.27, EUR: 1.16, GBP: 1 },
+};
+
+const currencySymbols: Record<string, string> = { USD: "$", EUR: "\u20AC", GBP: "\u00A3" };
 
 export default function TradingAccounts() {
   const [search, setSearch] = useState("");
@@ -79,7 +92,7 @@ export default function TradingAccounts() {
 
   const filtered = (accounts || []).filter((a) => {
     const matchSearch = a.accountNumber.toLowerCase().includes(search.toLowerCase());
-    const matchType = isLive ? a.type === "live" || a.type === "standard" : isDemo ? a.type === "demo" : true;
+    const matchType = isLive ? a.type !== "demo" : isDemo ? a.type === "demo" : true;
     return matchSearch && matchType;
   });
 
@@ -113,10 +126,11 @@ export default function TradingAccounts() {
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordType, setPasswordType] = useState<"master" | "investor">("master");
   const passwordMutation = useMutation({
     mutationFn: async () => {
       if (!selectedAccount) throw new Error("No account selected");
-      return apiRequest("POST", `/api/trading-accounts/${selectedAccount.id}/change-password`, { newPassword });
+      return apiRequest("POST", `/api/trading-accounts/${selectedAccount.id}/change-password`, { newPassword, passwordType });
     },
     onSuccess: () => {
       toast({ title: "Password changed successfully" });
@@ -164,16 +178,42 @@ export default function TradingAccounts() {
     },
   });
 
+  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [withdrawCurrency, setWithdrawCurrency] = useState("USD");
+  const withdrawMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedAccount) throw new Error("No account selected");
+      return apiRequest("POST", `/api/trading-accounts/${selectedAccount.id}/withdraw`, { amount: Number(withdrawAmount) });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/trading-accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      toast({ title: "Withdrawal successful", description: `${currencySymbols[withdrawCurrency]}${getConvertedAmount().toFixed(2)} withdrawn to ${withdrawCurrency} wallet` });
+      setWithdrawOpen(false);
+      setWithdrawAmount("");
+      setWithdrawCurrency("USD");
+    },
+    onError: () => {
+      toast({ title: "Withdrawal failed", variant: "destructive" });
+    },
+  });
+
+  function getConvertedAmount() {
+    const amount = Number(withdrawAmount) || 0;
+    const accountCurrency = selectedAccount?.currency || "USD";
+    const rate = conversionRates[accountCurrency]?.[withdrawCurrency] ?? 1;
+    return amount * rate;
+  }
+
   const passwordsMatch = newPassword === confirmPassword;
   const isPasswordValid = newPassword.length >= 6 && passwordsMatch;
 
-  function getPlatformColor(platform: string) {
-    switch (platform) {
-      case "MT5": return { text: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-900/20", badge: "bg-blue-500/10 text-blue-600 dark:text-blue-400" };
-      case "MT4": return { text: "text-indigo-600 dark:text-indigo-400", bg: "bg-indigo-50 dark:bg-indigo-900/20", badge: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400" };
-      case "cTrader": return { text: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/20", badge: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" };
-      default: return { text: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-900/20", badge: "bg-blue-500/10 text-blue-600 dark:text-blue-400" };
-    }
+  function getAccountTier(account: TradingAccount) {
+    const type = account.type?.toUpperCase();
+    if (type === "ECN" || type === "STANDARD" || type === "RAW") return type;
+    if (type === "LIVE") return "ECN";
+    return type || "ECN";
   }
 
   function getPnl(account: TradingAccount) {
@@ -191,6 +231,16 @@ export default function TradingAccounts() {
     if (wizardStep === 3) return !!formData.currency;
     return false;
   }
+
+  const cardActions = [
+    { label: "View", icon: Eye, action: (account: TradingAccount) => navigate(`/trading/account/${account.id}`) },
+    { label: "Password", icon: Lock, action: (account: TradingAccount) => { setSelectedAccount(account); setNewPassword(""); setConfirmPassword(""); setPasswordType("master"); setPasswordOpen(true); } },
+    { label: "Leverage", icon: RefreshCw, action: (account: TradingAccount) => { setSelectedAccount(account); setNewLeverage(account.leverage); setLeverageOpen(true); } },
+    { label: "Deposit", icon: ArrowDownCircle, action: (account: TradingAccount) => { setSelectedAccount(account); setDepositAmount(""); setDepositOpen(true); } },
+    { label: "Withdraw", icon: ArrowUpCircle, action: (account: TradingAccount) => { setSelectedAccount(account); setWithdrawAmount(""); setWithdrawCurrency("USD"); setWithdrawOpen(true); } },
+    { label: "Transfer", icon: ArrowLeftRight, action: (account: TradingAccount) => { setSelectedAccount(account); setTransferOpen(true); } },
+    { label: "Bonus", icon: Gift, action: () => { toast({ title: "Coming soon", description: "Bonus feature is coming soon." }); } },
+  ];
 
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto">
@@ -302,7 +352,7 @@ export default function TradingAccounts() {
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
+            <div key={i} className="bg-[#0f172a] p-6 rounded-xl shadow-sm">
               <Skeleton className="h-6 w-32 mb-4" />
               <Skeleton className="h-10 w-full mb-3" />
               <Skeleton className="h-4 w-24 mb-3" />
@@ -325,149 +375,90 @@ export default function TradingAccounts() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {filtered.map((account) => {
-            const { pnl, pnlPercent } = getPnl(account);
-            const platformColor = getPlatformColor(account.platform);
-            const isPositive = pnl >= 0;
+            const credit = 0;
+            const accountTier = getAccountTier(account);
 
             return (
               <div
                 key={account.id}
-                className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all"
+                className="bg-[#0f172a] rounded-xl shadow-sm overflow-visible"
                 data-testid={`card-account-${account.id}`}
               >
-                <div className="flex items-start justify-between gap-2 mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className={cn("p-3 rounded-lg", platformColor.bg)}>
-                      <CandlestickChart className={cn("w-5 h-5", platformColor.text)} />
-                    </div>
-                    <div>
-                      <p className="font-mono font-semibold text-gray-900 dark:text-white" data-testid={`text-account-number-${account.id}`}>
+                <div className="p-5">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-3">
+                      <span className="bg-emerald-500 text-white px-3 py-1 rounded-lg font-bold text-sm" data-testid={`badge-platform-${account.id}`}>
+                        {account.platform}
+                      </span>
+                      <span className="font-bold text-white text-base" data-testid={`text-account-number-${account.id}`}>
                         {account.accountNumber}
-                      </p>
-                      <div className="flex items-center gap-2 mt-1 flex-wrap">
-                        <Badge variant="secondary" className={cn("text-xs", platformColor.badge)} data-testid={`badge-platform-${account.id}`}>
-                          {account.platform}
-                        </Badge>
-                        <span className="text-xs text-gray-500 dark:text-gray-400 capitalize">{account.type}</span>
-                        <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
-                          <Globe className="w-3 h-3" />
-                          BridgeX-{account.type === "demo" ? "Demo" : "Live"}
-                        </div>
+                      </span>
+                      <button
+                        onClick={() => navigate(`/trading/account/${account.id}`)}
+                        className="text-gray-400 cursor-pointer"
+                        data-testid={`button-webtrader-${account.id}`}
+                      >
+                        <CandlestickChart className="w-5 h-5" />
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="border border-emerald-500 text-emerald-400 px-3 py-1 rounded-lg text-xs font-bold" data-testid={`badge-status-${account.id}`}>
+                        {account.type === "demo" ? "DEMO" : "LIVE"}
+                      </span>
+                      <span className="border border-gray-500 text-gray-300 px-3 py-1 rounded-lg text-xs font-bold" data-testid={`badge-tier-${account.id}`}>
+                        {accountTier}
+                      </span>
+                    </div>
+                  </div>
+
+                  <p className="text-gray-400 text-sm mt-2">
+                    BridgeX-{account.type === "demo" ? "Demo" : "Live"}
+                  </p>
+
+                  <div className="border-t border-gray-700 mt-4 pt-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-gray-400 uppercase text-xs font-medium tracking-wider">Balance</p>
+                        <p className="text-white text-2xl font-bold mt-1" data-testid={`text-balance-${account.id}`}>
+                          ${Number(account.balance).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-400 uppercase text-xs font-medium tracking-wider">Equity</p>
+                        <p className="text-emerald-400 text-2xl font-bold mt-1" data-testid={`text-equity-${account.id}`}>
+                          ${Number(account.equity).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-400 uppercase text-xs font-medium tracking-wider">Credit</p>
+                        <p className="text-emerald-400 text-base font-semibold mt-1" data-testid={`text-credit-${account.id}`}>
+                          ${credit.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-400 uppercase text-xs font-medium tracking-wider">Leverage</p>
+                        <p className="text-white text-base font-semibold mt-1" data-testid={`text-leverage-${account.id}`}>
+                          {account.leverage}
+                        </p>
                       </div>
                     </div>
                   </div>
-                  <Badge
-                    variant="secondary"
-                    className={cn(
-                      "text-xs",
-                      account.status === "active" && "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                    )}
-                    data-testid={`badge-status-${account.id}`}
-                  >
-                    {account.status}
-                  </Badge>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4 p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 mb-4">
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Balance</p>
-                    <p className="text-base font-bold text-gray-900 dark:text-white" data-testid={`text-balance-${account.id}`}>
-                      ${Number(account.balance).toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                    </p>
+                <div className="border-t border-gray-700 px-2 py-3">
+                  <div className="grid grid-cols-7">
+                    {cardActions.map((action) => (
+                      <button
+                        key={action.label}
+                        onClick={() => action.action(account)}
+                        className="flex flex-col items-center justify-center cursor-pointer group"
+                        data-testid={`button-action-${action.label.toLowerCase()}-${account.id}`}
+                      >
+                        <action.icon className="text-gray-400 w-5 h-5 group-hover:text-white transition-colors" />
+                        <span className="text-gray-400 text-[10px] mt-1 group-hover:text-white transition-colors">{action.label}</span>
+                      </button>
+                    ))}
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Equity</p>
-                    <p className="text-base font-bold text-gray-900 dark:text-white" data-testid={`text-equity-${account.id}`}>
-                      ${Number(account.equity).toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Margin</p>
-                    <p className="text-base font-bold text-gray-900 dark:text-white" data-testid={`text-margin-${account.id}`}>
-                      ${(Number(account.equity) - Number(account.balance) > 0 ? (Number(account.equity) - Number(account.balance)) : 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between gap-2 mb-4">
-                  <div className={cn(
-                    "flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-md",
-                    isPositive ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10" : "text-red-500 dark:text-red-400 bg-red-500/10"
-                  )}>
-                    {isPositive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                    <span data-testid={`text-pnl-${account.id}`}>
-                      {isPositive ? "+" : ""}${pnl.toFixed(2)} ({pnlPercent.toFixed(1)}%)
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">
-                    <Scale className="w-3 h-3" />
-                    <span>{account.leverage}</span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 mb-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs"
-                    onClick={() => { setSelectedAccount(account); setDepositAmount(""); setDepositOpen(true); }}
-                    data-testid={`button-deposit-${account.id}`}
-                  >
-                    <ArrowUpRight className="w-3.5 h-3.5 mr-1" />
-                    Deposit
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs"
-                    onClick={() => { setSelectedAccount(account); setWithdrawOpen(true); }}
-                    data-testid={`button-withdraw-${account.id}`}
-                  >
-                    <ArrowDownRight className="w-3.5 h-3.5 mr-1" />
-                    Withdraw
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs"
-                    onClick={() => { setSelectedAccount(account); setTransferOpen(true); }}
-                    data-testid={`button-transfer-${account.id}`}
-                  >
-                    <ArrowRightLeft className="w-3.5 h-3.5 mr-1" />
-                    Transfer
-                  </Button>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs"
-                    onClick={() => navigate(`/trading/account/${account.id}`)}
-                    data-testid={`button-webtrader-${account.id}`}
-                  >
-                    <Globe className="w-3.5 h-3.5 mr-1" />
-                    WebTrader
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs"
-                    onClick={() => { setSelectedAccount(account); setNewPassword(""); setConfirmPassword(""); setPasswordOpen(true); }}
-                    data-testid={`button-password-${account.id}`}
-                  >
-                    <Lock className="w-3.5 h-3.5 mr-1" />
-                    Password
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs"
-                    onClick={() => { setSelectedAccount(account); setNewLeverage(account.leverage); setLeverageOpen(true); }}
-                    data-testid={`button-leverage-${account.id}`}
-                  >
-                    <Settings2 className="w-3.5 h-3.5 mr-1" />
-                    Leverage
-                  </Button>
                 </div>
               </div>
             );
@@ -654,9 +645,37 @@ export default function TradingAccounts() {
       <Dialog open={passwordOpen} onOpenChange={setPasswordOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Change Trading Password</DialogTitle>
-            <DialogDescription>Set a new password for your trading account.</DialogDescription>
+            <DialogTitle>Change {passwordType === "master" ? "Master" : "Investor"} Password</DialogTitle>
+            <DialogDescription>Set a new {passwordType} password for your trading account.</DialogDescription>
           </DialogHeader>
+
+          <div className="flex rounded-lg overflow-visible mb-2">
+            <button
+              onClick={() => setPasswordType("master")}
+              className={cn(
+                "flex-1 px-4 py-2 text-sm font-medium rounded-l-lg transition-colors",
+                passwordType === "master"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+              )}
+              data-testid="button-password-type-master"
+            >
+              Master Password
+            </button>
+            <button
+              onClick={() => setPasswordType("investor")}
+              className={cn(
+                "flex-1 px-4 py-2 text-sm font-medium rounded-r-lg transition-colors",
+                passwordType === "investor"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+              )}
+              data-testid="button-password-type-investor"
+            >
+              Investor Password
+            </button>
+          </div>
+
           <p className="text-sm text-gray-500 dark:text-gray-400">
             Account: <span className="font-mono font-medium text-gray-900 dark:text-white">{selectedAccount?.accountNumber}</span>
           </p>
@@ -808,12 +827,82 @@ export default function TradingAccounts() {
               <p className="font-mono font-medium text-sm text-gray-900 dark:text-white">{selectedAccount?.accountNumber}</p>
             </div>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Available: <span className="font-medium text-gray-900 dark:text-white">${Number(selectedAccount?.balance || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
-          </p>
-          <Button variant="outline" className="w-full" onClick={() => setWithdrawOpen(false)} data-testid="button-close-withdraw">
-            Close
-          </Button>
+
+          <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+            <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">Available Balance</p>
+            <p className="text-xl font-bold text-blue-700 dark:text-blue-300" data-testid="text-withdraw-available">
+              ${Number(selectedAccount?.balance || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Destination Wallet Currency</Label>
+              <Select value={withdrawCurrency} onValueChange={setWithdrawCurrency}>
+                <SelectTrigger data-testid="select-withdraw-currency">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="USD">USD ($)</SelectItem>
+                  <SelectItem value="EUR">EUR (&euro;)</SelectItem>
+                  <SelectItem value="GBP">GBP (&pound;)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Amount ({selectedAccount?.currency || "USD"})</Label>
+              <Input
+                type="number"
+                placeholder="Enter amount"
+                value={withdrawAmount}
+                onChange={(e) => setWithdrawAmount(e.target.value)}
+                data-testid="input-withdraw-amount"
+              />
+            </div>
+
+            <div className="grid grid-cols-4 gap-2">
+              {["100", "500", "1000"].map((v) => (
+                <Button
+                  key={v}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setWithdrawAmount(v)}
+                  data-testid={`button-withdraw-amount-${v}`}
+                >
+                  ${v}
+                </Button>
+              ))}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setWithdrawAmount(String(Number(selectedAccount?.balance || 0)))}
+                data-testid="button-withdraw-amount-max"
+              >
+                Max
+              </Button>
+            </div>
+
+            {withdrawAmount && (selectedAccount?.currency || "USD") !== withdrawCurrency && (
+              <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  You will receive: <span className="font-bold text-gray-900 dark:text-white" data-testid="text-withdraw-converted">{currencySymbols[withdrawCurrency]}{getConvertedAmount().toFixed(2)} {withdrawCurrency}</span>
+                </p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                  Rate: 1 {selectedAccount?.currency || "USD"} = {conversionRates[selectedAccount?.currency || "USD"]?.[withdrawCurrency]?.toFixed(4)} {withdrawCurrency}
+                </p>
+              </div>
+            )}
+
+            <Button
+              className="w-full"
+              onClick={() => withdrawMutation.mutate()}
+              disabled={withdrawMutation.isPending || !withdrawAmount || Number(withdrawAmount) <= 0 || Number(withdrawAmount) > Number(selectedAccount?.balance || 0)}
+              data-testid="button-submit-withdraw"
+            >
+              {withdrawMutation.isPending ? "Processing..." : "Withdraw Now"}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 
