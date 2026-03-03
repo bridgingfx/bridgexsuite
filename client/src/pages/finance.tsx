@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -35,6 +36,7 @@ const demoTransactions = [
 export default function FinancePage() {
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [, navigate] = useLocation();
 
   const { data: transactions, isLoading } = useQuery<any[]>({
     queryKey: ["/api/transactions"],
@@ -129,7 +131,7 @@ export default function FinancePage() {
         <div className="flex items-center gap-2 flex-wrap">
           <Button
             className="bg-emerald-600 text-white"
-            onClick={() => setActiveTab("deposits")}
+            onClick={() => navigate("/wallet?tab=deposit")}
             data-testid="button-deposit"
           >
             <ArrowUpRight className="w-4 h-4 mr-2" />
@@ -137,7 +139,7 @@ export default function FinancePage() {
           </Button>
           <Button
             className="bg-red-600 text-white"
-            onClick={() => setActiveTab("withdrawals")}
+            onClick={() => navigate("/wallet?tab=withdraw")}
             data-testid="button-withdraw"
           >
             <ArrowDownRight className="w-4 h-4 mr-2" />
@@ -154,7 +156,7 @@ export default function FinancePage() {
         {kpis.map((kpi) => (
           <div
             key={kpi.title}
-            className="bg-white dark:bg-[#1c1c2e] p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm"
+            className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm"
             data-testid={`card-stat-${kpi.title.toLowerCase().replace(/\s+/g, '-')}`}
           >
             <div className="flex items-center justify-between gap-2 mb-3">
@@ -179,7 +181,7 @@ export default function FinancePage() {
         ))}
       </div>
 
-      <div className="bg-white dark:bg-[#1c1c2e] rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
+      <div className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
         <div className="p-6 border-b border-gray-100 dark:border-gray-800">
           <div className="flex items-center justify-between gap-4 flex-wrap mb-4">
             <h2 className="text-lg font-bold text-gray-900 dark:text-white" data-testid="text-transactions-title">Transaction History</h2>
@@ -201,7 +203,7 @@ export default function FinancePage() {
                 onClick={() => setActiveTab(tab.key)}
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   activeTab === tab.key
-                    ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                    ? "bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400"
                     : "text-gray-500 dark:text-gray-400"
                 }`}
                 data-testid={`button-filter-${tab.key}`}

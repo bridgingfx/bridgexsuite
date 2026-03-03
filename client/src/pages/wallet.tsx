@@ -18,6 +18,8 @@ import {
   Gift,
   RefreshCw,
   ChevronDown,
+  Users,
+  MessageSquare,
 } from "lucide-react";
 import type { Transaction, TradingAccount } from "@shared/schema";
 
@@ -30,6 +32,7 @@ const depositMethods = [
 const withdrawMethods = [
   { id: "bank_transfer", name: "To Bank Account", icon: Landmark, desc: "Withdraw to local bank" },
   { id: "crypto", name: "To Crypto Wallet", icon: Bitcoin, desc: "Withdraw USDT/BTC" },
+  { id: "wallet_transfer", name: "Wallet to Wallet", icon: Users, desc: "Transfer to another client" },
 ];
 
 const demoTransactions = [
@@ -43,7 +46,7 @@ export default function WalletPage() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"overview" | "deposit" | "withdraw" | "transfer">("overview");
   const [depositForm, setDepositForm] = useState({ method: "", amount: "" });
-  const [withdrawForm, setWithdrawForm] = useState({ method: "", amount: "", details: "" });
+  const [withdrawForm, setWithdrawForm] = useState({ method: "", amount: "", details: "", message: "" });
   const [transferForm, setTransferForm] = useState({ fromAccount: "wallet", toAccount: "", amount: "" });
 
   const { data: transactions, isLoading } = useQuery<Transaction[]>({
@@ -74,6 +77,13 @@ export default function WalletPage() {
 
   const withdrawMutation = useMutation({
     mutationFn: async () => {
+      if (withdrawForm.method === "wallet_transfer") {
+        return apiRequest("POST", "/api/wallet-transfer", {
+          recipientEmail: withdrawForm.details,
+          amount: withdrawForm.amount,
+          message: withdrawForm.message || undefined,
+        });
+      }
       return apiRequest("POST", "/api/transactions", {
         type: "withdrawal",
         amount: withdrawForm.amount,
@@ -81,16 +91,20 @@ export default function WalletPage() {
         currency: "USD",
       });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
       queryClient.invalidateQueries({ queryKey: ["/api/transactions/recent"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      toast({ title: "Withdrawal request submitted successfully" });
-      setWithdrawForm({ method: "", amount: "", details: "" });
+      if (withdrawForm.method === "wallet_transfer") {
+        toast({ title: `Transfer successful! Funds sent to ${withdrawForm.details}` });
+      } else {
+        toast({ title: "Withdrawal request submitted successfully" });
+      }
+      setWithdrawForm({ method: "", amount: "", details: "", message: "" });
       setActiveTab("overview");
     },
-    onError: () => {
-      toast({ title: "Withdrawal request failed", variant: "destructive" });
+    onError: (error: any) => {
+      toast({ title: error?.message || "Request failed", variant: "destructive" });
     },
   });
 
@@ -328,7 +342,9 @@ export default function WalletPage() {
           {withdrawForm.method && (
             <div className="animate-fade-in max-w-md space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount to Withdraw (USD)</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  {withdrawForm.method === "wallet_transfer" ? "Amount to Transfer (USD)" : "Amount to Withdraw (USD)"}
+                </label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">$</span>
                   <input
@@ -343,17 +359,45 @@ export default function WalletPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {withdrawForm.method === "crypto" ? "Wallet Address (TRC20)" : "Account Number / IBAN"}
+                  {withdrawForm.method === "wallet_transfer" ? "Recipient Email Address" : withdrawForm.method === "crypto" ? "Wallet Address (TRC20)" : "Account Number / IBAN"}
                 </label>
                 <input
-                  type="text"
-                  placeholder={withdrawForm.method === "crypto" ? "Enter wallet address" : "Enter account details"}
+                  type={withdrawForm.method === "wallet_transfer" ? "email" : "text"}
+                  placeholder={withdrawForm.method === "wallet_transfer" ? "Enter recipient's email address" : withdrawForm.method === "crypto" ? "Enter wallet address" : "Enter account details"}
                   value={withdrawForm.details}
                   onChange={(e) => setWithdrawForm({ ...withdrawForm, details: e.target.value })}
                   className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none"
                   data-testid="input-withdraw-details"
                 />
               </div>
+              {withdrawForm.method === "wallet_transfer" && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <span className="flex items-center gap-1"><MessageSquare size={14} /> Message (Optional)</span>
+                  </label>
+                  <textarea
+                    placeholder="Add a note for the recipient..."
+                    value={withdrawForm.message}
+                    onChange={(e) => setWithdrawForm({ ...withdrawForm, message: e.target.value })}
+                    rows={3}
+                    className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none resize-none"
+                    data-testid="input-withdraw-message"
+                  />
+                </div>
+              )}
+              {withdrawForm.method === "wallet_transfer" && withdrawForm.details && withdrawForm.amount && (
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 animate-fade-in" data-testid="wallet-transfer-summary">
+                  <h4 className="text-sm font-bold text-blue-800 dark:text-blue-300 mb-2 flex items-center gap-1">
+                    <Users size={14} /> Transfer Summary
+                  </h4>
+                  <div className="text-sm text-blue-700 dark:text-blue-400 space-y-1">
+                    <p>Recipient: <span className="font-medium">{withdrawForm.details}</span></p>
+                    <p>Amount: <span className="font-bold">${Number(withdrawForm.amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span></p>
+                    {withdrawForm.message && <p>Message: <span className="italic">"{withdrawForm.message}"</span></p>}
+                    <p className="text-xs mt-2">Fee: <span className="text-green-600 dark:text-green-400 font-medium">$0.00 (Free)</span></p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

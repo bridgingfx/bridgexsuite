@@ -52,7 +52,7 @@ export default function IbAffiliate() {
   });
 
   const totalCommissions = (commissions || []).reduce((sum, c) => sum + Number(c.amount), 0);
-  const referralLink = "https://forexcrm.com/ref/ADMIN123";
+  const referralLink = "https://bridgexsuite.com/ref/ADMIN123";
 
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto">

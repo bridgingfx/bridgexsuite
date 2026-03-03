@@ -165,7 +165,7 @@ export function AdminSidebar() {
             <Shield className="w-5 h-5 text-destructive-foreground" />
           </div>
           <div>
-            <h2 className="text-sm font-semibold tracking-tight">ForexCRM Admin</h2>
+            <h2 className="text-sm font-semibold tracking-tight">BridgeX Suite Admin</h2>
             <p className="text-xs text-muted-foreground">Admin Panel</p>
           </div>
         </div>

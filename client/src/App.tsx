@@ -242,14 +242,14 @@ function ClientFooter() {
       <div className="flex flex-col items-center justify-center gap-3">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-sm shadow-md">
-            F
+            B
           </div>
           <span className="text-lg font-bold tracking-tight">
-            ForexCRM<sup className="text-xs text-muted-foreground font-medium ml-0.5">TM</sup>
+            BridgeX Suite<sup className="text-xs text-muted-foreground font-medium ml-0.5">TM</sup>
           </span>
         </div>
         <div className="text-sm text-muted-foreground flex flex-col sm:flex-row items-center gap-2">
-          <span>© {new Date().getFullYear()} ForexCRM Systems.</span>
+          <span>© {new Date().getFullYear()} BridgeX Suite.</span>
           <span className="hidden sm:inline opacity-50">|</span>
           <span>All Rights Reserved.</span>
         </div>

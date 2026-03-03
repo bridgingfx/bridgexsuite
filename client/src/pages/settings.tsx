@@ -30,7 +30,7 @@ export default function SettingsPage() {
 
   const [profile, setProfile] = useState({
     fullName: "Admin User",
-    email: "admin@forexcrm.com",
+    email: "admin@bridgexsuite.com",
     phone: "+1 234 567 890",
     country: "United States",
     timezone: "UTC-5",

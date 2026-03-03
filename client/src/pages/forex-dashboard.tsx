@@ -8,29 +8,49 @@ import {
   BarChart3,
   Activity,
   Target,
-  ArrowUpRight,
-  ArrowDownRight,
-  Clock,
-  Globe,
 } from "lucide-react";
 import { Link } from "wouter";
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+} from "recharts";
 
-const recentTrades = [
-  { id: 1, pair: "EUR/USD", type: "Buy", lots: 1.5, openPrice: 1.0856, closePrice: 1.0892, profit: 54.0, time: "2 min ago" },
-  { id: 2, pair: "GBP/USD", type: "Sell", lots: 2.0, openPrice: 1.2645, closePrice: 1.2618, profit: 54.0, time: "15 min ago" },
-  { id: 3, pair: "USD/JPY", type: "Buy", lots: 1.0, openPrice: 149.52, closePrice: 149.38, profit: -14.0, time: "1 hr ago" },
-  { id: 4, pair: "XAU/USD", type: "Buy", lots: 0.5, openPrice: 2024.5, closePrice: 2031.8, profit: 36.5, time: "2 hrs ago" },
-  { id: 5, pair: "AUD/USD", type: "Sell", lots: 3.0, openPrice: 0.6542, closePrice: 0.6528, profit: 42.0, time: "3 hrs ago" },
+const profitData = [
+  { name: "Mon", value: 120 },
+  { name: "Tue", value: 350 },
+  { name: "Wed", value: 200 },
+  { name: "Thu", value: 450 },
+  { name: "Fri", value: 580 },
 ];
 
-const marketData = [
-  { pair: "EUR/USD", bid: 1.0892, ask: 1.0894, spread: 0.2, change: +0.15 },
-  { pair: "GBP/USD", bid: 1.2618, ask: 1.2621, spread: 0.3, change: -0.08 },
-  { pair: "USD/JPY", bid: 149.38, ask: 149.41, spread: 0.3, change: +0.22 },
-  { pair: "XAU/USD", bid: 2031.8, ask: 2032.3, spread: 0.5, change: +0.45 },
-  { pair: "AUD/USD", bid: 0.6528, ask: 0.6530, spread: 0.2, change: -0.12 },
-  { pair: "USD/CAD", bid: 1.3542, ask: 1.3545, spread: 0.3, change: +0.05 },
+const volumeData = [
+  { name: "Mon", lots: 2.5 },
+  { name: "Tue", lots: 4 },
+  { name: "Wed", lots: 3.2 },
+  { name: "Thu", lots: 5.5 },
+  { name: "Fri", lots: 4.8 },
 ];
+
+const openPositions = [
+  { symbol: "EURUSD", type: "Buy", vol: 1, open: 1.082, curr: 1.0845, profit: 250 },
+  { symbol: "GBPUSD", type: "Sell", vol: 0.5, open: 1.265, curr: 1.263, profit: 100 },
+  { symbol: "XAUUSD", type: "Buy", vol: 0.1, open: 2020, curr: 2015, profit: -50 },
+  { symbol: "USDJPY", type: "Buy", vol: 2, open: 149.5, curr: 149.8, profit: 400 },
+];
+
+const chartTooltipStyle = {
+  backgroundColor: "#1e293b",
+  borderColor: "#334155",
+  borderRadius: "8px",
+  color: "#fff",
+};
 
 export default function ForexDashboard() {
   const { data: stats, isLoading } = useQuery<any>({
@@ -50,6 +70,7 @@ export default function ForexDashboard() {
           <Skeleton className="h-80" />
           <Skeleton className="h-80" />
         </div>
+        <Skeleton className="h-64" />
       </div>
     );
   }
@@ -145,101 +166,98 @@ export default function ForexDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all">
-          <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
-            <div>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white" data-testid="text-recent-trades-title">Recent Trades</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Your latest trading activity</p>
-            </div>
-            <Link href="/forex/accounts">
-              <Badge variant="secondary" className="cursor-pointer" data-testid="link-view-all-trades">View All</Badge>
-            </Link>
+        <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
+          <div className="mb-4">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white" data-testid="text-profit-chart-title">Profit Growth (This Week)</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Daily profit performance</p>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm" data-testid="table-recent-trades">
-              <thead>
-                <tr className="border-b border-gray-100 dark:border-gray-800">
-                  <th className="text-left py-3 px-2 font-medium text-gray-500 dark:text-gray-400">Pair</th>
-                  <th className="text-left py-3 px-2 font-medium text-gray-500 dark:text-gray-400">Type</th>
-                  <th className="text-right py-3 px-2 font-medium text-gray-500 dark:text-gray-400">Lots</th>
-                  <th className="text-right py-3 px-2 font-medium text-gray-500 dark:text-gray-400">Profit</th>
-                  <th className="text-right py-3 px-2 font-medium text-gray-500 dark:text-gray-400">Time</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentTrades.map((trade) => (
-                  <tr key={trade.id} className="border-b border-gray-50 dark:border-gray-800/50 last:border-0" data-testid={`row-trade-${trade.id}`}>
-                    <td className="py-3 px-2 font-medium text-gray-900 dark:text-white">{trade.pair}</td>
-                    <td className="py-3 px-2">
-                      <Badge
-                        variant="secondary"
-                        className={
-                          trade.type === "Buy"
-                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                            : "bg-red-500/10 text-red-600 dark:text-red-400"
-                        }
-                        data-testid={`badge-trade-type-${trade.id}`}
-                      >
-                        {trade.type}
-                      </Badge>
-                    </td>
-                    <td className="py-3 px-2 text-right text-gray-600 dark:text-gray-300">{trade.lots.toFixed(2)}</td>
-                    <td className={`py-3 px-2 text-right font-medium ${trade.profit >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`} data-testid={`text-trade-profit-${trade.id}`}>
-                      {trade.profit >= 0 ? "+" : ""}${trade.profit.toFixed(2)}
-                    </td>
-                    <td className="py-3 px-2 text-right text-gray-500 dark:text-gray-400">
-                      <div className="flex items-center justify-end gap-1">
-                        <Clock className="w-3 h-3" />
-                        {trade.time}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="h-80" data-testid="chart-profit-growth">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={profitData}>
+                <defs>
+                  <linearGradient id="profitGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: "#94a3b8" }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: "#94a3b8" }} />
+                <Tooltip contentStyle={chartTooltipStyle} />
+                <Area type="monotone" dataKey="value" stroke="#10b981" strokeWidth={2} fill="url(#profitGradient)" />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all">
-          <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
-            <div>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white" data-testid="text-market-overview-title">Market Overview</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Live forex market prices</p>
-            </div>
-            <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
-              <Globe className="w-3.5 h-3.5" />
-              Live
-            </div>
+        <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
+          <div className="mb-4">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white" data-testid="text-volume-chart-title">Volume Traded (Lots)</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Daily trading volume</p>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm" data-testid="table-market-overview">
-              <thead>
-                <tr className="border-b border-gray-100 dark:border-gray-800">
-                  <th className="text-left py-3 px-2 font-medium text-gray-500 dark:text-gray-400">Pair</th>
-                  <th className="text-right py-3 px-2 font-medium text-gray-500 dark:text-gray-400">Bid</th>
-                  <th className="text-right py-3 px-2 font-medium text-gray-500 dark:text-gray-400">Ask</th>
-                  <th className="text-right py-3 px-2 font-medium text-gray-500 dark:text-gray-400">Spread</th>
-                  <th className="text-right py-3 px-2 font-medium text-gray-500 dark:text-gray-400">Change</th>
+          <div className="h-80" data-testid="chart-volume-traded">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={volumeData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: "#94a3b8" }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: "#94a3b8" }} />
+                <Tooltip contentStyle={chartTooltipStyle} />
+                <Bar dataKey="lots" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
+        <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
+          <div>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white" data-testid="text-positions-title">Live Open Positions</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Currently active trades</p>
+          </div>
+          <Link href="/forex/accounts">
+            <Badge variant="secondary" className="cursor-pointer" data-testid="link-view-all-accounts">View All Accounts</Badge>
+          </Link>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm" data-testid="table-open-positions">
+            <thead>
+              <tr className="border-b border-gray-100 dark:border-gray-800">
+                <th className="text-left py-3 px-2 font-medium text-gray-500 dark:text-gray-400">Symbol</th>
+                <th className="text-left py-3 px-2 font-medium text-gray-500 dark:text-gray-400">Type</th>
+                <th className="text-right py-3 px-2 font-medium text-gray-500 dark:text-gray-400">Volume</th>
+                <th className="text-right py-3 px-2 font-medium text-gray-500 dark:text-gray-400">Open Price</th>
+                <th className="text-right py-3 px-2 font-medium text-gray-500 dark:text-gray-400">Current Price</th>
+                <th className="text-right py-3 px-2 font-medium text-gray-500 dark:text-gray-400">Profit</th>
+              </tr>
+            </thead>
+            <tbody>
+              {openPositions.map((pos) => (
+                <tr key={pos.symbol} className="border-b border-gray-50 dark:border-gray-800/50 last:border-0" data-testid={`row-position-${pos.symbol}`}>
+                  <td className="py-3 px-2 font-medium text-gray-900 dark:text-white">{pos.symbol}</td>
+                  <td className="py-3 px-2">
+                    <Badge
+                      variant="secondary"
+                      className={
+                        pos.type === "Buy"
+                          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                          : "bg-red-500/10 text-red-600 dark:text-red-400"
+                      }
+                      data-testid={`badge-position-type-${pos.symbol}`}
+                    >
+                      {pos.type}
+                    </Badge>
+                  </td>
+                  <td className="py-3 px-2 text-right text-gray-600 dark:text-gray-300">{pos.vol.toFixed(2)}</td>
+                  <td className="py-3 px-2 text-right font-mono text-gray-600 dark:text-gray-300">{pos.open.toFixed(pos.open > 100 ? 1 : 4)}</td>
+                  <td className="py-3 px-2 text-right font-mono text-gray-600 dark:text-gray-300">{pos.curr.toFixed(pos.curr > 100 ? 1 : 4)}</td>
+                  <td className={`py-3 px-2 text-right font-medium ${pos.profit >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`} data-testid={`text-position-profit-${pos.symbol}`}>
+                    {pos.profit >= 0 ? "+" : ""}${Math.abs(pos.profit).toFixed(2)}
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {marketData.map((item) => (
-                  <tr key={item.pair} className="border-b border-gray-50 dark:border-gray-800/50 last:border-0" data-testid={`row-market-${item.pair.replace('/', '-')}`}>
-                    <td className="py-3 px-2 font-medium text-gray-900 dark:text-white">{item.pair}</td>
-                    <td className="py-3 px-2 text-right font-mono text-gray-600 dark:text-gray-300">{item.bid.toFixed(item.bid > 100 ? 1 : 4)}</td>
-                    <td className="py-3 px-2 text-right font-mono text-gray-600 dark:text-gray-300">{item.ask.toFixed(item.ask > 100 ? 1 : 4)}</td>
-                    <td className="py-3 px-2 text-right text-gray-500 dark:text-gray-400">{item.spread.toFixed(1)}</td>
-                    <td className="py-3 px-2 text-right">
-                      <div className={`flex items-center justify-end gap-1 font-medium ${item.change >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`} data-testid={`text-market-change-${item.pair.replace('/', '-')}`}>
-                        {item.change >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                        {item.change >= 0 ? "+" : ""}{item.change.toFixed(2)}%
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

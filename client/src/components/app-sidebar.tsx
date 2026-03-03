@@ -194,10 +194,10 @@ export function AppSidebar() {
         <Link href="/">
           <div className="flex items-center gap-3 group cursor-pointer">
             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shrink-0 shadow-md transition-transform duration-200 group-hover:scale-105">
-              <span className="text-white font-bold text-xl">F</span>
+              <span className="text-white font-bold text-xl">B</span>
             </div>
             <div className="min-w-0 flex flex-col">
-              <span className="text-lg font-bold tracking-tight leading-none">ForexCRM</span>
+              <span className="text-lg font-bold tracking-tight leading-none">BridgeX Suite</span>
               <span className="text-[10px] font-semibold text-primary uppercase tracking-widest leading-none mt-1">Trading Platform</span>
             </div>
           </div>
@@ -286,10 +286,10 @@ export function AppSidebar() {
       <SidebarFooter className="p-3 pt-0 border-t">
         <div className="flex items-center justify-center gap-2.5 py-2">
           <div className="w-6 h-6 rounded-md bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-xs shadow-sm">
-            F
+            B
           </div>
           <span className="text-xs font-bold tracking-tight">
-            ForexCRM<sup className="text-[8px] text-muted-foreground font-medium ml-0.5">TM</sup>
+            BridgeX Suite<sup className="text-[8px] text-muted-foreground font-medium ml-0.5">TM</sup>
           </span>
         </div>
       </SidebarFooter>

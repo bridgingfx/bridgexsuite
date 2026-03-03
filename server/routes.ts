@@ -326,6 +326,53 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/wallet-transfer", requireAuth, async (req, res) => {
+    try {
+      const { recipientEmail, amount, message } = z.object({
+        recipientEmail: z.string().email(),
+        amount: z.string().min(1),
+        message: z.string().optional(),
+      }).parse(req.body);
+      const numAmount = parseFloat(amount);
+      if (isNaN(numAmount) || numAmount <= 0) return res.status(400).json({ error: "Invalid amount" });
+      const sender = await storage.getUser(req.session.userId!);
+      if (!sender) return res.status(404).json({ error: "Sender not found" });
+      if (recipientEmail.toLowerCase() === sender.email.toLowerCase()) {
+        return res.status(400).json({ error: "Cannot transfer to yourself" });
+      }
+      const recipient = await storage.getUserByEmail(recipientEmail);
+      if (!recipient) return res.status(404).json({ error: "Recipient not found. Please check the email address." });
+      const userTxns = await storage.getTransactionsByUser(req.session.userId!);
+      const totalDeposits = userTxns.filter(t => t.type === "deposit" && (t.status === "approved" || t.status === "completed")).reduce((s, t) => s + Number(t.amount), 0);
+      const totalWithdrawals = userTxns.filter(t => t.type === "withdrawal" && (t.status === "approved" || t.status === "completed")).reduce((s, t) => s + Number(t.amount), 0);
+      const walletBalance = totalDeposits - totalWithdrawals;
+      if (numAmount > walletBalance) return res.status(400).json({ error: `Insufficient wallet balance. Available: $${walletBalance.toFixed(2)}` });
+      const noteText = message ? `Wallet transfer to ${recipientEmail}: ${message}` : `Wallet transfer to ${recipientEmail}`;
+      await storage.createTransaction({
+        userId: req.session.userId!,
+        type: "withdrawal",
+        amount,
+        currency: "USD",
+        method: "wallet_transfer",
+        notes: noteText,
+        status: "approved",
+      });
+      await storage.createTransaction({
+        userId: recipient.id,
+        type: "deposit",
+        amount,
+        currency: "USD",
+        method: "wallet_transfer",
+        notes: `Wallet transfer from ${sender.email}${message ? ": " + message : ""}`,
+        status: "approved",
+      });
+      res.json({ success: true, message: `$${numAmount.toFixed(2)} transferred to ${recipientEmail}` });
+    } catch (error: any) {
+      if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors[0].message });
+      res.status(500).json({ error: error.message || "Transfer failed" });
+    }
+  });
+
   app.patch("/api/transactions/:id/status", async (req, res) => {
     try {
       const { status } = z.object({ status: z.string() }).parse(req.body);

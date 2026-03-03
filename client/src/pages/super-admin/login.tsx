@@ -59,7 +59,7 @@ export default function SuperAdminLoginPage() {
               <Crown className="w-5 h-5 text-white" />
             </div>
             <div>
-              <span className="text-lg font-bold tracking-tight">ForexCRM</span>
+              <span className="text-lg font-bold tracking-tight">BridgeX Suite</span>
               <p className="text-[11px] text-muted-foreground leading-tight">Platform Administration</p>
             </div>
           </div>
