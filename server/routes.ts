@@ -482,6 +482,19 @@ export async function registerRoutes(
     }
   });
 
+  app.patch("/api/transactions/:id/cancel", requireAuth, async (req, res) => {
+    try {
+      const txn = await storage.getTransactionById(req.params.id);
+      if (!txn) return res.status(404).json({ error: "Transaction not found" });
+      if (txn.userId !== req.session.userId) return res.status(403).json({ error: "Not authorized" });
+      if (txn.status !== "pending") return res.status(400).json({ error: "Only pending transactions can be cancelled" });
+      const updated = await storage.updateTransactionStatus(req.params.id, "cancelled");
+      res.json(updated);
+    } catch (error) {
+      res.status(400).json({ error: "Failed to cancel transaction" });
+    }
+  });
+
   // KYC Documents
   app.get("/api/kyc/documents", async (req, res) => {
     try {

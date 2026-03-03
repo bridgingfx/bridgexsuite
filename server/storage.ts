@@ -91,6 +91,7 @@ export interface IStorage {
   updateTradingAccount(id: string, data: Partial<InsertTradingAccount>): Promise<TradingAccount | undefined>;
 
   getTransactions(): Promise<Transaction[]>;
+  getTransactionById(id: string): Promise<Transaction | undefined>;
   getRecentTransactions(limit?: number): Promise<Transaction[]>;
   getTransactionsByUser(userId: string): Promise<Transaction[]>;
   getTransactionsByStatus(status: string): Promise<Transaction[]>;
@@ -271,6 +272,11 @@ export class DatabaseStorage implements IStorage {
 
   async getTransactions(): Promise<Transaction[]> {
     return db.select().from(transactions).orderBy(desc(transactions.createdAt));
+  }
+
+  async getTransactionById(id: string): Promise<Transaction | undefined> {
+    const [txn] = await db.select().from(transactions).where(eq(transactions.id, id));
+    return txn;
   }
 
   async getRecentTransactions(limit = 5): Promise<Transaction[]> {

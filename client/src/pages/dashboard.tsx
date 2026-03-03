@@ -1,5 +1,14 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Wallet,
   ArrowUpRight,
@@ -15,7 +24,12 @@ import {
   Gift,
   Star,
   DollarSign,
+  Eye,
+  XCircle,
+  Download,
 } from "lucide-react";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import {
   AreaChart,
   Area,
@@ -146,8 +160,26 @@ export default function Dashboard() {
     queryKey: ["/api/dashboard/stats"],
   });
 
-  const { data: recentTransactions } = useQuery<Transaction[]>({
-    queryKey: ["/api/transactions/recent"],
+  const { data: allTransactions } = useQuery<Transaction[]>({
+    queryKey: ["/api/transactions"],
+  });
+
+  const { toast } = useToast();
+  const [viewTx, setViewTx] = useState<Transaction | null>(null);
+
+  const cancelMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest("PATCH", `/api/transactions/${id}/cancel`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions/recent"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      toast({ title: "Transaction cancelled", description: "Your withdrawal request has been cancelled." });
+    },
+    onError: () => {
+      toast({ title: "Cancel failed", variant: "destructive" });
+    },
   });
 
   return (
@@ -365,49 +397,87 @@ export default function Dashboard() {
         />
       </div>
 
-      <div className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden" data-testid="recent-transactions">
-        <div className="p-6 border-b border-gray-100 dark:border-gray-800">
-          <h3 className="font-bold text-gray-900 dark:text-white">Recent Transactions</h3>
+      <div className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden" data-testid="transaction-history">
+        <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+          <h3 className="font-bold text-gray-900 dark:text-white">Transaction History</h3>
+          <button className="flex items-center gap-1.5 text-sm text-primary font-medium" data-testid="button-export-transactions">
+            <Download size={14} />
+            Export
+          </button>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-left" data-testid="table-recent-transactions">
+          <table className="w-full text-left" data-testid="table-transaction-history">
             <thead className="bg-gray-50 dark:bg-gray-800/50">
               <tr>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">ID</th>
                 <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Amount</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</th>
                 <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Amount</th>
                 <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-              {(recentTransactions && recentTransactions.length > 0 ? recentTransactions.slice(0, 5) : demoTransactions).map((tx: any, i: number) => (
+              {(allTransactions && allTransactions.length > 0 ? allTransactions : demoTransactions).map((tx: any, i: number) => (
                 <tr key={tx.id || i} className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors" data-testid={`row-transaction-${i}`}>
+                  <td className="px-6 py-4 text-sm font-mono text-gray-700 dark:text-gray-300" data-testid={`text-tx-ref-${i}`}>
+                    {tx.reference || tx.id?.slice(0, 12) || "N/A"}
+                  </td>
                   <td className="px-6 py-4 text-sm">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
                       tx.type === "deposit" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" :
                       tx.type === "withdrawal" ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" :
                       tx.type === "profit" ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" :
                       "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
-                    }`}>
+                    }`} data-testid={`badge-tx-type-${i}`}>
                       {tx.type}
                     </span>
                   </td>
-                  <td className={`px-6 py-4 text-sm font-bold ${
-                    tx.type === "withdrawal" ? "text-red-500" : "text-green-500"
-                  }`}>
-                    {tx.type === "withdrawal" ? "-" : "+"}${Math.abs(Number(tx.amount)).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                  <td className="px-6 py-4 text-sm font-medium text-gray-700 dark:text-gray-300" data-testid={`text-tx-desc-${i}`}>
+                    {tx.method ? tx.method.replace(/_/g, " ") : tx.description || "N/A"}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                  <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400" data-testid={`text-tx-date-${i}`}>
                     {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : tx.date || "N/A"}
                   </td>
-                  <td className="px-6 py-4 text-sm">
+                  <td className={`px-6 py-4 text-sm font-bold ${
+                    tx.type === "withdrawal" ? "text-red-500" : "text-green-500"
+                  }`} data-testid={`text-tx-amount-${i}`}>
+                    {tx.type === "withdrawal" ? "-" : "+"}${Math.abs(Number(tx.amount)).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                  </td>
+                  <td className="px-6 py-4 text-sm" data-testid={`badge-tx-status-${i}`}>
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
                       tx.status === "completed" || tx.status === "approved" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" :
                       tx.status === "pending" ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" :
-                      "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+                      tx.status === "rejected" ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" :
+                      tx.status === "cancelled" ? "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300" :
+                      "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
                     }`}>
-                      {tx.status}
+                      {tx.status === "approved" ? "Approved" : tx.status === "pending" ? "Pending" : tx.status === "rejected" ? "Rejected" : tx.status === "cancelled" ? "Cancelled" : tx.status}
                     </span>
+                  </td>
+                  <td className="px-6 py-4 text-sm">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setViewTx(tx)}
+                        className="p-1.5 rounded-lg text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                        title="View details"
+                        data-testid={`button-view-tx-${i}`}
+                      >
+                        <Eye size={16} />
+                      </button>
+                      {tx.status === "pending" && tx.type === "withdrawal" && (
+                        <button
+                          onClick={() => cancelMutation.mutate(tx.id)}
+                          className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                          title="Cancel withdrawal"
+                          disabled={cancelMutation.isPending}
+                          data-testid={`button-cancel-tx-${i}`}
+                        >
+                          <XCircle size={16} />
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -415,6 +485,89 @@ export default function Dashboard() {
           </table>
         </div>
       </div>
+
+      <Dialog open={!!viewTx} onOpenChange={(open) => !open && setViewTx(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Transaction Details</DialogTitle>
+            <DialogDescription>Full details for transaction {viewTx?.reference || viewTx?.id?.slice(0, 12)}</DialogDescription>
+          </DialogHeader>
+          {viewTx && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">Reference</p>
+                  <p className="font-mono text-sm font-medium text-gray-900 dark:text-white" data-testid="text-detail-ref">{viewTx.reference || "N/A"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">Type</p>
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize mt-1 ${
+                    viewTx.type === "deposit" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" :
+                    viewTx.type === "withdrawal" ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" :
+                    "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+                  }`} data-testid="text-detail-type">{viewTx.type}</span>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">Amount</p>
+                  <p className={`text-lg font-bold ${viewTx.type === "withdrawal" ? "text-red-500" : "text-green-500"}`} data-testid="text-detail-amount">
+                    {viewTx.type === "withdrawal" ? "-" : "+"}${Math.abs(Number(viewTx.amount)).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">Currency</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white" data-testid="text-detail-currency">{viewTx.currency}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">Method</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white capitalize" data-testid="text-detail-method">{viewTx.method?.replace(/_/g, " ") || "N/A"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">Status</p>
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize mt-1 ${
+                    viewTx.status === "approved" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" :
+                    viewTx.status === "pending" ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" :
+                    viewTx.status === "rejected" ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" :
+                    viewTx.status === "cancelled" ? "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300" :
+                    "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+                  }`} data-testid="text-detail-status">{viewTx.status}</span>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">Created</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white" data-testid="text-detail-created">
+                    {viewTx.createdAt ? new Date(viewTx.createdAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "N/A"}
+                  </p>
+                </div>
+                {viewTx.processedAt && (
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">Processed At</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white" data-testid="text-detail-processed">
+                      {new Date(viewTx.processedAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}
+                    </p>
+                  </div>
+                )}
+                {viewTx.approvedBy && (
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">Approved By</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white" data-testid="text-detail-approved-by">{viewTx.approvedBy}</p>
+                  </div>
+                )}
+              </div>
+              {viewTx.notes && (
+                <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">Notes / Comment</p>
+                  <p className="text-sm text-gray-700 dark:text-gray-300" data-testid="text-detail-notes">{viewTx.notes}</p>
+                </div>
+              )}
+              {viewTx.rejectionReason && (
+                <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+                  <p className="text-xs text-red-500 uppercase mb-1">Rejection Reason</p>
+                  <p className="text-sm text-red-700 dark:text-red-400" data-testid="text-detail-rejection">{viewTx.rejectionReason}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
