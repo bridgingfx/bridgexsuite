@@ -267,9 +267,9 @@ export default function PropAccounts() {
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
+            <div key={i} className="bg-[#0f172a] p-6 rounded-xl shadow-sm">
               <Skeleton className="h-6 w-32 mb-4" />
               <Skeleton className="h-10 w-full mb-3" />
               <Skeleton className="h-4 w-24 mb-3" />
@@ -286,7 +286,7 @@ export default function PropAccounts() {
           <p className="text-sm text-gray-500 dark:text-gray-400">Start a challenge to get your first prop trading account.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           <button
             onClick={() => setLocation("/prop/challenges")}
             className="flex flex-col items-center justify-center gap-3 p-6 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 bg-transparent hover:border-brand-500 hover:bg-brand-500/5 cursor-pointer transition-all min-h-[280px]"
@@ -345,23 +345,29 @@ export default function PropAccounts() {
                   </div>
 
                   <div className="border-t border-gray-700 mt-4 pt-4">
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
                         <p className="text-gray-400 uppercase text-xs font-medium tracking-wider">Balance</p>
-                        <p className="text-white text-xl font-bold mt-1" data-testid={`text-balance-${account.id}`}>
+                        <p className="text-white text-2xl font-bold mt-1" data-testid={`text-balance-${account.id}`}>
                           ${balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                         </p>
                       </div>
                       <div>
                         <p className="text-gray-400 uppercase text-xs font-medium tracking-wider">Profit</p>
-                        <p className={cn("text-xl font-bold mt-1", profit >= 0 ? "text-emerald-400" : "text-red-400")} data-testid={`text-profit-${account.id}`}>
+                        <p className={cn("text-2xl font-bold mt-1", profit >= 0 ? "text-emerald-400" : "text-red-400")} data-testid={`text-profit-${account.id}`}>
                           {profit >= 0 ? "+" : ""}${profit.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                         </p>
                       </div>
                       <div>
                         <p className="text-gray-400 uppercase text-xs font-medium tracking-wider">Days Traded</p>
-                        <p className="text-white text-xl font-bold mt-1" data-testid={`text-days-${account.id}`}>
+                        <p className="text-white text-base font-semibold mt-1" data-testid={`text-days-${account.id}`}>
                           {account.tradingDays}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-400 uppercase text-xs font-medium tracking-wider">Leverage</p>
+                        <p className="text-white text-base font-semibold mt-1" data-testid={`text-leverage-${account.id}`}>
+                          {account.leverage}
                         </p>
                       </div>
                     </div>
