@@ -57,6 +57,8 @@ const demoAppliedBonuses = [
     appliedDate: "2025-01-15",
     status: "used" as const,
     challengeName: "50K Challenge",
+    tradingAccount: "PROP-50821",
+    tradingPlatform: "MT5",
   },
   {
     id: "b-2",
@@ -65,6 +67,8 @@ const demoAppliedBonuses = [
     appliedDate: "2025-03-20",
     status: "active" as const,
     challengeName: "100K Challenge",
+    tradingAccount: "PROP-100322",
+    tradingPlatform: "MT5",
   },
   {
     id: "b-3",
@@ -73,6 +77,8 @@ const demoAppliedBonuses = [
     appliedDate: "2024-11-25",
     status: "expired" as const,
     challengeName: "10K Challenge",
+    tradingAccount: "PROP-10045",
+    tradingPlatform: "cTrader",
   },
 ];
 
@@ -153,6 +159,8 @@ export default function PropBonus() {
                   <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Code</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Discount</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Challenge</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Trading Account</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Trading Platform</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Applied Date</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Status</th>
                 </tr>
@@ -169,6 +177,8 @@ export default function PropBonus() {
                     <td className="py-3 px-4 font-medium text-gray-900 dark:text-white">{bonus.code}</td>
                     <td className="py-3 px-4 text-gray-700 dark:text-gray-300">{bonus.discount}%</td>
                     <td className="py-3 px-4 text-gray-700 dark:text-gray-300">{bonus.challengeName}</td>
+                    <td className="py-3 px-4 text-gray-700 dark:text-gray-300">{bonus.tradingAccount}</td>
+                    <td className="py-3 px-4 text-gray-700 dark:text-gray-300">{bonus.tradingPlatform}</td>
                     <td className="py-3 px-4 text-gray-700 dark:text-gray-300">{bonus.appliedDate}</td>
                     <td className="py-3 px-4">
                       <Badge className={statusColor(bonus.status)}>
