@@ -23,6 +23,10 @@ import {
   Users,
   BarChart3,
   Copy,
+  Briefcase,
+  Target,
+  Award,
+  BookOpen,
 } from "lucide-react";
 import { useState } from "react";
 import {
@@ -77,7 +81,23 @@ const section2Menu: MenuItem[] = [
       { title: "Copy Trading", url: "/forex/copy-trading", icon: Copy },
     ],
   },
-  { title: "Prop Trading", url: "/prop-trading", icon: Trophy, iconColor: "text-yellow-500 dark:text-yellow-400" },
+  {
+    title: "Prop Trading",
+    url: "/prop/dashboard",
+    icon: Trophy,
+    iconColor: "text-yellow-500 dark:text-yellow-400",
+    children: [
+      { title: "Dashboard", url: "/prop/dashboard", icon: LayoutDashboard },
+      { title: "Accounts", url: "/prop/accounts", icon: Briefcase },
+      { title: "Challenges", url: "/prop/challenges", icon: Target },
+      { title: "Analytics", url: "/prop/analytics", icon: BarChart3 },
+      { title: "Payouts", url: "/prop/payouts", icon: CircleDollarSign },
+      { title: "Bonus & Promos", url: "/prop/bonus", icon: Gift },
+      { title: "Referral", url: "/prop/referral", icon: Users },
+      { title: "Certificates", url: "/prop/certificates", icon: Award },
+      { title: "Rules & Compliance", url: "/prop/rules", icon: BookOpen },
+    ],
+  },
   { title: "Investments", url: "/investment", icon: PiggyBank, iconColor: "text-pink-500 dark:text-pink-400" },
   { title: "Loyalty Points", url: "/loyalty-points", icon: Star, iconColor: "text-orange-500 dark:text-orange-400" },
   { title: "Download Platform", url: "/download-platform", icon: Download, iconColor: "text-cyan-500 dark:text-cyan-400" },
@@ -173,7 +193,7 @@ export function AppSidebar() {
   const [location] = useLocation();
   const initials = user?.fullName?.split(" ").map((n: string) => n[0]).join("").toUpperCase() || "U";
 
-  const defaultExpanded = section2Menu[0]?.children?.some(c => location.startsWith("/forex")) ? "Forex Trading" : "";
+  const defaultExpanded = location.startsWith("/forex") ? "Forex Trading" : location.startsWith("/prop") ? "Prop Trading" : "";
   const [expandedMenu, setExpandedMenu] = useState(defaultExpanded);
 
   function handleToggle(name: string) {

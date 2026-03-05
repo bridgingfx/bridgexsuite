@@ -13,12 +13,23 @@ I want the agent to focus on high-level features only and avoid granular impleme
 
 ## System Architecture
 
-### Frontend (Unchanged)
+### Frontend
 - **React + TypeScript** with Wouter for routing
 - **Tailwind CSS + Shadcn UI** for styling, **Recharts** for charts
 - **TanStack React Query** for data fetching/state management
 - Separate login portals for Client (`/login`), Admin (`/admin/login`), and Super Admin (`/super-admin/login`)
-- 40+ pages across three CRM tiers
+- 50+ pages across three CRM tiers
+
+### Prop Trading Module (9 sub-pages)
+- **Dashboard** (`/prop/dashboard`) - KPIs, challenge status, next steps, announcements
+- **Accounts** (`/prop/accounts`) - Prop accounts list with credentials, platform info, reset/retry
+- **Challenges** (`/prop/challenges`) - Challenge pricing, my challenges, rules, add-ons
+- **Analytics** (`/prop/analytics`) - Performance, trade history, risk metrics, Recharts charts
+- **Payouts** (`/prop/payouts`) - Payout dashboard, withdraw-to-wallet (same pattern as forex), history
+- **Bonus & Promos** (`/prop/bonus`) - Promo codes, promotions, applied bonuses
+- **Referral** (`/prop/referral`) - Referral link, stats, commission history, withdraw rewards
+- **Certificates** (`/prop/certificates`) - Download purchase/withdrawal/achievement certificates
+- **Rules & Compliance** (`/prop/rules`) - Trading rules, policies, breach logs, T&C
 
 ### Backend (Migrated: Express.js → Laravel PHP)
 - **PHP 8.4 + Laravel 12** in `laravel-api/` directory
@@ -59,6 +70,8 @@ Browser → Vite (port 5000) → /api/* proxy → Laravel (port 8000) → Postgr
 - `laravel-api/app/Models/` - 24 Eloquent models
 - `laravel-api/app/Traits/CamelCaseAttributes.php` - snake_case → camelCase JSON conversion
 - `laravel-api/app/Http/Middleware/` - Auth middleware (EnsureAuthenticated, EnsureAdmin, EnsureSuperAdmin)
+- `client/src/pages/prop/` - 9 Prop Trading sub-pages
+- `client/src/components/app-sidebar.tsx` - Client sidebar with expandable menus
 - `vite.config.ts` - Vite config with proxy and allowedHosts
 - `start.sh` - Startup script for both servers
 

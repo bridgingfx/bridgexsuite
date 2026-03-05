@@ -27,6 +27,15 @@ import Support from "@/pages/support";
 import Notifications from "@/pages/notifications";
 import SettingsPage from "@/pages/settings";
 import PropTradingPage from "@/pages/prop-trading";
+import PropDashboard from "@/pages/prop/dashboard";
+import PropAccounts from "@/pages/prop/accounts";
+import PropChallenges from "@/pages/prop/challenges";
+import PropAnalytics from "@/pages/prop/analytics";
+import PropPayouts from "@/pages/prop/payouts";
+import PropBonus from "@/pages/prop/bonus";
+import PropReferral from "@/pages/prop/referral";
+import PropCertificates from "@/pages/prop/certificates";
+import PropRules from "@/pages/prop/rules";
 import InvestmentPage from "@/pages/investment";
 import CopyTradingPage from "@/pages/copy-trading";
 import PammPage from "@/pages/pamm";
@@ -118,7 +127,16 @@ function ClientRouter() {
       <Route path="/forex/pamm" component={PammPage} />
       <Route path="/forex/copy-trading" component={CopyTradingPage} />
       <Route path="/trading/account/:id">{(params) => <AccountDetail id={params.id} />}</Route>
-      <Route path="/prop-trading" component={PropTradingPage} />
+      <Route path="/prop-trading" component={PropDashboard} />
+      <Route path="/prop/dashboard" component={PropDashboard} />
+      <Route path="/prop/accounts" component={PropAccounts} />
+      <Route path="/prop/challenges" component={PropChallenges} />
+      <Route path="/prop/analytics" component={PropAnalytics} />
+      <Route path="/prop/payouts" component={PropPayouts} />
+      <Route path="/prop/bonus" component={PropBonus} />
+      <Route path="/prop/referral" component={PropReferral} />
+      <Route path="/prop/certificates" component={PropCertificates} />
+      <Route path="/prop/rules" component={PropRules} />
       <Route path="/investment" component={InvestmentPage} />
       <Route path="/loyalty-points" component={LoyaltyPointsPage} />
       <Route path="/download-platform" component={DownloadPlatformPage} />
