@@ -26,9 +26,10 @@ I want the agent to focus on high-level features only and avoid granular impleme
 - Profit Growth and Volume Traded charts
 - Transaction History table (latest 5 wallet↔trading transfers) with "View All" linking to `/forex/finance`
 
-### Prop Trading Module (9 sub-pages)
+### Prop Trading Module (10 sub-pages)
 - **Dashboard** (`/prop/dashboard`) - KPIs, challenge status, next steps, announcements
 - **Accounts** (`/prop/accounts`) - Prop accounts list with credentials, platform info, reset/retry
+- **Account Detail** (`/prop/account/:id`) - Full account detail page combining dashboard KPIs, countdown timer, challenge status/progress, next steps, account info (platform/credentials), announcements
 - **Challenges** (`/prop/challenges`) - Challenge pricing, my challenges, rules, add-ons
 - **Analytics** (`/prop/analytics`) - Performance, trade history, risk metrics, Recharts charts
 - **Payouts** (`/prop/payouts`) - Payout dashboard, withdraw-to-wallet (same pattern as forex), history
@@ -76,7 +77,7 @@ Browser → Vite (port 5000) → /api/* proxy → Laravel (port 8000) → Postgr
 - `laravel-api/app/Models/` - 24 Eloquent models
 - `laravel-api/app/Traits/CamelCaseAttributes.php` - snake_case → camelCase JSON conversion
 - `laravel-api/app/Http/Middleware/` - Auth middleware (EnsureAuthenticated, EnsureAdmin, EnsureSuperAdmin)
-- `client/src/pages/prop/` - 9 Prop Trading sub-pages
+- `client/src/pages/prop/` - 10 Prop Trading sub-pages (includes account-detail.tsx)
 - `client/src/components/app-sidebar.tsx` - Client sidebar with expandable menus
 - `vite.config.ts` - Vite config with proxy and allowedHosts
 - `start.sh` - Startup script for both servers
