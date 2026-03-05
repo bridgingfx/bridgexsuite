@@ -23,7 +23,6 @@ import type { PropAccount } from "@shared/schema";
 import {
   DollarSign,
   Wallet,
-  Calendar,
   CheckCircle2,
   Clock,
   XCircle,
@@ -35,18 +34,20 @@ import {
   ChevronRight,
   ArrowRight,
   Loader2,
+  Eye,
+  Ban,
 } from "lucide-react";
 
 const conversionRates: Record<string, number> = { USD: 1, EUR: 0.85, GBP: 0.79 };
 const currencySymbols: Record<string, string> = { USD: "$", EUR: "\u20AC", GBP: "\u00A3" };
 
 const demoPayoutHistory = [
-  { id: "PAY-1001", date: "2024-01-15", amount: 2500, currency: "USD", method: "Wallet", status: "approved" as const },
-  { id: "PAY-1002", date: "2024-02-01", amount: 1800, currency: "USD", method: "Wallet", status: "approved" as const },
-  { id: "PAY-1003", date: "2024-02-15", amount: 3200, currency: "USD", method: "Wallet", status: "pending" as const },
-  { id: "PAY-1004", date: "2024-03-01", amount: 1500, currency: "USD", method: "Wallet", status: "approved" as const },
-  { id: "PAY-1005", date: "2024-03-15", amount: 900, currency: "USD", method: "Wallet", status: "rejected" as const },
-  { id: "PAY-1006", date: "2024-04-01", amount: 4100, currency: "USD", method: "Wallet", status: "approved" as const },
+  { id: "PAY-1001", date: "2024-01-15", amount: 2500, currency: "USD", method: "Wallet", status: "approved" as const, tradingAccount: "PROP-50821", tradingPlatform: "MT5", approvedDate: "2024-01-16" },
+  { id: "PAY-1002", date: "2024-02-01", amount: 1800, currency: "USD", method: "Wallet", status: "approved" as const, tradingAccount: "PROP-100322", tradingPlatform: "MT5", approvedDate: "2024-02-02" },
+  { id: "PAY-1003", date: "2024-02-15", amount: 3200, currency: "USD", method: "Wallet", status: "pending" as const, tradingAccount: "PROP-50821", tradingPlatform: "MT5", approvedDate: null },
+  { id: "PAY-1004", date: "2024-03-01", amount: 1500, currency: "USD", method: "Wallet", status: "approved" as const, tradingAccount: "PROP-50199", tradingPlatform: "cTrader", approvedDate: "2024-03-02" },
+  { id: "PAY-1005", date: "2024-03-15", amount: 900, currency: "USD", method: "Wallet", status: "rejected" as const, tradingAccount: "PROP-100322", tradingPlatform: "MT5", approvedDate: "2024-03-16" },
+  { id: "PAY-1006", date: "2024-04-01", amount: 4100, currency: "USD", method: "Wallet", status: "approved" as const, tradingAccount: "PROP-50199", tradingPlatform: "cTrader", approvedDate: "2024-04-02" },
 ];
 
 const demoInvoices = [
@@ -63,6 +64,7 @@ export default function PropPayouts() {
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [withdrawCurrency, setWithdrawCurrency] = useState("USD");
   const [historyPage, setHistoryPage] = useState(1);
+  const [viewPayout, setViewPayout] = useState<typeof demoPayoutHistory[0] | null>(null);
   const perPage = 5;
 
   const { data: allAccounts, isLoading: accountsLoading } = useQuery<PropAccount[]>({
@@ -350,7 +352,16 @@ export default function PropPayouts() {
                   Method
                 </th>
                 <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Trading Account
+                </th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Trading Platform
+                </th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Status
+                </th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Action
                 </th>
               </tr>
             </thead>
@@ -383,6 +394,12 @@ export default function PropPayouts() {
                     <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                       {payout.method}
                     </td>
+                    <td className="px-6 py-4 text-sm font-mono text-gray-900 dark:text-white" data-testid={`text-trading-account-${payout.id}`}>
+                      {payout.tradingAccount}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400" data-testid={`text-trading-platform-${payout.id}`}>
+                      {payout.tradingPlatform}
+                    </td>
                     <td className="px-6 py-4">
                       <span
                         className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium ${sc.color}`}
@@ -392,6 +409,35 @@ export default function PropPayouts() {
                         {payout.status.charAt(0).toUpperCase() +
                           payout.status.slice(1)}
                       </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-blue-500 dark:text-blue-400"
+                          onClick={() => setViewPayout(payout)}
+                          data-testid={`button-view-${payout.id}`}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        {payout.status === "pending" && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-red-500 dark:text-red-400"
+                            onClick={() => {
+                              toast({
+                                title: "Withdrawal Cancelled",
+                                description: `Payout ${payout.id} has been cancelled.`,
+                              });
+                            }}
+                            data-testid={`button-cancel-${payout.id}`}
+                          >
+                            <Ban className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
@@ -477,6 +523,71 @@ export default function PropPayouts() {
           ))}
         </div>
       </Card>
+
+      <Dialog open={!!viewPayout} onOpenChange={(open) => !open && setViewPayout(null)}>
+        <DialogContent className="max-w-md" data-testid="dialog-view-payout">
+          <DialogHeader>
+            <DialogTitle>Transaction Details</DialogTitle>
+            <DialogDescription>
+              View the details of this payout transaction.
+            </DialogDescription>
+          </DialogHeader>
+          {viewPayout && (() => {
+            const sc = statusConfig[viewPayout.status];
+            const StatusIcon = sc.icon;
+            return (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Transaction ID</span>
+                  <span className="text-sm font-mono font-medium text-gray-900 dark:text-white" data-testid="text-view-id">{viewPayout.id}</span>
+                </div>
+                <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Date</span>
+                  <span className="text-sm text-gray-900 dark:text-white" data-testid="text-view-date">
+                    {new Date(viewPayout.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Amount</span>
+                  <span className="text-sm font-bold text-gray-900 dark:text-white" data-testid="text-view-amount">
+                    ${viewPayout.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Method</span>
+                  <span className="text-sm text-gray-900 dark:text-white" data-testid="text-view-method">{viewPayout.method}</span>
+                </div>
+                <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Trading Account</span>
+                  <span className="text-sm font-mono text-gray-900 dark:text-white" data-testid="text-view-trading-account">{viewPayout.tradingAccount}</span>
+                </div>
+                <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Trading Platform</span>
+                  <span className="text-sm text-gray-900 dark:text-white" data-testid="text-view-trading-platform">{viewPayout.tradingPlatform}</span>
+                </div>
+                <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Status</span>
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium ${sc.color}`} data-testid="text-view-status">
+                    <StatusIcon className="w-3 h-3" />
+                    {viewPayout.status.charAt(0).toUpperCase() + viewPayout.status.slice(1)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between py-2">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Approved Date</span>
+                  <span className="text-sm text-gray-900 dark:text-white" data-testid="text-view-approved-date">
+                    {viewPayout.approvedDate
+                      ? new Date(viewPayout.approvedDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+                      : "Pending"}
+                  </span>
+                </div>
+              </div>
+            );
+          })()}
+          <Button variant="outline" className="w-full" onClick={() => setViewPayout(null)} data-testid="button-close-view">
+            Close
+          </Button>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={withdrawOpen} onOpenChange={setWithdrawOpen}>
         <DialogContent className="max-w-md">
