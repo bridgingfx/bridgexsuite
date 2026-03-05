@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import {
   Briefcase,
@@ -22,6 +23,12 @@ import {
   TrendingUp,
   Layers,
   Shield,
+  X,
+  Target,
+  Calendar,
+  ChevronRight,
+  BarChart3,
+  Activity,
 } from "lucide-react";
 import type { PropAccount } from "@shared/schema";
 import { cn } from "@/lib/utils";
@@ -108,7 +115,16 @@ function getStatusColor(status: string) {
   }
 }
 
-function getPhaseLabel(account: any) {
+interface AccountWithExtras extends PropAccount {
+  platform: string;
+  server: string;
+  leverage: string;
+  symbolGroup: string;
+  masterPassword: string;
+  investorPassword: string;
+}
+
+function getPhaseLabel(account: { status: string; currentPhase: number }) {
   if (account.status === "funded") return "Funded";
   if (account.status === "failed") return "Failed";
   return `Phase ${account.currentPhase}`;
@@ -122,9 +138,199 @@ function getAccountSize(challengeId: string) {
   return "$50,000";
 }
 
+function AccountDetailPanel({ account, onClose }: { account: AccountWithExtras; onClose: () => void }) {
+  const balance = Number(account.currentBalance);
+  const profit = Number(account.currentProfit);
+  const startingBalance = balance - profit;
+  const equity = balance + (profit * 0.1);
+  const drawdown = startingBalance > 0 ? Math.max(0, ((startingBalance - Math.min(balance, startingBalance)) / startingBalance) * 100) : 0;
+  const profitTargetPercent = 8;
+  const profitProgress = startingBalance > 0 ? Math.min(100, (profit / (startingBalance * profitTargetPercent / 100)) * 100) : 0;
+  const maxDailyDrawdown = 5;
+  const maxTotalDrawdown = 10;
+  const minTradingDays = 5;
+  const maxTradingDays = 30;
+  const daysRemaining = Math.max(0, maxTradingDays - account.tradingDays);
+
+  return (
+    <Card className="p-6 space-y-6 bg-gray-50 dark:bg-dark-card" data-testid={`panel-account-detail-${account.id}`}>
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-500/20">
+            <BarChart3 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          </div>
+          <div>
+            <h3 className="text-gray-900 dark:text-white font-bold text-lg" data-testid={`text-detail-account-${account.id}`}>
+              {account.accountNumber} Details
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">
+              {getPhaseLabel(account)} &middot; {getAccountSize(account.challengeId)}
+            </p>
+          </div>
+        </div>
+        <Button
+          size="icon"
+          variant="ghost"
+          className="text-gray-400"
+          onClick={onClose}
+          data-testid={`button-close-detail-${account.id}`}
+        >
+          <X className="w-4 h-4" />
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="bg-white dark:bg-gray-800/50 rounded-lg p-4 border border-gray-100 dark:border-gray-700" data-testid={`kpi-balance-${account.id}`}>
+          <p className="text-gray-500 dark:text-gray-400 text-xs font-medium uppercase tracking-wider mb-1">Balance</p>
+          <p className="text-gray-900 dark:text-white text-xl font-bold">${balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}</p>
+        </div>
+        <div className="bg-white dark:bg-gray-800/50 rounded-lg p-4 border border-gray-100 dark:border-gray-700" data-testid={`kpi-equity-${account.id}`}>
+          <p className="text-gray-500 dark:text-gray-400 text-xs font-medium uppercase tracking-wider mb-1">Equity</p>
+          <p className="text-gray-900 dark:text-white text-xl font-bold">${equity.toLocaleString("en-US", { minimumFractionDigits: 2 })}</p>
+        </div>
+        <div className="bg-white dark:bg-gray-800/50 rounded-lg p-4 border border-gray-100 dark:border-gray-700" data-testid={`kpi-profit-${account.id}`}>
+          <p className="text-gray-500 dark:text-gray-400 text-xs font-medium uppercase tracking-wider mb-1">Profit</p>
+          <p className={cn("text-xl font-bold", profit >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400")}>
+            {profit >= 0 ? "+" : ""}${profit.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+          </p>
+        </div>
+        <div className="bg-white dark:bg-gray-800/50 rounded-lg p-4 border border-gray-100 dark:border-gray-700" data-testid={`kpi-drawdown-${account.id}`}>
+          <p className="text-gray-500 dark:text-gray-400 text-xs font-medium uppercase tracking-wider mb-1">Drawdown</p>
+          <p className="text-amber-600 dark:text-amber-400 text-xl font-bold">{drawdown.toFixed(2)}%</p>
+        </div>
+        <div className="bg-white dark:bg-gray-800/50 rounded-lg p-4 border border-gray-100 dark:border-gray-700" data-testid={`kpi-days-traded-${account.id}`}>
+          <p className="text-gray-500 dark:text-gray-400 text-xs font-medium uppercase tracking-wider mb-1">Days Traded</p>
+          <p className="text-gray-900 dark:text-white text-xl font-bold">{account.tradingDays}</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="space-y-4">
+          <h4 className="text-gray-900 dark:text-white font-semibold flex items-center gap-2">
+            <Target className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            Challenge Progress
+          </h4>
+          <div className="space-y-3">
+            <div>
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <span className="text-gray-500 dark:text-gray-400 text-sm">Profit Target ({profitTargetPercent}%)</span>
+                <span className="text-gray-900 dark:text-white text-sm font-medium">{profitProgress.toFixed(1)}%</span>
+              </div>
+              <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full">
+                <div
+                  className={cn("h-full rounded-full transition-all", profitProgress >= 100 ? "bg-emerald-500" : "bg-blue-500")}
+                  style={{ width: `${Math.min(100, profitProgress)}%` }}
+                  data-testid={`progress-profit-${account.id}`}
+                />
+              </div>
+            </div>
+            <div>
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <span className="text-gray-500 dark:text-gray-400 text-sm">Max Daily Drawdown ({maxDailyDrawdown}%)</span>
+                <span className="text-emerald-600 dark:text-emerald-400 text-sm font-medium">Within Limits</span>
+              </div>
+              <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full">
+                <div className="h-full rounded-full bg-emerald-500" style={{ width: `${Math.min(100, (drawdown / maxDailyDrawdown) * 100)}%` }} />
+              </div>
+            </div>
+            <div>
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <span className="text-gray-500 dark:text-gray-400 text-sm">Max Total Drawdown ({maxTotalDrawdown}%)</span>
+                <span className="text-emerald-600 dark:text-emerald-400 text-sm font-medium">Within Limits</span>
+              </div>
+              <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full">
+                <div className="h-full rounded-full bg-emerald-500" style={{ width: `${Math.min(100, (drawdown / maxTotalDrawdown) * 100)}%` }} />
+              </div>
+            </div>
+            <div>
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <span className="text-gray-500 dark:text-gray-400 text-sm">Min Trading Days ({minTradingDays})</span>
+                <span className={cn("text-sm font-medium", account.tradingDays >= minTradingDays ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400")}>
+                  {account.tradingDays}/{minTradingDays}
+                </span>
+              </div>
+              <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full">
+                <div
+                  className={cn("h-full rounded-full", account.tradingDays >= minTradingDays ? "bg-emerald-500" : "bg-amber-500")}
+                  style={{ width: `${Math.min(100, (account.tradingDays / minTradingDays) * 100)}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <h4 className="text-gray-900 dark:text-white font-semibold flex items-center gap-2">
+            <Activity className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            Next Steps
+          </h4>
+          <div className="space-y-3">
+            {account.status === "active" && (
+              <>
+                {account.tradingDays < minTradingDays && (
+                  <div className="flex items-start gap-3 bg-white dark:bg-gray-800/50 rounded-lg p-3 border border-gray-100 dark:border-gray-700">
+                    <Calendar className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-gray-900 dark:text-white text-sm font-medium">Complete Minimum Trading Days</p>
+                      <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">
+                        Trade for {minTradingDays - account.tradingDays} more day(s) to meet the requirement.
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {profitProgress < 100 && (
+                  <div className="flex items-start gap-3 bg-white dark:bg-gray-800/50 rounded-lg p-3 border border-gray-100 dark:border-gray-700">
+                    <Target className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-gray-900 dark:text-white text-sm font-medium">Reach Profit Target</p>
+                      <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">
+                        You need ${((startingBalance * profitTargetPercent / 100) - profit).toLocaleString("en-US", { minimumFractionDigits: 2 })} more profit to pass this phase.
+                      </p>
+                    </div>
+                  </div>
+                )}
+                <div className="flex items-start gap-3 bg-white dark:bg-gray-800/50 rounded-lg p-3 border border-gray-100 dark:border-gray-700">
+                  <Shield className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-gray-900 dark:text-white text-sm font-medium">Stay Within Drawdown Limits</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">
+                      Keep daily drawdown under {maxDailyDrawdown}% and total drawdown under {maxTotalDrawdown}%.
+                    </p>
+                  </div>
+                </div>
+              </>
+            )}
+            {account.status === "funded" && (
+              <div className="flex items-start gap-3 bg-white dark:bg-gray-800/50 rounded-lg p-3 border border-gray-100 dark:border-gray-700">
+                <DollarSign className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-gray-900 dark:text-white text-sm font-medium">Request Payout</p>
+                  <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">
+                    Your account is funded. You can request a payout from the Payouts page.
+                  </p>
+                </div>
+              </div>
+            )}
+            <div className="flex items-start gap-3 bg-white dark:bg-gray-800/50 rounded-lg p-3 border border-gray-100 dark:border-gray-700">
+              <Calendar className="w-4 h-4 text-gray-500 dark:text-gray-400 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-gray-900 dark:text-white text-sm font-medium">Trading Period</p>
+                <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">
+                  {daysRemaining > 0 ? `${daysRemaining} days remaining in your trading period.` : "Trading period has ended."}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 export default function PropAccounts() {
   const [search, setSearch] = useState("");
   const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
+  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const { data: propAccounts, isLoading } = useQuery<PropAccount[]>({
@@ -392,6 +598,16 @@ export default function PropAccounts() {
 
                 <div className="border-t border-gray-700 px-4 py-3">
                   <div className="flex items-center gap-2 flex-wrap">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-blue-600 text-blue-300"
+                      onClick={() => setSelectedAccountId(selectedAccountId === account.id ? null : account.id)}
+                      data-testid={`button-view-${account.id}`}
+                    >
+                      <Eye className="w-3.5 h-3.5 mr-1" />
+                      View
+                    </Button>
                     {account.status !== "funded" && (
                       <>
                         <Button
@@ -455,6 +671,17 @@ export default function PropAccounts() {
           })}
         </div>
       )}
+
+      {selectedAccountId && (() => {
+        const selectedAccount = filtered.find((a) => a.id === selectedAccountId);
+        if (!selectedAccount) return null;
+        return (
+          <AccountDetailPanel
+            account={selectedAccount}
+            onClose={() => setSelectedAccountId(null)}
+          />
+        );
+      })()}
     </div>
   );
 }

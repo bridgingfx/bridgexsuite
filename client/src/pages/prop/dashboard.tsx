@@ -1,6 +1,16 @@
+import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   DollarSign,
   TrendingUp,
@@ -16,9 +26,13 @@ import {
   Shield,
   Clock,
   Megaphone,
+  RefreshCw,
+  ChevronDown,
 } from "lucide-react";
 import { Link } from "wouter";
 import type { PropAccount, PropChallenge } from "@shared/schema";
+
+type TabFilter = "active" | "passed" | "breached" | "funded";
 
 const demoAnnouncements = [
   { title: "New 200K Challenge Available", description: "We've launched a new $200,000 account size challenge with competitive pricing.", date: "2024-01-15", type: "new" as const },
@@ -33,6 +47,27 @@ const nextSteps = [
   { label: "Trade for minimum 5 days", icon: Calendar, done: false },
 ];
 
+function useCountdownToMidnightUTC() {
+  const [timeLeft, setTimeLeft] = useState("");
+
+  useEffect(() => {
+    function calc() {
+      const now = new Date();
+      const midnight = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0));
+      const diff = midnight.getTime() - now.getTime();
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      setTimeLeft(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`);
+    }
+    calc();
+    const interval = setInterval(calc, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return timeLeft;
+}
+
 export default function PropDashboard() {
   const { data: accounts, isLoading: accountsLoading } = useQuery<PropAccount[]>({
     queryKey: ["/api/prop/accounts"],
@@ -42,18 +77,57 @@ export default function PropDashboard() {
     queryKey: ["/api/prop/challenges"],
   });
 
-  const activeAccount = accounts?.[0];
-  const balance = activeAccount ? Number(activeAccount.currentBalance) : 50000;
-  const profit = activeAccount ? Number(activeAccount.currentProfit) : 1200;
+  const [selectedAccountId, setSelectedAccountId] = useState<string>("");
+  const [activeTab, setActiveTab] = useState<TabFilter>("active");
+  const countdown = useCountdownToMidnightUTC();
+
+  const filteredAccounts = useMemo(() => {
+    if (!accounts) return [];
+    return accounts.filter((a) => {
+      if (activeTab === "active") return a.status === "active";
+      if (activeTab === "passed") return a.status === "passed";
+      if (activeTab === "breached") return a.status === "failed";
+      if (activeTab === "funded") return a.status === "funded";
+      return true;
+    });
+  }, [accounts, activeTab]);
+
+  const tabCounts = useMemo(() => {
+    if (!accounts) return { active: 0, passed: 0, breached: 0, funded: 0 };
+    return {
+      active: accounts.filter((a) => a.status === "active").length,
+      passed: accounts.filter((a) => a.status === "passed").length,
+      breached: accounts.filter((a) => a.status === "failed").length,
+      funded: accounts.filter((a) => a.status === "funded").length,
+    };
+  }, [accounts]);
+
+  useEffect(() => {
+    if (accounts && accounts.length > 0 && !selectedAccountId) {
+      setSelectedAccountId(accounts[0].id);
+    }
+  }, [accounts, selectedAccountId]);
+
+  const selectedAccount = accounts?.find((a) => a.id === selectedAccountId);
+
+  const balance = selectedAccount ? Number(selectedAccount.currentBalance) : 0;
+  const profit = selectedAccount ? Number(selectedAccount.currentProfit) : 0;
   const equity = balance + profit;
-  const drawdownUsed = activeAccount ? Math.abs(Math.min(profit, 0)) / (balance * 0.10) * 100 : 2.4;
-  const tradingDays = activeAccount?.tradingDays ?? 3;
-  const currentPhase = activeAccount?.currentPhase ?? 1;
-  const status = activeAccount?.status ?? "active";
+  const drawdownUsed = selectedAccount ? Math.abs(Math.min(profit, 0)) / (balance * 0.10) * 100 : 0;
+  const tradingDays = selectedAccount?.tradingDays ?? 0;
+  const currentPhase = selectedAccount?.currentPhase ?? 1;
+  const status = selectedAccount?.status ?? "active";
   const profitTarget = balance * 0.08;
-  const profitProgress = Math.min((profit / profitTarget) * 100, 100);
+  const profitProgress = profitTarget > 0 ? Math.min((profit / profitTarget) * 100, 100) : 0;
 
   const isLoading = accountsLoading || challengesLoading;
+
+  const tabs: { key: TabFilter; label: string }[] = [
+    { key: "active", label: "Active" },
+    { key: "passed", label: "Passed" },
+    { key: "breached", label: "Breached" },
+    { key: "funded", label: "Funded" },
+  ];
 
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto" data-testid="prop-dashboard-page">
@@ -66,70 +140,118 @@ export default function PropDashboard() {
             Monitor your challenge progress and trading performance.
           </p>
         </div>
-        <Link href="/prop/challenges">
-          <span className="inline-flex items-center gap-2 text-sm font-medium text-brand-600 dark:text-brand-400 cursor-pointer" data-testid="link-view-challenges">
-            View Challenges <ArrowRight className="w-4 h-4" />
-          </span>
-        </Link>
+        <div className="flex items-center gap-3 flex-wrap">
+          {accounts && accounts.length > 1 && (
+            <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
+              <SelectTrigger className="w-[240px]" data-testid="select-account">
+                <SelectValue placeholder="Select account" />
+              </SelectTrigger>
+              <SelectContent>
+                {accounts.map((acc) => (
+                  <SelectItem key={acc.id} value={acc.id} data-testid={`select-account-option-${acc.id}`}>
+                    {acc.accountNumber} - ${Number(acc.currentBalance).toLocaleString()}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          <Link href="/prop/challenges">
+            <span className="inline-flex items-center gap-2 text-sm font-medium text-brand-600 dark:text-brand-400 cursor-pointer" data-testid="link-view-challenges">
+              View Challenges <ArrowRight className="w-4 h-4" />
+            </span>
+          </Link>
+        </div>
       </div>
+
+      <Card className="p-4 overflow-visible" data-testid="reset-timer-section">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
+              <RefreshCw className="w-4 h-4 text-teal-500 animate-spin" style={{ animationDuration: "3s" }} />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Today's Permitted Loss Will Reset In
+              </span>
+            </div>
+            <Badge className="bg-gradient-to-r from-cyan-500 to-teal-500 text-white border-0 text-base px-4 py-1 font-mono" data-testid="badge-reset-timer">
+              {countdown}
+            </Badge>
+          </div>
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-emerald-500" />
+              <span className="text-xs text-gray-500 dark:text-gray-400">Highest Profit</span>
+              <span className="text-sm font-semibold text-gray-900 dark:text-white" data-testid="text-highest-profit-id">
+                {selectedAccount?.accountNumber ?? "-"}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-red-500" />
+              <span className="text-xs text-gray-500 dark:text-gray-400">Breached Loss</span>
+              <span className="text-sm font-semibold text-gray-900 dark:text-white" data-testid="text-breached-loss-id">
+                -
+              </span>
+            </div>
+          </div>
+        </div>
+      </Card>
 
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
+            <Card key={i} className="p-6">
               <div className="animate-pulse space-y-3">
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3" />
-                <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded-md w-2/3" />
+                <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded-md w-1/2" />
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4" data-testid="kpi-section">
-          <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm" data-testid="kpi-balance">
-            <div className="flex justify-between items-start">
+          <Card className="p-6" data-testid="kpi-balance">
+            <div className="flex justify-between items-start gap-2">
               <div>
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Balance</p>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                   ${balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                 </h3>
               </div>
-              <div className="p-3 bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400 rounded-lg">
+              <div className="p-3 bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400 rounded-md">
                 <DollarSign className="w-5 h-5" />
               </div>
             </div>
-          </div>
+          </Card>
 
-          <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm" data-testid="kpi-equity">
-            <div className="flex justify-between items-start">
+          <Card className="p-6" data-testid="kpi-equity">
+            <div className="flex justify-between items-start gap-2">
               <div>
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Equity</p>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                   ${equity.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                 </h3>
               </div>
-              <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-lg">
+              <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-md">
                 <TrendingUp className="w-5 h-5" />
               </div>
             </div>
-          </div>
+          </Card>
 
-          <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm" data-testid="kpi-profit">
-            <div className="flex justify-between items-start">
+          <Card className="p-6" data-testid="kpi-profit">
+            <div className="flex justify-between items-start gap-2">
               <div>
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Profit</p>
                 <h3 className={`text-xl font-bold ${profit >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}>
                   {profit >= 0 ? "+" : ""}${profit.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                 </h3>
               </div>
-              <div className={`p-3 rounded-lg ${profit >= 0 ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400" : "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400"}`}>
+              <div className={`p-3 rounded-md ${profit >= 0 ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400" : "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400"}`}>
                 {profit >= 0 ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
               </div>
             </div>
-          </div>
+          </Card>
 
-          <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm" data-testid="kpi-drawdown">
-            <div className="flex justify-between items-start">
+          <Card className="p-6" data-testid="kpi-drawdown">
+            <div className="flex justify-between items-start gap-2">
               <div>
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Drawdown</p>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -137,14 +259,14 @@ export default function PropDashboard() {
                 </h3>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">of 10% max</p>
               </div>
-              <div className="p-3 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-lg">
+              <div className="p-3 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-md">
                 <AlertTriangle className="w-5 h-5" />
               </div>
             </div>
-          </div>
+          </Card>
 
-          <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm" data-testid="kpi-days-traded">
-            <div className="flex justify-between items-start">
+          <Card className="p-6" data-testid="kpi-days-traded">
+            <div className="flex justify-between items-start gap-2">
               <div>
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Days Traded</p>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -152,19 +274,19 @@ export default function PropDashboard() {
                 </h3>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">min 5 required</p>
               </div>
-              <div className="p-3 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-lg">
+              <div className="p-3 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-md">
                 <Calendar className="w-5 h-5" />
               </div>
             </div>
-          </div>
+          </Card>
         </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm" data-testid="challenge-status-section">
+        <Card className="p-6" data-testid="challenge-status-section">
           <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Challenge Status</h2>
 
-          <div className="flex items-center gap-3 mb-6">
+          <div className="flex items-center gap-3 mb-6 flex-wrap">
             <Badge className={`${status === "funded" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" : status === "failed" ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" : "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"}`} data-testid="badge-account-status">
               {status === "funded" ? "Funded" : status === "failed" ? "Failed" : `Phase ${currentPhase}`}
             </Badge>
@@ -208,7 +330,7 @@ export default function PropDashboard() {
             })}
           </div>
 
-          <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+          <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-md">
             <div className="flex items-center justify-between gap-4 flex-wrap">
               <div>
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Profit Target Progress</p>
@@ -222,9 +344,9 @@ export default function PropDashboard() {
             </div>
             <Progress value={profitProgress} className="h-2 mt-3" data-testid="progress-profit-target" />
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm" data-testid="next-steps-section">
+        <Card className="p-6" data-testid="next-steps-section">
           <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Next Steps</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">What you need to focus on today.</p>
 
@@ -232,7 +354,7 @@ export default function PropDashboard() {
             {nextSteps.map((step, index) => (
               <div
                 key={index}
-                className={`flex items-center gap-3 p-3 rounded-lg ${step.done ? "bg-emerald-50 dark:bg-emerald-900/10" : "bg-gray-50 dark:bg-gray-800/50"}`}
+                className={`flex items-center gap-3 p-3 rounded-md ${step.done ? "bg-emerald-50 dark:bg-emerald-900/10" : "bg-gray-50 dark:bg-gray-800/50"}`}
                 data-testid={`next-step-${index}`}
               >
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
@@ -249,7 +371,7 @@ export default function PropDashboard() {
             ))}
           </div>
 
-          <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/10 rounded-lg border border-blue-100 dark:border-blue-800/30">
+          <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/10 rounded-md border border-blue-100 dark:border-blue-800/30">
             <div className="flex items-start gap-3">
               <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
               <div>
@@ -260,11 +382,80 @@ export default function PropDashboard() {
               </div>
             </div>
           </div>
-        </div>
+        </Card>
       </div>
 
-      <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm" data-testid="announcements-section">
-        <div className="flex items-center gap-3 mb-6">
+      <Card className="p-6" data-testid="account-tabs-section">
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">My Accounts</h2>
+        <div className="flex items-center gap-2 mb-4 flex-wrap">
+          {tabs.map((tab) => (
+            <Button
+              key={tab.key}
+              variant={activeTab === tab.key ? "default" : "outline"}
+              size="sm"
+              onClick={() => setActiveTab(tab.key)}
+              data-testid={`tab-${tab.key}`}
+            >
+              {tab.label} ({tabCounts[tab.key]})
+            </Button>
+          ))}
+        </div>
+
+        {filteredAccounts.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-sm text-gray-500 dark:text-gray-400" data-testid="text-no-accounts">
+              No {activeTab} accounts found.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredAccounts.map((acc) => (
+              <div
+                key={acc.id}
+                className={`p-4 rounded-md border cursor-pointer transition-colors ${
+                  acc.id === selectedAccountId
+                    ? "border-brand-500 bg-brand-50/50 dark:bg-brand-900/10 dark:border-brand-400"
+                    : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50"
+                }`}
+                onClick={() => setSelectedAccountId(acc.id)}
+                data-testid={`account-card-${acc.id}`}
+              >
+                <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white" data-testid={`text-account-number-${acc.id}`}>
+                    {acc.accountNumber}
+                  </span>
+                  <Badge
+                    variant="outline"
+                    className={`text-xs ${
+                      acc.status === "funded" ? "border-emerald-300 text-emerald-700 dark:text-emerald-400" :
+                      acc.status === "failed" ? "border-red-300 text-red-700 dark:text-red-400" :
+                      acc.status === "passed" ? "border-blue-300 text-blue-700 dark:text-blue-400" :
+                      "border-gray-300 text-gray-700 dark:text-gray-400"
+                    }`}
+                    data-testid={`badge-account-status-${acc.id}`}
+                  >
+                    {acc.status === "failed" ? "Breached" : acc.status.charAt(0).toUpperCase() + acc.status.slice(1)}
+                  </Badge>
+                </div>
+                <p className="text-lg font-bold text-gray-900 dark:text-white" data-testid={`text-account-balance-${acc.id}`}>
+                  ${Number(acc.currentBalance).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                </p>
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  <span className={`text-xs font-medium ${Number(acc.currentProfit) >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}>
+                    {Number(acc.currentProfit) >= 0 ? "+" : ""}${Number(acc.currentProfit).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                  </span>
+                  <span className="text-xs text-gray-400 dark:text-gray-500">
+                    Phase {acc.currentPhase} | {acc.tradingDays} days
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      <Card className="p-6" data-testid="announcements-section">
+        <div className="flex items-center gap-3 mb-6 flex-wrap">
           <Megaphone className="w-5 h-5 text-gray-500 dark:text-gray-400" />
           <h2 className="text-lg font-bold text-gray-900 dark:text-white">Announcements & Rules Updates</h2>
         </div>
@@ -273,7 +464,7 @@ export default function PropDashboard() {
           {demoAnnouncements.map((item, index) => (
             <div
               key={index}
-              className="flex items-start gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg"
+              className="flex items-start gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-md"
               data-testid={`announcement-${index}`}
             >
               <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
@@ -301,10 +492,10 @@ export default function PropDashboard() {
             </div>
           ))}
         </div>
-      </div>
+      </Card>
 
       {!isLoading && challenges && challenges.length > 0 && (
-        <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm" data-testid="available-challenges-section">
+        <Card className="p-6" data-testid="available-challenges-section">
           <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
             <h2 className="text-lg font-bold text-gray-900 dark:text-white">Available Challenges</h2>
             <Link href="/prop/challenges">
@@ -315,7 +506,7 @@ export default function PropDashboard() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {challenges.slice(0, 3).map((ch) => (
-              <div key={ch.id} className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg" data-testid={`challenge-card-${ch.id}`}>
+              <div key={ch.id} className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-md" data-testid={`challenge-card-${ch.id}`}>
                 <p className="text-sm font-medium text-gray-900 dark:text-white">{ch.name}</p>
                 <p className="text-lg font-bold text-brand-600 dark:text-brand-400 mt-1">
                   ${Number(ch.accountSize).toLocaleString()}
@@ -327,7 +518,7 @@ export default function PropDashboard() {
               </div>
             ))}
           </div>
-        </div>
+        </Card>
       )}
     </div>
   );

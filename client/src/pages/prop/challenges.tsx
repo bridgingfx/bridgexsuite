@@ -5,49 +5,77 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import {
   Trophy,
   Zap,
   Target,
   CheckCircle2,
-  Star,
   Shield,
-  Clock,
   AlertTriangle,
+  Calendar,
   RotateCcw,
   TimerReset,
-  Gauge,
-  Newspaper,
-  Calendar,
-  Bot,
-  Moon,
-  TrendingUp,
   ChevronRight,
+  Send,
+  ClipboardList,
+  TrendingUp,
+  Award,
+  DollarSign,
+  Percent,
+  Clock,
+  BarChart3,
+  Scale,
+  Info,
 } from "lucide-react";
 import type { PropChallenge, PropAccount } from "@shared/schema";
 
 type TabKey = "active" | "passed" | "failed";
+type ChallengeType = "1-step" | "2-step";
 
-const rulesData = [
-  { metric: "Profit Target", phase1: "8%", phase2: "5%", funded: "N/A", icon: Target },
-  { metric: "Max Daily Loss", phase1: "5%", phase2: "5%", funded: "5%", icon: AlertTriangle },
-  { metric: "Max Overall Loss", phase1: "10%", phase2: "10%", funded: "10%", icon: Shield },
-  { metric: "Min Trading Days", phase1: "5 days", phase2: "5 days", funded: "N/A", icon: Calendar },
-  { metric: "Consistency Rule", phase1: "Yes", phase2: "Yes", funded: "Yes", icon: Gauge },
+const accountSizes = [
+  { label: "$10K", value: "10000" },
+  { label: "$25K", value: "25000" },
+  { label: "$50K", value: "50000" },
+  { label: "$100K", value: "100000" },
+  { label: "$200K", value: "200000" },
 ];
 
-const addOnsData = [
-  { id: "leverage", label: "Higher Leverage (1:200)", description: "Double your default leverage", price: "+$50", icon: TrendingUp },
-  { id: "news", label: "News Trading Allowed", description: "Trade during high-impact news events", price: "+$30", icon: Newspaper },
-  { id: "weekend", label: "Weekend Holding", description: "Keep positions over weekends", price: "+$25", icon: Moon },
-  { id: "ea", label: "EA / Algo Trading", description: "Use expert advisors and automated strategies", price: "+$40", icon: Bot },
-];
+const challengeData: Record<ChallengeType, Record<string, {
+  price: string;
+  leverage: string;
+  tradingPeriod: string;
+  minTradingDays: string;
+  maxDailyLoss: string;
+  maxLoss: string;
+  profitTarget: string;
+  profitSplit: string;
+  phases: number;
+  phase2ProfitTarget?: string;
+}>> = {
+  "1-step": {
+    "10000": { price: "89", leverage: "1:100", tradingPeriod: "Unlimited", minTradingDays: "5 Days", maxDailyLoss: "4%", maxLoss: "6%", profitTarget: "10%", profitSplit: "80%", phases: 1 },
+    "25000": { price: "179", leverage: "1:100", tradingPeriod: "Unlimited", minTradingDays: "5 Days", maxDailyLoss: "4%", maxLoss: "6%", profitTarget: "10%", profitSplit: "80%", phases: 1 },
+    "50000": { price: "299", leverage: "1:100", tradingPeriod: "Unlimited", minTradingDays: "5 Days", maxDailyLoss: "4%", maxLoss: "6%", profitTarget: "10%", profitSplit: "85%", phases: 1 },
+    "100000": { price: "499", leverage: "1:100", tradingPeriod: "Unlimited", minTradingDays: "5 Days", maxDailyLoss: "4%", maxLoss: "6%", profitTarget: "10%", profitSplit: "85%", phases: 1 },
+    "200000": { price: "899", leverage: "1:100", tradingPeriod: "Unlimited", minTradingDays: "5 Days", maxDailyLoss: "4%", maxLoss: "6%", profitTarget: "10%", profitSplit: "90%", phases: 1 },
+  },
+  "2-step": {
+    "10000": { price: "99", leverage: "1:100", tradingPeriod: "Unlimited", minTradingDays: "5 Days", maxDailyLoss: "5%", maxLoss: "10%", profitTarget: "8%", profitSplit: "80%", phases: 2, phase2ProfitTarget: "5%" },
+    "25000": { price: "199", leverage: "1:100", tradingPeriod: "Unlimited", minTradingDays: "5 Days", maxDailyLoss: "5%", maxLoss: "10%", profitTarget: "8%", profitSplit: "80%", phases: 2, phase2ProfitTarget: "5%" },
+    "50000": { price: "299", leverage: "1:100", tradingPeriod: "Unlimited", minTradingDays: "5 Days", maxDailyLoss: "5%", maxLoss: "10%", profitTarget: "8%", profitSplit: "85%", phases: 2, phase2ProfitTarget: "5%" },
+    "100000": { price: "499", leverage: "1:100", tradingPeriod: "Unlimited", minTradingDays: "5 Days", maxDailyLoss: "5%", maxLoss: "10%", profitTarget: "8%", profitSplit: "85%", phases: 2, phase2ProfitTarget: "5%" },
+    "200000": { price: "899", leverage: "1:100", tradingPeriod: "Unlimited", minTradingDays: "5 Days", maxDailyLoss: "5%", maxLoss: "10%", profitTarget: "8%", profitSplit: "90%", phases: 2, phase2ProfitTarget: "5%" },
+  },
+};
 
 export default function PropChallengesPage() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabKey>("active");
-  const [selectedAddOns, setSelectedAddOns] = useState<Set<string>>(new Set());
+  const [challengeType, setChallengeType] = useState<ChallengeType>("1-step");
+  const [selectedSize, setSelectedSize] = useState("50000");
 
   const { data: challenges, isLoading: challengesLoading } = useQuery<PropChallenge[]>({
     queryKey: ["/api/prop/challenges"],
@@ -58,8 +86,8 @@ export default function PropChallengesPage() {
   });
 
   const purchaseMutation = useMutation({
-    mutationFn: async (challengeId: string) => {
-      return apiRequest("POST", "/api/prop/accounts", { challengeId });
+    mutationFn: async (data: { challengeType: string; accountSize: string }) => {
+      return apiRequest("POST", "/api/prop/accounts", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/prop/accounts"] });
@@ -70,19 +98,8 @@ export default function PropChallengesPage() {
     },
   });
 
-  const demoChallenges = [
-    { id: "10k", name: "10K Challenge", accountSize: "10000", price: "99", profitTarget: "8", maxDailyDrawdown: "5", maxTotalDrawdown: "10", profitSplit: "80", leverage: "1:100", phases: 2, minTradingDays: 5, maxTradingDays: 30 },
-    { id: "25k", name: "25K Challenge", accountSize: "25000", price: "199", profitTarget: "8", maxDailyDrawdown: "5", maxTotalDrawdown: "10", profitSplit: "80", leverage: "1:100", phases: 2, minTradingDays: 5, maxTradingDays: 30 },
-    { id: "50k", name: "50K Challenge", accountSize: "50000", price: "299", profitTarget: "8", maxDailyDrawdown: "5", maxTotalDrawdown: "10", profitSplit: "80", leverage: "1:100", phases: 2, minTradingDays: 5, maxTradingDays: 30 },
-    { id: "100k", name: "100K Challenge", accountSize: "100000", price: "499", profitTarget: "8", maxDailyDrawdown: "5", maxTotalDrawdown: "10", profitSplit: "85", leverage: "1:100", phases: 2, minTradingDays: 5, maxTradingDays: 30 },
-    { id: "200k", name: "200K Challenge", accountSize: "200000", price: "899", profitTarget: "8", maxDailyDrawdown: "5", maxTotalDrawdown: "10", profitSplit: "90", leverage: "1:100", phases: 2, minTradingDays: 5, maxTradingDays: 30 },
-  ];
-
-  const displayChallenges = challenges && challenges.length > 0
-    ? challenges
-    : demoChallenges;
-
-  const popularIndex = Math.floor(displayChallenges.length / 2);
+  const currentData = challengeData[challengeType][selectedSize];
+  const userName = user?.fullName?.split(" ")[0] || "Trader";
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -123,130 +140,238 @@ export default function PropChallengesPage() {
         return true;
       });
 
-  const toggleAddOn = (id: string) => {
-    setSelectedAddOns((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
   const tabs: { key: TabKey; label: string }[] = [
     { key: "active", label: "Active" },
     { key: "passed", label: "Passed" },
     { key: "failed", label: "Failed" },
   ];
 
+  const phaseRules = [
+    { icon: Scale, label: "Leverage", value: currentData.leverage },
+    { icon: Clock, label: "Trading Period", value: currentData.tradingPeriod },
+    { icon: Calendar, label: "Min Trading Days", value: currentData.minTradingDays },
+    { icon: AlertTriangle, label: "Max Daily Loss", value: currentData.maxDailyLoss },
+    { icon: Shield, label: "Max Loss", value: currentData.maxLoss },
+    { icon: Target, label: "Profit Target", value: currentData.profitTarget },
+    { icon: Percent, label: "Profit Split", value: currentData.profitSplit },
+  ];
+
+  const fundedRules = [
+    { icon: Scale, label: "Leverage", value: currentData.leverage },
+    { icon: Clock, label: "Trading Period", value: "Unlimited" },
+    { icon: Calendar, label: "Min Trading Days", value: "N/A" },
+    { icon: AlertTriangle, label: "Max Daily Loss", value: currentData.maxDailyLoss },
+    { icon: Shield, label: "Max Loss", value: currentData.maxLoss },
+    { icon: Target, label: "Profit Target", value: "N/A" },
+    { icon: Percent, label: "Profit Split", value: currentData.profitSplit },
+  ];
+
   return (
-    <div className="space-y-8 max-w-[1600px] mx-auto">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white" data-testid="text-challenges-title">
-          Prop Challenges
-        </h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Choose a challenge, prove your skills, and get funded.
-        </p>
+    <div className="space-y-8 max-w-[1200px] mx-auto">
+      <div className="relative overflow-visible rounded-md bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 p-6 sm:p-8">
+        <div className="relative z-10 flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white" data-testid="text-welcome-banner">
+              Welcome, {userName}
+            </h1>
+            <p className="text-blue-100 mt-2 max-w-lg text-sm sm:text-base">
+              Take the first step toward becoming a funded trader. Choose your challenge, prove your skills, and trade with our capital.
+            </p>
+          </div>
+          <div className="hidden sm:block">
+            <Send className="w-16 h-16 text-white/30" />
+          </div>
+        </div>
       </div>
 
       <div>
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4" data-testid="text-choose-challenge">
-          Choose a Challenge
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 text-center" data-testid="text-get-started">
+          Get Started in 3 Easy Steps
         </h2>
-        {challengesLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <Card key={i} className="p-6">
-                <div className="animate-pulse space-y-4">
-                  <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-2/3" />
-                  <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
-                  <div className="space-y-2">
-                    {[1, 2, 3, 4].map((j) => (
-                      <div key={j} className="h-4 bg-gray-200 dark:bg-gray-700 rounded" />
-                    ))}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Card className="p-5 text-center" data-testid="card-step-1">
+            <div className="mx-auto w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3">
+              <ClipboardList className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">Step 1</div>
+            <h3 className="font-semibold text-gray-900 dark:text-white text-sm">Choose a Plan</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Select your challenge type and account size that fits your trading style.</p>
+          </Card>
+          <Card className="p-5 text-center" data-testid="card-step-2">
+            <div className="mx-auto w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-3">
+              <BarChart3 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 mb-1">Step 2</div>
+            <h3 className="font-semibold text-gray-900 dark:text-white text-sm">Start Trading</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Trade within the rules and hit your profit target to pass the evaluation.</p>
+          </Card>
+          <Card className="p-5 text-center" data-testid="card-step-3">
+            <div className="mx-auto w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mb-3">
+              <Award className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+            </div>
+            <div className="text-xs font-semibold text-amber-600 dark:text-amber-400 mb-1">Step 3</div>
+            <h3 className="font-semibold text-gray-900 dark:text-white text-sm">Evaluation Passed</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Get funded and start earning real profits with up to {currentData.profitSplit} profit split.</p>
+          </Card>
+        </div>
+      </div>
+
+      <div>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1 text-center" data-testid="text-proven-model">
+          Proven Model | Fair Rules | Real Profits
+        </h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400 text-center mb-6">
+          Select your preferred challenge type and account size below.
+        </p>
+
+        <div className="flex justify-center mb-6">
+          <div className="inline-flex rounded-md border border-gray-200 dark:border-gray-700 p-1 gap-1">
+            <Button
+              variant={challengeType === "1-step" ? "default" : "ghost"}
+              onClick={() => setChallengeType("1-step")}
+              data-testid="button-1-step"
+            >
+              The 1-Step Challenge
+            </Button>
+            <Button
+              variant={challengeType === "2-step" ? "default" : "ghost"}
+              onClick={() => setChallengeType("2-step")}
+              data-testid="button-2-step"
+            >
+              The Classic 2-Step Challenge
+            </Button>
+          </div>
+        </div>
+
+        <p className="text-sm text-gray-600 dark:text-gray-400 text-center mb-6 max-w-2xl mx-auto">
+          {challengeType === "1-step"
+            ? "Our 1-Step Challenge is designed for experienced traders who want a faster path to funding. Pass a single evaluation phase and get funded immediately."
+            : "The Classic 2-Step Challenge provides a structured evaluation with two phases. Demonstrate consistent trading across both phases to earn your funded account."}
+        </p>
+
+        <div className="flex justify-center gap-2 mb-8 flex-wrap">
+          {accountSizes.map((size) => (
+            <Button
+              key={size.value}
+              variant={selectedSize === size.value ? "default" : "outline"}
+              onClick={() => setSelectedSize(size.value)}
+              data-testid={`button-size-${size.value}`}
+            >
+              {size.label}
+            </Button>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          <Card className="lg:col-span-3 p-6" data-testid="card-phase-details">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <Zap className="w-5 h-5 text-blue-500" />
+              Phase 1 {challengeType === "2-step" ? "Details" : "- Evaluation"}
+            </h3>
+            <div className="space-y-3">
+              {phaseRules.map((rule) => (
+                <div key={rule.label} className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800 last:border-0">
+                  <div className="flex items-center gap-3">
+                    <rule.icon className="w-4 h-4 text-gray-400 dark:text-gray-500 flex-shrink-0" />
+                    <span className="text-sm text-gray-700 dark:text-gray-300">{rule.label}</span>
                   </div>
-                  <div className="h-9 bg-gray-200 dark:bg-gray-700 rounded" />
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white" data-testid={`text-phase1-${rule.label.toLowerCase().replace(/\s+/g, "-")}`}>
+                    {rule.value}
+                  </span>
                 </div>
-              </Card>
-            ))}
+              ))}
+            </div>
+
+            {challengeType === "2-step" && (
+              <div className="mt-6">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-emerald-500" />
+                  Phase 2 Details
+                </h3>
+                <div className="space-y-3">
+                  {phaseRules.map((rule) => (
+                    <div key={`p2-${rule.label}`} className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800 last:border-0">
+                      <div className="flex items-center gap-3">
+                        <rule.icon className="w-4 h-4 text-gray-400 dark:text-gray-500 flex-shrink-0" />
+                        <span className="text-sm text-gray-700 dark:text-gray-300">{rule.label}</span>
+                      </div>
+                      <span className="text-sm font-semibold text-gray-900 dark:text-white" data-testid={`text-phase2-${rule.label.toLowerCase().replace(/\s+/g, "-")}`}>
+                        {rule.label === "Profit Target" ? currentData.phase2ProfitTarget || rule.value : rule.value}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </Card>
+
+          <div className="lg:col-span-2 space-y-6">
+            <Card className="p-6 text-center" data-testid="card-pricing">
+              <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                {challengeType === "1-step" ? "1-Step Challenge" : "2-Step Challenge"} - ${Number(selectedSize).toLocaleString()}
+              </p>
+              <div className="text-4xl font-bold text-gray-900 dark:text-white mb-1" data-testid="text-price-display">
+                ${currentData.price}
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-6">Pay once, own it forever</p>
+              <Button
+                className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 text-white border-0"
+                onClick={() => purchaseMutation.mutate({ challengeType, accountSize: selectedSize })}
+                disabled={purchaseMutation.isPending}
+                data-testid="button-buy-now"
+              >
+                <DollarSign className="w-4 h-4 mr-2" />
+                {purchaseMutation.isPending ? "Processing..." : "Buy Now"}
+              </Button>
+              <div className="flex items-center justify-center gap-2 mt-4 text-xs text-gray-500 dark:text-gray-400">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                <span>Instant account activation</span>
+              </div>
+              <div className="flex items-center justify-center gap-2 mt-2 text-xs text-gray-500 dark:text-gray-400">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                <span>Up to {currentData.profitSplit} profit split</span>
+              </div>
+              <div className="flex items-center justify-center gap-2 mt-2 text-xs text-gray-500 dark:text-gray-400">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                <span>No time limits</span>
+              </div>
+            </Card>
+
+            <Card className="p-4" data-testid="card-trading-name">
+              <div className="flex items-start gap-3">
+                <Info className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Trading Name</h4>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Your funded account will be registered under your verified profile name. Ensure your KYC documents are up to date.
+                  </p>
+                </div>
+              </div>
+            </Card>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-            {displayChallenges.map((challenge, index) => {
-              const isPopular = index === popularIndex;
-              return (
-                <Card
-                  key={challenge.id}
-                  className={`relative p-5 ${
-                    isPopular
-                      ? "border-brand-500 ring-2 ring-brand-500/20"
-                      : ""
-                  }`}
-                  data-testid={`card-challenge-${challenge.id}`}
-                >
-                  {isPopular && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                      <Badge className="bg-brand-600 text-white border-0">
-                        <Star className="w-3 h-3 mr-1" />
-                        POPULAR
-                      </Badge>
-                    </div>
-                  )}
+        </div>
 
-                  <div className="text-center mb-4 mt-1">
-                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                      {challenge.name}
-                    </p>
-                    <h3 className="text-3xl font-bold text-gray-900 dark:text-white" data-testid={`text-funding-${challenge.id}`}>
-                      ${Number(challenge.accountSize).toLocaleString()}
-                    </h3>
-                    <p className="text-lg font-semibold text-brand-600 dark:text-brand-400 mt-1" data-testid={`text-price-${challenge.id}`}>
-                      ${Number(challenge.price).toFixed(0)}
-                    </p>
+        <div className="mt-6">
+          <Card className="p-6" data-testid="card-funded-phase">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <Award className="w-5 h-5 text-amber-500" />
+              Funded Phase
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-3">
+              {fundedRules.map((rule) => (
+                <div key={`funded-${rule.label}`} className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
+                  <div className="flex items-center gap-3">
+                    <rule.icon className="w-4 h-4 text-gray-400 dark:text-gray-500 flex-shrink-0" />
+                    <span className="text-sm text-gray-700 dark:text-gray-300">{rule.label}</span>
                   </div>
-
-                  <div className="space-y-2 mb-4 text-sm">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                      <span className="text-gray-700 dark:text-gray-300">{challenge.profitTarget}% Profit Target</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                      <span className="text-gray-700 dark:text-gray-300">Max {challenge.maxDailyDrawdown}% Daily Loss</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                      <span className="text-gray-700 dark:text-gray-300">Max {challenge.maxTotalDrawdown}% Drawdown</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                      <span className="text-gray-700 dark:text-gray-300">{challenge.profitSplit}% Profit Split</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                      <span className="text-gray-700 dark:text-gray-300">Leverage {challenge.leverage}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                      <span className="text-gray-700 dark:text-gray-300">{challenge.phases} Phase Evaluation</span>
-                    </div>
-                  </div>
-
-                  <Button
-                    className={`w-full ${isPopular ? "bg-brand-600 text-white" : ""}`}
-                    variant={isPopular ? "default" : "outline"}
-                    onClick={() => purchaseMutation.mutate(challenge.id)}
-                    disabled={purchaseMutation.isPending}
-                    data-testid={`button-purchase-${challenge.id}`}
-                  >
-                    <Zap className="w-4 h-4 mr-2" />
-                    Start Challenge
-                  </Button>
-                </Card>
-              );
-            })}
-          </div>
-        )}
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white" data-testid={`text-funded-${rule.label.toLowerCase().replace(/\s+/g, "-")}`}>
+                    {rule.value}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
       </div>
 
       <div>
@@ -271,9 +396,9 @@ export default function PropChallengesPage() {
             {[1, 2].map((i) => (
               <Card key={i} className="p-6">
                 <div className="animate-pulse space-y-3">
-                  <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-1/3" />
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
-                  <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded" />
+                  <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded-md w-1/3" />
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded-md w-1/2" />
+                  <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-md" />
                 </div>
               </Card>
             ))}
@@ -349,105 +474,6 @@ export default function PropChallengesPage() {
             })}
           </div>
         )}
-      </div>
-
-      <div>
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4" data-testid="text-rules-objectives">
-          Rules & Objectives
-        </h2>
-        <Card className="overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm" data-testid="table-rules">
-              <thead>
-                <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
-                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Rule</th>
-                  <th className="text-center py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Phase 1</th>
-                  <th className="text-center py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Phase 2</th>
-                  <th className="text-center py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Funded</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rulesData.map((rule, index) => (
-                  <tr
-                    key={rule.metric}
-                    className={`border-b border-gray-100 dark:border-gray-800 last:border-0 ${
-                      index % 2 === 0 ? "" : "bg-gray-50/50 dark:bg-gray-800/20"
-                    }`}
-                    data-testid={`row-rule-${index}`}
-                  >
-                    <td className="py-3 px-4 font-medium text-gray-900 dark:text-white">
-                      <div className="flex items-center gap-2">
-                        <rule.icon className="w-4 h-4 text-gray-400" />
-                        {rule.metric}
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 text-center text-gray-700 dark:text-gray-300">{rule.phase1}</td>
-                    <td className="py-3 px-4 text-center text-gray-700 dark:text-gray-300">{rule.phase2}</td>
-                    <td className="py-3 px-4 text-center text-gray-700 dark:text-gray-300">{rule.funded}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-      </div>
-
-      <div>
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4" data-testid="text-addons">
-          Add-ons
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {addOnsData.map((addon) => {
-            const isSelected = selectedAddOns.has(addon.id);
-            return (
-              <Card
-                key={addon.id}
-                className={`p-4 cursor-pointer transition-colors toggle-elevate ${isSelected ? "toggle-elevated border-brand-500" : ""}`}
-                onClick={() => toggleAddOn(addon.id)}
-                data-testid={`card-addon-${addon.id}`}
-              >
-                <div className="flex items-start gap-3">
-                  <div className={`p-2 rounded-md flex-shrink-0 ${isSelected ? "bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400" : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"}`}>
-                    <addon.icon className="w-5 h-5" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <h4 className="text-sm font-semibold text-gray-900 dark:text-white">{addon.label}</h4>
-                      <span className="text-xs font-medium text-brand-600 dark:text-brand-400">{addon.price}</span>
-                    </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{addon.description}</p>
-                  </div>
-                </div>
-              </Card>
-            );
-          })}
-        </div>
-      </div>
-
-      <div>
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4" data-testid="text-retry-extend">
-          Retry / Extend Time
-        </h2>
-        <Card className="p-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 flex-wrap">
-            <div>
-              <h3 className="font-semibold text-gray-900 dark:text-white">Need another chance?</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                Retry a failed challenge at a discounted rate or extend the trading period of an active challenge.
-              </p>
-            </div>
-            <div className="flex gap-3 flex-wrap">
-              <Button variant="outline" data-testid="button-retry-challenge">
-                <RotateCcw className="w-4 h-4 mr-2" />
-                Retry Challenge
-              </Button>
-              <Button variant="outline" data-testid="button-extend-time">
-                <TimerReset className="w-4 h-4 mr-2" />
-                Extend Time
-              </Button>
-            </div>
-          </div>
-        </Card>
       </div>
     </div>
   );
