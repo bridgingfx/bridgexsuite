@@ -130,10 +130,10 @@ export default function ForexDashboard() {
       href: "/forex/accounts",
     },
     {
-      label: "Used Margin",
-      value: `$${(1240).toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
+      label: "Trading Credits",
+      value: `$${(500).toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
       trend: null,
-      subtext: "Level: 1,240%",
+      subtext: "Available bonus credits",
       isPositive: true,
       icon: <Activity className="w-5 h-5" />,
       iconBg: "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400",
