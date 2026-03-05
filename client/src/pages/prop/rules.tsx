@@ -109,11 +109,11 @@ const policies = [
 ];
 
 const breachLogs = [
-  { date: "2025-01-15", rule: "Max Daily Loss", details: "Daily loss exceeded 5% limit (-5.3%)", severity: "Critical" },
-  { date: "2025-01-10", rule: "News Trading", details: "Position opened within 2-min NFP window", severity: "Warning" },
-  { date: "2024-12-28", rule: "Consistency Rule", details: "Single day profit exceeded 40% of total", severity: "Warning" },
-  { date: "2024-12-20", rule: "Tick Scalping", details: "3 trades held for less than 5 seconds", severity: "Minor" },
-  { date: "2024-12-15", rule: "Max Overall Drawdown", details: "Account drawdown reached 9.8% (approaching limit)", severity: "Warning" },
+  { date: "2025-01-15", rule: "Max Daily Loss", details: "Daily loss exceeded 5% limit (-5.3%)", severity: "Critical", tradingAccount: "PROP-50821", tradingPlatform: "MT5" },
+  { date: "2025-01-10", rule: "News Trading", details: "Position opened within 2-min NFP window", severity: "Warning", tradingAccount: "PROP-100322", tradingPlatform: "MT5" },
+  { date: "2024-12-28", rule: "Consistency Rule", details: "Single day profit exceeded 40% of total", severity: "Warning", tradingAccount: "PROP-50821", tradingPlatform: "MT5" },
+  { date: "2024-12-20", rule: "Tick Scalping", details: "3 trades held for less than 5 seconds", severity: "Minor", tradingAccount: "PROP-50199", tradingPlatform: "cTrader" },
+  { date: "2024-12-15", rule: "Max Overall Drawdown", details: "Account drawdown reached 9.8% (approaching limit)", severity: "Warning", tradingAccount: "PROP-100322", tradingPlatform: "MT5" },
 ];
 
 const termsContent = [
@@ -268,6 +268,8 @@ export default function PropRulesPage() {
                   <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Date</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Rule Violated</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Details</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Trading Account</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Trading Platform</th>
                   <th className="text-center py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Severity</th>
                 </tr>
               </thead>
@@ -286,6 +288,8 @@ export default function PropRulesPage() {
                     </td>
                     <td className="py-3 px-4 font-medium text-gray-900 dark:text-white">{log.rule}</td>
                     <td className="py-3 px-4 text-gray-600 dark:text-gray-400">{log.details}</td>
+                    <td className="py-3 px-4 font-mono text-gray-900 dark:text-white" data-testid={`text-breach-account-${index}`}>{log.tradingAccount}</td>
+                    <td className="py-3 px-4 text-gray-600 dark:text-gray-400" data-testid={`text-breach-platform-${index}`}>{log.tradingPlatform}</td>
                     <td className="py-3 px-4 text-center">
                       <SeverityBadge severity={log.severity} />
                     </td>

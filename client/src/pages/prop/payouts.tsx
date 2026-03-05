@@ -41,13 +41,27 @@ import {
 const conversionRates: Record<string, number> = { USD: 1, EUR: 0.85, GBP: 0.79 };
 const currencySymbols: Record<string, string> = { USD: "$", EUR: "\u20AC", GBP: "\u00A3" };
 
-const demoPayoutHistory = [
-  { id: "PAY-1001", date: "2024-01-15", amount: 2500, currency: "USD", method: "Wallet", status: "approved" as const, tradingAccount: "PROP-50821", tradingPlatform: "MT5", approvedDate: "2024-01-16" },
-  { id: "PAY-1002", date: "2024-02-01", amount: 1800, currency: "USD", method: "Wallet", status: "approved" as const, tradingAccount: "PROP-100322", tradingPlatform: "MT5", approvedDate: "2024-02-02" },
-  { id: "PAY-1003", date: "2024-02-15", amount: 3200, currency: "USD", method: "Wallet", status: "pending" as const, tradingAccount: "PROP-50821", tradingPlatform: "MT5", approvedDate: null },
-  { id: "PAY-1004", date: "2024-03-01", amount: 1500, currency: "USD", method: "Wallet", status: "approved" as const, tradingAccount: "PROP-50199", tradingPlatform: "cTrader", approvedDate: "2024-03-02" },
-  { id: "PAY-1005", date: "2024-03-15", amount: 900, currency: "USD", method: "Wallet", status: "rejected" as const, tradingAccount: "PROP-100322", tradingPlatform: "MT5", approvedDate: "2024-03-16" },
-  { id: "PAY-1006", date: "2024-04-01", amount: 4100, currency: "USD", method: "Wallet", status: "approved" as const, tradingAccount: "PROP-50199", tradingPlatform: "cTrader", approvedDate: "2024-04-02" },
+type PayoutStatus = "approved" | "pending" | "rejected" | "cancelled";
+
+interface PayoutRecord {
+  id: string;
+  date: string;
+  amount: number;
+  currency: string;
+  method: string;
+  status: PayoutStatus;
+  tradingAccount: string;
+  tradingPlatform: string;
+  approvedDate: string | null;
+}
+
+const initialPayoutHistory: PayoutRecord[] = [
+  { id: "PAY-1001", date: "2024-01-15", amount: 2500, currency: "USD", method: "Wallet", status: "approved", tradingAccount: "PROP-50821", tradingPlatform: "MT5", approvedDate: "2024-01-16" },
+  { id: "PAY-1002", date: "2024-02-01", amount: 1800, currency: "USD", method: "Wallet", status: "approved", tradingAccount: "PROP-100322", tradingPlatform: "MT5", approvedDate: "2024-02-02" },
+  { id: "PAY-1003", date: "2024-02-15", amount: 3200, currency: "USD", method: "Wallet", status: "pending", tradingAccount: "PROP-50821", tradingPlatform: "MT5", approvedDate: null },
+  { id: "PAY-1004", date: "2024-03-01", amount: 1500, currency: "USD", method: "Wallet", status: "approved", tradingAccount: "PROP-50199", tradingPlatform: "cTrader", approvedDate: "2024-03-02" },
+  { id: "PAY-1005", date: "2024-03-15", amount: 900, currency: "USD", method: "Wallet", status: "rejected", tradingAccount: "PROP-100322", tradingPlatform: "MT5", approvedDate: "2024-03-16" },
+  { id: "PAY-1006", date: "2024-04-01", amount: 4100, currency: "USD", method: "Wallet", status: "approved", tradingAccount: "PROP-50199", tradingPlatform: "cTrader", approvedDate: "2024-04-02" },
 ];
 
 const demoInvoices = [
@@ -63,8 +77,9 @@ export default function PropPayouts() {
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [withdrawCurrency, setWithdrawCurrency] = useState("USD");
+  const [payoutHistory, setPayoutHistory] = useState<PayoutRecord[]>(initialPayoutHistory);
   const [historyPage, setHistoryPage] = useState(1);
-  const [viewPayout, setViewPayout] = useState<typeof demoPayoutHistory[0] | null>(null);
+  const [viewPayout, setViewPayout] = useState<PayoutRecord | null>(null);
   const perPage = 5;
 
   const { data: allAccounts, isLoading: accountsLoading } = useQuery<PropAccount[]>({
@@ -80,7 +95,7 @@ export default function PropPayouts() {
     ? Number(selectedAccount.currentBalance)
     : 0;
 
-  const totalEarned = demoPayoutHistory
+  const totalEarned = payoutHistory
     .filter((p) => p.status === "approved")
     .reduce((sum, p) => sum + p.amount, 0);
 
@@ -109,13 +124,13 @@ export default function PropPayouts() {
     setWithdrawCurrency("USD");
   }
 
-  const totalPages = Math.ceil(demoPayoutHistory.length / perPage);
-  const paginatedHistory = demoPayoutHistory.slice(
+  const totalPages = Math.ceil(payoutHistory.length / perPage);
+  const paginatedHistory = payoutHistory.slice(
     (historyPage - 1) * perPage,
     historyPage * perPage
   );
 
-  const statusConfig = {
+  const statusConfig: Record<PayoutStatus, { color: string; icon: typeof CheckCircle2 }> = {
     approved: {
       color:
         "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
@@ -130,6 +145,11 @@ export default function PropPayouts() {
       color:
         "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
       icon: XCircle,
+    },
+    cancelled: {
+      color:
+        "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400",
+      icon: Ban,
     },
   };
 
@@ -427,6 +447,13 @@ export default function PropPayouts() {
                             size="icon"
                             className="text-red-500 dark:text-red-400"
                             onClick={() => {
+                              setPayoutHistory((prev) =>
+                                prev.map((p) =>
+                                  p.id === payout.id
+                                    ? { ...p, status: "cancelled" as PayoutStatus, approvedDate: new Date().toISOString().split("T")[0] }
+                                    : p
+                                )
+                              );
                               toast({
                                 title: "Withdrawal Cancelled",
                                 description: `Payout ${payout.id} has been cancelled.`,
