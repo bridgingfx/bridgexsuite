@@ -10,7 +10,6 @@ import {
   Shield,
   AlertTriangle,
   Calendar,
-  Send,
   ClipboardList,
   TrendingUp,
   Award,
@@ -20,6 +19,9 @@ import {
   BarChart3,
   Scale,
   Info,
+  Trophy,
+  Medal,
+  Crown,
 } from "lucide-react";
 
 type ChallengeType = "1-step" | "2-step";
@@ -91,18 +93,41 @@ export default function PropChallengesPage() {
 
   return (
     <div className="space-y-8 max-w-[1200px] mx-auto">
-      <div className="relative overflow-visible rounded-md bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 p-6 sm:p-8">
-        <div className="relative z-10 flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white" data-testid="text-welcome-banner">
-              Welcome, {userName}
-            </h1>
-            <p className="text-blue-100 mt-2 max-w-lg text-sm sm:text-base">
-              Take the first step toward becoming a funded trader. Choose your challenge, prove your skills, and trade with our capital.
-            </p>
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-700 via-blue-600 to-cyan-500 p-6 sm:p-8" data-testid="leaderboard-banner">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4" />
+        <div className="absolute bottom-0 left-1/2 w-48 h-48 bg-white/5 rounded-full translate-y-1/2" />
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-4">
+            <Trophy className="w-6 h-6 text-yellow-300" />
+            <h2 className="text-xl font-bold text-white" data-testid="text-leaderboard-title">Top Traders Leaderboard</h2>
           </div>
-          <div className="hidden sm:block">
-            <Send className="w-16 h-16 text-white/30" />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {[
+              { rank: 1, name: "Alex M.", profit: "+12.4%", prize: "$5,200", icon: Crown, color: "text-yellow-300", bg: "bg-yellow-400/20" },
+              { rank: 2, name: "Sarah K.", profit: "+10.8%", prize: "$3,800", icon: Medal, color: "text-gray-200", bg: "bg-white/10" },
+              { rank: 3, name: "David R.", profit: "+9.2%", prize: "$2,100", icon: Medal, color: "text-amber-400", bg: "bg-amber-400/15" },
+            ].map((trader) => (
+              <div
+                key={trader.rank}
+                className={`flex items-center gap-3 ${trader.bg} rounded-lg p-3`}
+                data-testid={`leaderboard-rank-${trader.rank}`}
+              >
+                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                  <trader.icon className={`w-5 h-5 ${trader.color}`} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-semibold text-white">#{trader.rank} {trader.name}</span>
+                    <span className="text-xs font-bold text-emerald-300">{trader.profit}</span>
+                  </div>
+                  <p className="text-xs text-blue-200 mt-0.5">Prize: {trader.prize}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
+            <p className="text-xs text-blue-200">Updated daily. Trade consistently to climb the ranks!</p>
+            <span className="text-xs text-white/60 font-medium">Season 4 - March 2026</span>
           </div>
         </div>
       </div>
