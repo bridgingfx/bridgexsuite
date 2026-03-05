@@ -385,8 +385,15 @@ export default function PropDashboard() {
         </Card>
       </div>
 
-      <Card className="p-6" data-testid="account-tabs-section">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">My Accounts</h2>
+      <Card className="p-6" data-testid="my-challenges-section">
+        <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">My Challenges</h2>
+          <Link href="/prop/accounts">
+            <span className="text-sm font-medium text-brand-600 dark:text-brand-400 cursor-pointer" data-testid="link-view-all-challenges">
+              View All <ArrowRight className="w-3 h-3 inline ml-1" />
+            </span>
+          </Link>
+        </div>
         <div className="flex items-center gap-2 mb-4 flex-wrap">
           {tabs.map((tab) => (
             <Button
@@ -403,53 +410,89 @@ export default function PropDashboard() {
 
         {filteredAccounts.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-sm text-gray-500 dark:text-gray-400" data-testid="text-no-accounts">
-              No {activeTab} accounts found.
+            <p className="text-sm text-gray-500 dark:text-gray-400" data-testid="text-no-challenges">
+              No {activeTab} challenges found.
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredAccounts.map((acc) => (
-              <div
-                key={acc.id}
-                className={`p-4 rounded-md border cursor-pointer transition-colors ${
-                  acc.id === selectedAccountId
-                    ? "border-brand-500 bg-brand-50/50 dark:bg-brand-900/10 dark:border-brand-400"
-                    : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50"
-                }`}
-                onClick={() => setSelectedAccountId(acc.id)}
-                data-testid={`account-card-${acc.id}`}
-              >
-                <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
-                  <span className="text-sm font-semibold text-gray-900 dark:text-white" data-testid={`text-account-number-${acc.id}`}>
-                    {acc.accountNumber}
-                  </span>
-                  <Badge
-                    variant="outline"
-                    className={`text-xs ${
-                      acc.status === "funded" ? "border-emerald-300 text-emerald-700 dark:text-emerald-400" :
-                      acc.status === "failed" ? "border-red-300 text-red-700 dark:text-red-400" :
-                      acc.status === "passed" ? "border-blue-300 text-blue-700 dark:text-blue-400" :
-                      "border-gray-300 text-gray-700 dark:text-gray-400"
-                    }`}
-                    data-testid={`badge-account-status-${acc.id}`}
-                  >
-                    {acc.status === "failed" ? "Breached" : acc.status.charAt(0).toUpperCase() + acc.status.slice(1)}
-                  </Badge>
-                </div>
-                <p className="text-lg font-bold text-gray-900 dark:text-white" data-testid={`text-account-balance-${acc.id}`}>
-                  ${Number(acc.currentBalance).toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                </p>
-                <div className="flex items-center gap-2 mt-1 flex-wrap">
-                  <span className={`text-xs font-medium ${Number(acc.currentProfit) >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}>
-                    {Number(acc.currentProfit) >= 0 ? "+" : ""}${Number(acc.currentProfit).toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                  </span>
-                  <span className="text-xs text-gray-400 dark:text-gray-500">
-                    Phase {acc.currentPhase} | {acc.tradingDays} days
-                  </span>
-                </div>
-              </div>
-            ))}
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm" data-testid="table-my-challenges">
+              <thead>
+                <tr className="border-b border-gray-200 dark:border-gray-700">
+                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Account</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Status</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Phase</th>
+                  <th className="text-right py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Balance</th>
+                  <th className="text-right py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Profit</th>
+                  <th className="text-right py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Days</th>
+                  <th className="text-center py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Progress</th>
+                  <th className="text-right py-3 px-4 font-medium text-gray-500 dark:text-gray-400"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredAccounts.map((acc) => {
+                  const accBalance = Number(acc.currentBalance);
+                  const accProfit = Number(acc.currentProfit);
+                  const accProfitPct = accBalance > 0 ? (accProfit / accBalance) * 100 : 0;
+                  const accTarget = accBalance * 0.08;
+                  const accProgress = accTarget > 0 ? Math.min((accProfit / accTarget) * 100, 100) : 0;
+                  return (
+                    <tr
+                      key={acc.id}
+                      className={`border-b border-gray-100 dark:border-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${
+                        acc.id === selectedAccountId ? "bg-brand-50/50 dark:bg-brand-900/10" : ""
+                      }`}
+                      onClick={() => setSelectedAccountId(acc.id)}
+                      data-testid={`row-challenge-${acc.id}`}
+                    >
+                      <td className="py-3 px-4">
+                        <span className="font-semibold text-gray-900 dark:text-white" data-testid={`text-account-number-${acc.id}`}>
+                          {acc.accountNumber}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <Badge
+                          variant="outline"
+                          className={`text-xs ${
+                            acc.status === "funded" ? "border-emerald-300 text-emerald-700 dark:text-emerald-400" :
+                            acc.status === "failed" ? "border-red-300 text-red-700 dark:text-red-400" :
+                            acc.status === "passed" ? "border-blue-300 text-blue-700 dark:text-blue-400" :
+                            "border-gray-300 text-gray-700 dark:text-gray-400"
+                          }`}
+                          data-testid={`badge-status-${acc.id}`}
+                        >
+                          {acc.status === "failed" ? "Breached" : acc.status.charAt(0).toUpperCase() + acc.status.slice(1)}
+                        </Badge>
+                      </td>
+                      <td className="py-3 px-4 text-gray-700 dark:text-gray-300">Phase {acc.currentPhase}</td>
+                      <td className="py-3 px-4 text-right font-semibold text-gray-900 dark:text-white">
+                        ${accBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <span className={`font-medium ${accProfit >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}>
+                          {accProfit >= 0 ? "+" : ""}{accProfitPct.toFixed(1)}%
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-right text-gray-700 dark:text-gray-300">{acc.tradingDays}</td>
+                      <td className="py-3 px-4">
+                        {acc.status === "active" && (
+                          <div className="w-20 mx-auto">
+                            <Progress value={Math.max(accProgress, 0)} className="h-2" />
+                          </div>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <Link href={`/prop/account/${acc.id}`}>
+                          <Button variant="ghost" size="sm" data-testid={`button-view-challenge-${acc.id}`}>
+                            View <ArrowRight className="w-3 h-3 ml-1" />
+                          </Button>
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         )}
       </Card>

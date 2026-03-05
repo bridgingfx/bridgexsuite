@@ -37,6 +37,7 @@ import PropReferral from "@/pages/prop/referral";
 import PropCertificates from "@/pages/prop/certificates";
 import PropRules from "@/pages/prop/rules";
 import PropAccountDetail from "@/pages/prop/account-detail";
+import PropPurchase from "@/pages/prop/purchase";
 import InvestmentPage from "@/pages/investment";
 import CopyTradingPage from "@/pages/copy-trading";
 import PammPage from "@/pages/pamm";
@@ -133,6 +134,7 @@ function ClientRouter() {
       <Route path="/prop/accounts" component={PropAccounts} />
       <Route path="/prop/account/:id" component={PropAccountDetail} />
       <Route path="/prop/challenges" component={PropChallenges} />
+      <Route path="/prop/purchase" component={PropPurchase} />
       <Route path="/prop/analytics" component={PropAnalytics} />
       <Route path="/prop/payouts" component={PropPayouts} />
       <Route path="/prop/bonus" component={PropBonus} />

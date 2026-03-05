@@ -1,23 +1,15 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { apiRequest, queryClient } from "@/lib/queryClient";
 import {
-  Trophy,
   Zap,
   Target,
   CheckCircle2,
   Shield,
   AlertTriangle,
   Calendar,
-  RotateCcw,
-  TimerReset,
-  ChevronRight,
   Send,
   ClipboardList,
   TrendingUp,
@@ -29,9 +21,7 @@ import {
   Scale,
   Info,
 } from "lucide-react";
-import type { PropChallenge, PropAccount } from "@shared/schema";
 
-type TabKey = "active" | "passed" | "failed";
 type ChallengeType = "1-step" | "2-step";
 
 const accountSizes = [
@@ -71,80 +61,13 @@ const challengeData: Record<ChallengeType, Record<string, {
 };
 
 export default function PropChallengesPage() {
-  const { toast } = useToast();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<TabKey>("active");
+  const [, setLocation] = useLocation();
   const [challengeType, setChallengeType] = useState<ChallengeType>("1-step");
   const [selectedSize, setSelectedSize] = useState("50000");
 
-  const { data: challenges, isLoading: challengesLoading } = useQuery<PropChallenge[]>({
-    queryKey: ["/api/prop/challenges"],
-  });
-
-  const { data: propAccounts, isLoading: accountsLoading } = useQuery<PropAccount[]>({
-    queryKey: ["/api/prop/accounts"],
-  });
-
-  const purchaseMutation = useMutation({
-    mutationFn: async (data: { challengeType: string; accountSize: string }) => {
-      return apiRequest("POST", "/api/prop/accounts", data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/prop/accounts"] });
-      toast({ title: "Challenge purchased successfully!" });
-    },
-    onError: () => {
-      toast({ title: "Purchase failed", variant: "destructive" });
-    },
-  });
-
   const currentData = challengeData[challengeType][selectedSize];
   const userName = user?.fullName?.split(" ")[0] || "Trader";
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "active":
-        return <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 no-default-hover-elevate no-default-active-elevate" data-testid="badge-status-active">Active</Badge>;
-      case "funded":
-        return <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 no-default-hover-elevate no-default-active-elevate" data-testid="badge-status-funded">Funded</Badge>;
-      case "failed":
-        return <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 no-default-hover-elevate no-default-active-elevate" data-testid="badge-status-failed">Failed</Badge>;
-      case "passed":
-        return <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 no-default-hover-elevate no-default-active-elevate" data-testid="badge-status-passed">Passed</Badge>;
-      default:
-        return <Badge className="no-default-hover-elevate no-default-active-elevate">{status}</Badge>;
-    }
-  };
-
-  const filteredAccounts = propAccounts?.filter((account) => {
-    if (activeTab === "active") return account.status === "active";
-    if (activeTab === "passed") return account.status === "funded" || account.status === "passed";
-    if (activeTab === "failed") return account.status === "failed";
-    return true;
-  }) ?? [];
-
-  const demoAccounts: Array<{ id: string; accountNumber: string; status: string; currentPhase: number; currentBalance: string; currentProfit: string; tradingDays: number; startDate: string; challengeName: string }> = propAccounts && propAccounts.length > 0
-    ? []
-    : [
-        { id: "demo-1", accountNumber: "PROP-50K-001", status: "active", currentPhase: 1, currentBalance: "51200.00", currentProfit: "1200.00", tradingDays: 8, startDate: "2025-01-15", challengeName: "50K Challenge" },
-        { id: "demo-2", accountNumber: "PROP-100K-002", status: "funded", currentPhase: 2, currentBalance: "104500.00", currentProfit: "4500.00", tradingDays: 22, startDate: "2024-12-01", challengeName: "100K Challenge" },
-        { id: "demo-3", accountNumber: "PROP-25K-003", status: "failed", currentPhase: 1, currentBalance: "22100.00", currentProfit: "-2900.00", tradingDays: 4, startDate: "2025-01-10", challengeName: "25K Challenge" },
-      ];
-
-  const displayAccounts = propAccounts && propAccounts.length > 0
-    ? filteredAccounts
-    : demoAccounts.filter((a) => {
-        if (activeTab === "active") return a.status === "active";
-        if (activeTab === "passed") return a.status === "funded" || a.status === "passed";
-        if (activeTab === "failed") return a.status === "failed";
-        return true;
-      });
-
-  const tabs: { key: TabKey; label: string }[] = [
-    { key: "active", label: "Active" },
-    { key: "passed", label: "Passed" },
-    { key: "failed", label: "Failed" },
-  ];
 
   const phaseRules = [
     { icon: Scale, label: "Leverage", value: currentData.leverage },
@@ -316,12 +239,11 @@ export default function PropChallengesPage() {
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-6">Pay once, own it forever</p>
               <Button
                 className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 text-white border-0"
-                onClick={() => purchaseMutation.mutate({ challengeType, accountSize: selectedSize })}
-                disabled={purchaseMutation.isPending}
+                onClick={() => setLocation(`/prop/purchase?type=${challengeType}&size=${selectedSize}&price=${currentData.price}`)}
                 data-testid="button-buy-now"
               >
                 <DollarSign className="w-4 h-4 mr-2" />
-                {purchaseMutation.isPending ? "Processing..." : "Buy Now"}
+                Buy Now
               </Button>
               <div className="flex items-center justify-center gap-2 mt-4 text-xs text-gray-500 dark:text-gray-400">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
@@ -374,107 +296,6 @@ export default function PropChallengesPage() {
         </div>
       </div>
 
-      <div>
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4" data-testid="text-my-challenges">
-          My Challenges
-        </h2>
-        <div className="flex gap-2 mb-4 flex-wrap">
-          {tabs.map((tab) => (
-            <Button
-              key={tab.key}
-              variant={activeTab === tab.key ? "default" : "outline"}
-              onClick={() => setActiveTab(tab.key)}
-              data-testid={`button-tab-${tab.key}`}
-            >
-              {tab.label}
-            </Button>
-          ))}
-        </div>
-
-        {accountsLoading ? (
-          <div className="space-y-4">
-            {[1, 2].map((i) => (
-              <Card key={i} className="p-6">
-                <div className="animate-pulse space-y-3">
-                  <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded-md w-1/3" />
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded-md w-1/2" />
-                  <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-md" />
-                </div>
-              </Card>
-            ))}
-          </div>
-        ) : displayAccounts.length === 0 ? (
-          <Card className="p-8 text-center">
-            <Trophy className="w-10 h-10 mx-auto text-gray-400 dark:text-gray-500 mb-3" />
-            <p className="text-gray-500 dark:text-gray-400" data-testid="text-no-challenges">
-              No {activeTab} challenges found.
-            </p>
-          </Card>
-        ) : (
-          <div className="space-y-4">
-            {displayAccounts.map((account: any) => {
-              const balance = Number(account.currentBalance);
-              const profit = Number(account.currentProfit);
-              const profitPct = balance > 0 ? ((profit / balance) * 100) : 0;
-              return (
-                <Card key={account.id} className="p-5" data-testid={`card-my-challenge-${account.id}`}>
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 flex-wrap">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <h3 className="font-semibold text-gray-900 dark:text-white" data-testid={`text-account-number-${account.id}`}>
-                          {account.accountNumber || account.challengeName}
-                        </h3>
-                        {getStatusBadge(account.status)}
-                      </div>
-                      <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400 flex-wrap">
-                        <span>Phase {account.currentPhase}</span>
-                        <span>Balance: ${balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
-                        <span className={profit >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}>
-                          {profit >= 0 ? "+" : ""}{profitPct.toFixed(1)}%
-                        </span>
-                        <span>{account.tradingDays} days traded</span>
-                      </div>
-                      {account.status === "active" && (
-                        <div className="mt-3 max-w-md">
-                          <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
-                            <span>Profit Target Progress</span>
-                            <span>{Math.min(Math.max(profitPct / 8 * 100, 0), 100).toFixed(0)}%</span>
-                          </div>
-                          <Progress
-                            value={Math.min(Math.max(profitPct / 8 * 100, 0), 100)}
-                            className="h-2"
-                            data-testid={`progress-challenge-${account.id}`}
-                          />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex gap-2 flex-wrap">
-                      {account.status === "failed" && (
-                        <>
-                          <Button variant="outline" data-testid={`button-retry-${account.id}`}>
-                            <RotateCcw className="w-4 h-4 mr-2" />
-                            Retry
-                          </Button>
-                          <Button variant="outline" data-testid={`button-extend-${account.id}`}>
-                            <TimerReset className="w-4 h-4 mr-2" />
-                            Extend Time
-                          </Button>
-                        </>
-                      )}
-                      {account.status === "active" && (
-                        <Button variant="outline" data-testid={`button-view-details-${account.id}`}>
-                          Details
-                          <ChevronRight className="w-4 h-4 ml-1" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </Card>
-              );
-            })}
-          </div>
-        )}
-      </div>
     </div>
   );
 }

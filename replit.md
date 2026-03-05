@@ -26,11 +26,12 @@ I want the agent to focus on high-level features only and avoid granular impleme
 - Profit Growth and Volume Traded charts
 - Transaction History table (latest 5 wallet↔trading transfers) with "View All" linking to `/forex/finance`
 
-### Prop Trading Module (10 sub-pages)
+### Prop Trading Module (11 sub-pages)
 - **Dashboard** (`/prop/dashboard`) - KPIs, challenge status, next steps, announcements
 - **Accounts** (`/prop/accounts`) - Prop accounts list with credentials, platform info, reset/retry
 - **Account Detail** (`/prop/account/:id`) - Full account detail page combining dashboard KPIs, countdown timer, challenge status/progress, next steps, account info (platform/credentials), announcements
-- **Challenges** (`/prop/challenges`) - Challenge pricing, my challenges, rules, add-ons
+- **Challenges** (`/prop/challenges`) - Challenge pricing, type selection, phase details; "Buy Now" navigates to purchase page
+- **Purchase** (`/prop/purchase`) - Purchase account page with phase summary, add-ons (profit split, drawdown limits, min trading days), coupon code, payment method, summary
 - **Analytics** (`/prop/analytics`) - Performance, trade history, risk metrics, Recharts charts
 - **Payouts** (`/prop/payouts`) - Payout dashboard, withdraw-to-wallet (same pattern as forex), history
 - **Bonus & Promos** (`/prop/bonus`) - Promo codes, promotions, applied bonuses
