@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import {
   Briefcase,
@@ -22,8 +23,15 @@ import {
   TrendingUp,
   Layers,
   Shield,
+  X,
+  Target,
+  CalendarDays,
+  Activity,
+  ChevronRight,
+  CheckCircle2,
+  Clock,
+  BarChart3,
 } from "lucide-react";
-import { Link } from "wouter";
 import type { PropAccount } from "@shared/schema";
 import { cn } from "@/lib/utils";
 
@@ -132,9 +140,209 @@ function getAccountSize(challengeId: string) {
   return "$50,000";
 }
 
+function AccountDetailPanel({ account, onClose }: { account: AccountWithExtras; onClose: () => void }) {
+  const balance = Number(account.currentBalance);
+  const profit = Number(account.currentProfit);
+  const startingBalance = balance - profit;
+  const profitPercent = startingBalance > 0 ? (profit / startingBalance) * 100 : 0;
+  const drawdown = startingBalance > 0 ? Math.max(0, (startingBalance - balance) / startingBalance) * 100 : 0;
+  const equity = balance;
+
+  const profitTarget = account.status === "funded" ? 0 : startingBalance * 0.08;
+  const profitTargetPercent = profitTarget > 0 ? Math.min(100, (profit / profitTarget) * 100) : 100;
+
+  const maxDailyLoss = startingBalance * 0.05;
+  const maxTotalLoss = startingBalance * 0.10;
+
+  const nextSteps = account.status === "funded"
+    ? [
+        { label: "Continue trading within risk parameters", done: true },
+        { label: "Request payout when ready", done: false },
+        { label: "Maintain consistent profitability", done: false },
+      ]
+    : account.currentPhase === 1
+    ? [
+        { label: "Reach 8% profit target", done: profitPercent >= 8 },
+        { label: "Trade minimum 5 days", done: account.tradingDays >= 5 },
+        { label: "Stay within daily loss limit", done: true },
+        { label: "Advance to Phase 2", done: false },
+      ]
+    : [
+        { label: "Reach 5% profit target", done: profitPercent >= 5 },
+        { label: "Trade minimum 5 days", done: account.tradingDays >= 5 },
+        { label: "Stay within daily loss limit", done: true },
+        { label: "Get funded", done: false },
+      ];
+
+  return (
+    <div className="col-span-1 lg:col-span-2" data-testid={`detail-panel-${account.id}`}>
+      <Card className="bg-[#0f172a] border-gray-700 p-0">
+        <div className="p-5">
+          <div className="flex items-center justify-between gap-2 mb-5 flex-wrap">
+            <div className="flex items-center gap-3">
+              <BarChart3 className="w-5 h-5 text-blue-400" />
+              <h3 className="text-lg font-bold text-white">
+                Account Details - {account.accountNumber}
+              </h3>
+              <Badge className={cn("text-xs font-bold", getStatusColor(account.status))}>
+                {account.status.toUpperCase()}
+              </Badge>
+            </div>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="text-gray-400"
+              onClick={onClose}
+              data-testid={`button-close-detail-${account.id}`}
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+            <div className="bg-gray-800/50 rounded-lg p-4" data-testid={`detail-balance-${account.id}`}>
+              <div className="flex items-center gap-2 mb-2">
+                <DollarSign className="w-4 h-4 text-blue-400" />
+                <p className="text-gray-400 text-xs font-medium uppercase tracking-wider">Balance</p>
+              </div>
+              <p className="text-white text-xl font-bold">
+                ${balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+              </p>
+            </div>
+            <div className="bg-gray-800/50 rounded-lg p-4" data-testid={`detail-equity-${account.id}`}>
+              <div className="flex items-center gap-2 mb-2">
+                <Activity className="w-4 h-4 text-cyan-400" />
+                <p className="text-gray-400 text-xs font-medium uppercase tracking-wider">Equity</p>
+              </div>
+              <p className="text-white text-xl font-bold">
+                ${equity.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+              </p>
+            </div>
+            <div className="bg-gray-800/50 rounded-lg p-4" data-testid={`detail-profit-${account.id}`}>
+              <div className="flex items-center gap-2 mb-2">
+                <TrendingUp className="w-4 h-4 text-emerald-400" />
+                <p className="text-gray-400 text-xs font-medium uppercase tracking-wider">Profit</p>
+              </div>
+              <p className={cn("text-xl font-bold", profit >= 0 ? "text-emerald-400" : "text-red-400")}>
+                {profit >= 0 ? "+" : ""}${profit.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+              </p>
+            </div>
+            <div className="bg-gray-800/50 rounded-lg p-4" data-testid={`detail-drawdown-${account.id}`}>
+              <div className="flex items-center gap-2 mb-2">
+                <Shield className="w-4 h-4 text-amber-400" />
+                <p className="text-gray-400 text-xs font-medium uppercase tracking-wider">Drawdown</p>
+              </div>
+              <p className="text-white text-xl font-bold">
+                {drawdown.toFixed(2)}%
+              </p>
+            </div>
+            <div className="bg-gray-800/50 rounded-lg p-4" data-testid={`detail-days-${account.id}`}>
+              <div className="flex items-center gap-2 mb-2">
+                <CalendarDays className="w-4 h-4 text-purple-400" />
+                <p className="text-gray-400 text-xs font-medium uppercase tracking-wider">Days Traded</p>
+              </div>
+              <p className="text-white text-xl font-bold">
+                {account.tradingDays}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div>
+              <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
+                <Target className="w-4 h-4 text-blue-400" />
+                Challenge Status
+              </h4>
+              <div className="bg-gray-800/50 rounded-lg p-4 space-y-4">
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <span className="text-gray-400 text-sm">Phase</span>
+                    <span className="text-white text-sm font-bold">{getPhaseLabel(account)}</span>
+                  </div>
+                </div>
+
+                {account.status !== "funded" && (
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <span className="text-gray-400 text-sm">Profit Target</span>
+                      <span className="text-white text-sm font-bold">
+                        ${profit.toLocaleString("en-US", { minimumFractionDigits: 2 })} / ${profitTarget.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-700 rounded-full h-2.5">
+                      <div
+                        className={cn(
+                          "h-2.5 rounded-full transition-all",
+                          profitTargetPercent >= 100 ? "bg-emerald-500" : "bg-blue-500"
+                        )}
+                        style={{ width: `${Math.min(100, profitTargetPercent)}%` }}
+                        data-testid={`progress-profit-target-${account.id}`}
+                      />
+                    </div>
+                    <p className="text-gray-500 text-xs mt-1">{profitTargetPercent.toFixed(1)}% complete</p>
+                  </div>
+                )}
+
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <span className="text-gray-400 text-sm">Max Daily Loss</span>
+                    <span className="text-white text-sm font-bold">
+                      ${maxDailyLoss.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <span className="text-gray-400 text-sm">Max Total Loss</span>
+                    <span className="text-white text-sm font-bold">
+                      ${maxTotalLoss.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <span className="text-gray-400 text-sm">Start Date</span>
+                    <span className="text-white text-sm font-bold">
+                      {new Date(account.startDate ?? account.createdAt ?? new Date()).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
+                <ChevronRight className="w-4 h-4 text-emerald-400" />
+                Next Steps
+              </h4>
+              <div className="bg-gray-800/50 rounded-lg p-4 space-y-3">
+                {nextSteps.map((step, idx) => (
+                  <div key={idx} className="flex items-start gap-3" data-testid={`next-step-${account.id}-${idx}`}>
+                    {step.done ? (
+                      <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+                    ) : (
+                      <Clock className="w-5 h-5 text-gray-500 shrink-0 mt-0.5" />
+                    )}
+                    <span className={cn("text-sm", step.done ? "text-gray-300" : "text-gray-400")}>
+                      {step.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
 export default function PropAccounts() {
   const [search, setSearch] = useState("");
   const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
+  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const { data: propAccounts, isLoading } = useQuery<PropAccount[]>({
@@ -282,8 +490,8 @@ export default function PropAccounts() {
             const profitPercent = balance > 0 ? (profit / balance) * 100 : 0;
 
             return (
+              <Fragment key={account.id}>
               <div
-                key={account.id}
                 className="bg-[#0f172a] rounded-xl shadow-sm overflow-visible"
                 data-testid={`card-prop-account-${account.id}`}
               >
@@ -402,17 +610,16 @@ export default function PropAccounts() {
 
                 <div className="border-t border-gray-700 px-4 py-3">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <Link href={`/prop/account/${account.id}`}>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="border-blue-600 text-blue-300"
-                        data-testid={`button-view-${account.id}`}
-                      >
-                        <Eye className="w-3.5 h-3.5 mr-1" />
-                        View
-                      </Button>
-                    </Link>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-blue-600 text-blue-300"
+                      onClick={() => setSelectedAccountId(selectedAccountId === account.id ? null : account.id)}
+                      data-testid={`button-view-${account.id}`}
+                    >
+                      <Eye className="w-3.5 h-3.5 mr-1" />
+                      {selectedAccountId === account.id ? "Hide" : "View"}
+                    </Button>
                     {account.status !== "funded" && (
                       <>
                         <Button
@@ -472,6 +679,13 @@ export default function PropAccounts() {
                   </div>
                 </div>
               </div>
+              {selectedAccountId === account.id && (
+                <AccountDetailPanel
+                  account={account as AccountWithExtras}
+                  onClose={() => setSelectedAccountId(null)}
+                />
+              )}
+            </Fragment>
             );
           })}
         </div>

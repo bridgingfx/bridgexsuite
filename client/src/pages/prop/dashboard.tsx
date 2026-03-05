@@ -27,12 +27,12 @@ import {
   Clock,
   Megaphone,
   RefreshCw,
-  ChevronDown,
 } from "lucide-react";
 import { Link } from "wouter";
 import type { PropAccount, PropChallenge } from "@shared/schema";
 
 type TabFilter = "active" | "passed" | "breached" | "funded";
+type TimerTab = "highest_profit" | "breached_loss";
 
 const demoAnnouncements = [
   { title: "New 200K Challenge Available", description: "We've launched a new $200,000 account size challenge with competitive pricing.", date: "2024-01-15", type: "new" as const },
@@ -79,6 +79,7 @@ export default function PropDashboard() {
 
   const [selectedAccountId, setSelectedAccountId] = useState<string>("");
   const [activeTab, setActiveTab] = useState<TabFilter>("active");
+  const [timerTab, setTimerTab] = useState<TimerTab>("highest_profit");
   const countdown = useCountdownToMidnightUTC();
 
   const filteredAccounts = useMemo(() => {
@@ -129,15 +130,29 @@ export default function PropDashboard() {
     { key: "funded", label: "Funded" },
   ];
 
+  const highestProfitAccount = useMemo(() => {
+    if (!accounts || accounts.length === 0) return null;
+    return accounts.reduce((best, acc) => {
+      const p = Number(acc.currentProfit);
+      const bestP = Number(best.currentProfit);
+      return p > bestP ? acc : best;
+    }, accounts[0]);
+  }, [accounts]);
+
+  const breachedAccount = useMemo(() => {
+    if (!accounts) return null;
+    return accounts.find((a) => a.status === "failed") ?? null;
+  }, [accounts]);
+
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto" data-testid="prop-dashboard-page">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white" data-testid="text-prop-dashboard-title">
-            Prop Trading Dashboard
+            Accounts
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Monitor your challenge progress and trading performance.
+            Unlock your trading potential with Funded FX Profirm. Start trading now!
           </p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
@@ -156,44 +171,219 @@ export default function PropDashboard() {
             </Select>
           )}
           <Link href="/prop/challenges">
-            <span className="inline-flex items-center gap-2 text-sm font-medium text-brand-600 dark:text-brand-400 cursor-pointer" data-testid="link-view-challenges">
-              View Challenges <ArrowRight className="w-4 h-4" />
-            </span>
+            <Button data-testid="link-start-challenge">
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Start Challenge
+            </Button>
           </Link>
         </div>
       </div>
 
-      <Card className="p-4 overflow-visible" data-testid="reset-timer-section">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex items-center gap-2">
-              <RefreshCw className="w-4 h-4 text-teal-500 animate-spin" style={{ animationDuration: "3s" }} />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Today's Permitted Loss Will Reset In
-              </span>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <Card className="p-0 overflow-visible" data-testid="my-challenges-section">
+            <div className="flex items-center gap-1 border-b border-gray-200 dark:border-gray-700 px-4">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`py-3 px-4 text-sm font-medium border-b-2 transition-colors ${
+                    activeTab === tab.key
+                      ? "border-brand-500 text-brand-600 dark:text-brand-400"
+                      : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                  }`}
+                  data-testid={`tab-${tab.key}`}
+                >
+                  {tab.label}
+                </button>
+              ))}
             </div>
-            <Badge className="bg-gradient-to-r from-cyan-500 to-teal-500 text-white border-0 text-base px-4 py-1 font-mono" data-testid="badge-reset-timer">
-              {countdown}
-            </Badge>
-          </div>
-          <div className="flex items-center gap-4 flex-wrap">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-emerald-500" />
-              <span className="text-xs text-gray-500 dark:text-gray-400">Highest Profit</span>
-              <span className="text-sm font-semibold text-gray-900 dark:text-white" data-testid="text-highest-profit-id">
-                {selectedAccount?.accountNumber ?? "-"}
-              </span>
+
+            <div className="p-4">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4" data-testid="text-total-accounts">
+                Total {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Accounts: {tabCounts[activeTab]}
+              </p>
+
+              {isLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="animate-pulse h-12 bg-gray-100 dark:bg-gray-800 rounded-md" />
+                  ))}
+                </div>
+              ) : filteredAccounts.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-sm text-gray-500 dark:text-gray-400" data-testid="text-no-challenges">
+                    No {activeTab} accounts found.
+                  </p>
+                  <Link href="/prop/challenges">
+                    <Button variant="outline" className="mt-3" data-testid="button-browse-challenges-empty">
+                      Browse Challenges
+                    </Button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm" data-testid="table-my-challenges">
+                    <thead>
+                      <tr className="border-b border-gray-200 dark:border-gray-700">
+                        <th className="text-left py-2 px-3 font-medium text-gray-500 dark:text-gray-400">Account</th>
+                        <th className="text-left py-2 px-3 font-medium text-gray-500 dark:text-gray-400">Status</th>
+                        <th className="text-left py-2 px-3 font-medium text-gray-500 dark:text-gray-400">Phase</th>
+                        <th className="text-right py-2 px-3 font-medium text-gray-500 dark:text-gray-400">Balance</th>
+                        <th className="text-right py-2 px-3 font-medium text-gray-500 dark:text-gray-400">Profit</th>
+                        <th className="text-right py-2 px-3 font-medium text-gray-500 dark:text-gray-400">Days</th>
+                        <th className="text-center py-2 px-3 font-medium text-gray-500 dark:text-gray-400">Progress</th>
+                        <th className="text-right py-2 px-3 font-medium text-gray-500 dark:text-gray-400"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredAccounts.map((acc) => {
+                        const accBalance = Number(acc.currentBalance);
+                        const accProfit = Number(acc.currentProfit);
+                        const accProfitPct = accBalance > 0 ? (accProfit / accBalance) * 100 : 0;
+                        const accTarget = accBalance * 0.08;
+                        const accProgress = accTarget > 0 ? Math.min((accProfit / accTarget) * 100, 100) : 0;
+                        return (
+                          <tr
+                            key={acc.id}
+                            className={`border-b border-gray-100 dark:border-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${
+                              acc.id === selectedAccountId ? "bg-brand-50/50 dark:bg-brand-900/10" : ""
+                            }`}
+                            onClick={() => setSelectedAccountId(acc.id)}
+                            data-testid={`row-challenge-${acc.id}`}
+                          >
+                            <td className="py-3 px-3">
+                              <span className="font-semibold text-gray-900 dark:text-white" data-testid={`text-account-number-${acc.id}`}>
+                                {acc.accountNumber}
+                              </span>
+                            </td>
+                            <td className="py-3 px-3">
+                              <Badge
+                                variant="outline"
+                                className={`text-xs ${
+                                  acc.status === "funded" ? "border-emerald-300 text-emerald-700 dark:text-emerald-400" :
+                                  acc.status === "failed" ? "border-red-300 text-red-700 dark:text-red-400" :
+                                  acc.status === "passed" ? "border-blue-300 text-blue-700 dark:text-blue-400" :
+                                  "border-gray-300 text-gray-700 dark:text-gray-400"
+                                }`}
+                                data-testid={`badge-status-${acc.id}`}
+                              >
+                                {acc.status === "failed" ? "Breached" : acc.status.charAt(0).toUpperCase() + acc.status.slice(1)}
+                              </Badge>
+                            </td>
+                            <td className="py-3 px-3 text-gray-700 dark:text-gray-300">Phase {acc.currentPhase}</td>
+                            <td className="py-3 px-3 text-right font-semibold text-gray-900 dark:text-white">
+                              ${accBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                            </td>
+                            <td className="py-3 px-3 text-right">
+                              <span className={`font-medium ${accProfit >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}>
+                                {accProfit >= 0 ? "+" : ""}{accProfitPct.toFixed(1)}%
+                              </span>
+                            </td>
+                            <td className="py-3 px-3 text-right text-gray-700 dark:text-gray-300">{acc.tradingDays}</td>
+                            <td className="py-3 px-3">
+                              {acc.status === "active" && (
+                                <div className="w-20 mx-auto">
+                                  <Progress value={Math.max(accProgress, 0)} className="h-2" />
+                                </div>
+                              )}
+                            </td>
+                            <td className="py-3 px-3 text-right">
+                              <Link href={`/prop/account/${acc.id}`}>
+                                <Button variant="ghost" size="sm" data-testid={`button-view-challenge-${acc.id}`}>
+                                  View <ArrowRight className="w-3 h-3 ml-1" />
+                                </Button>
+                              </Link>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-red-500" />
-              <span className="text-xs text-gray-500 dark:text-gray-400">Breached Loss</span>
-              <span className="text-sm font-semibold text-gray-900 dark:text-white" data-testid="text-breached-loss-id">
-                -
-              </span>
-            </div>
-          </div>
+          </Card>
         </div>
-      </Card>
+
+        <div className="lg:col-span-1">
+          <Card className="p-6 overflow-visible" data-testid="reset-timer-section">
+            <h3 className="text-base font-bold text-gray-900 dark:text-white mb-4">
+              Today's Permitted Loss Will Reset In
+            </h3>
+
+            <div className="flex items-center gap-4 mb-6">
+              <RefreshCw className="w-8 h-8 text-cyan-500 animate-spin" style={{ animationDuration: "3s" }} />
+              <Badge className="bg-gradient-to-r from-cyan-500 to-teal-500 text-white border-0 text-lg px-5 py-1.5 font-mono" data-testid="badge-reset-timer">
+                {countdown}
+              </Badge>
+            </div>
+
+            <div className="flex gap-0 border-b border-gray-200 dark:border-gray-700 mb-4">
+              <button
+                onClick={() => setTimerTab("highest_profit")}
+                className={`pb-2 px-3 text-sm font-medium border-b-2 transition-colors ${
+                  timerTab === "highest_profit"
+                    ? "border-brand-500 text-brand-600 dark:text-brand-400"
+                    : "border-transparent text-gray-500 dark:text-gray-400"
+                }`}
+                data-testid="tab-highest-profit"
+              >
+                Highest Profit ID
+              </button>
+              <button
+                onClick={() => setTimerTab("breached_loss")}
+                className={`pb-2 px-3 text-sm font-medium border-b-2 transition-colors ${
+                  timerTab === "breached_loss"
+                    ? "border-brand-500 text-brand-600 dark:text-brand-400"
+                    : "border-transparent text-gray-500 dark:text-gray-400"
+                }`}
+                data-testid="tab-breached-loss"
+              >
+                Breached Loss ID
+              </button>
+            </div>
+
+            <div className="min-h-[60px]">
+              {timerTab === "highest_profit" ? (
+                <div data-testid="panel-highest-profit">
+                  {highestProfitAccount ? (
+                    <div className="space-y-2">
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white" data-testid="text-highest-profit-id">
+                        {highestProfitAccount.accountNumber}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Profit: <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                          +${Number(highestProfitAccount.currentProfit).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                        </span>
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-400 dark:text-gray-500">No accounts available</p>
+                  )}
+                </div>
+              ) : (
+                <div data-testid="panel-breached-loss">
+                  {breachedAccount ? (
+                    <div className="space-y-2">
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white" data-testid="text-breached-loss-id">
+                        {breachedAccount.accountNumber}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Loss: <span className="text-red-600 dark:text-red-400 font-medium">
+                          ${Number(breachedAccount.currentProfit).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                        </span>
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-400 dark:text-gray-500">No breached accounts</p>
+                  )}
+                </div>
+              )}
+            </div>
+          </Card>
+        </div>
+      </div>
 
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -384,118 +574,6 @@ export default function PropDashboard() {
           </div>
         </Card>
       </div>
-
-      <Card className="p-6" data-testid="my-challenges-section">
-        <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white">My Challenges</h2>
-          <Link href="/prop/accounts">
-            <span className="text-sm font-medium text-brand-600 dark:text-brand-400 cursor-pointer" data-testid="link-view-all-challenges">
-              View All <ArrowRight className="w-3 h-3 inline ml-1" />
-            </span>
-          </Link>
-        </div>
-        <div className="flex items-center gap-2 mb-4 flex-wrap">
-          {tabs.map((tab) => (
-            <Button
-              key={tab.key}
-              variant={activeTab === tab.key ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActiveTab(tab.key)}
-              data-testid={`tab-${tab.key}`}
-            >
-              {tab.label} ({tabCounts[tab.key]})
-            </Button>
-          ))}
-        </div>
-
-        {filteredAccounts.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-sm text-gray-500 dark:text-gray-400" data-testid="text-no-challenges">
-              No {activeTab} challenges found.
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm" data-testid="table-my-challenges">
-              <thead>
-                <tr className="border-b border-gray-200 dark:border-gray-700">
-                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Account</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Status</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Phase</th>
-                  <th className="text-right py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Balance</th>
-                  <th className="text-right py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Profit</th>
-                  <th className="text-right py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Days</th>
-                  <th className="text-center py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Progress</th>
-                  <th className="text-right py-3 px-4 font-medium text-gray-500 dark:text-gray-400"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredAccounts.map((acc) => {
-                  const accBalance = Number(acc.currentBalance);
-                  const accProfit = Number(acc.currentProfit);
-                  const accProfitPct = accBalance > 0 ? (accProfit / accBalance) * 100 : 0;
-                  const accTarget = accBalance * 0.08;
-                  const accProgress = accTarget > 0 ? Math.min((accProfit / accTarget) * 100, 100) : 0;
-                  return (
-                    <tr
-                      key={acc.id}
-                      className={`border-b border-gray-100 dark:border-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${
-                        acc.id === selectedAccountId ? "bg-brand-50/50 dark:bg-brand-900/10" : ""
-                      }`}
-                      onClick={() => setSelectedAccountId(acc.id)}
-                      data-testid={`row-challenge-${acc.id}`}
-                    >
-                      <td className="py-3 px-4">
-                        <span className="font-semibold text-gray-900 dark:text-white" data-testid={`text-account-number-${acc.id}`}>
-                          {acc.accountNumber}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <Badge
-                          variant="outline"
-                          className={`text-xs ${
-                            acc.status === "funded" ? "border-emerald-300 text-emerald-700 dark:text-emerald-400" :
-                            acc.status === "failed" ? "border-red-300 text-red-700 dark:text-red-400" :
-                            acc.status === "passed" ? "border-blue-300 text-blue-700 dark:text-blue-400" :
-                            "border-gray-300 text-gray-700 dark:text-gray-400"
-                          }`}
-                          data-testid={`badge-status-${acc.id}`}
-                        >
-                          {acc.status === "failed" ? "Breached" : acc.status.charAt(0).toUpperCase() + acc.status.slice(1)}
-                        </Badge>
-                      </td>
-                      <td className="py-3 px-4 text-gray-700 dark:text-gray-300">Phase {acc.currentPhase}</td>
-                      <td className="py-3 px-4 text-right font-semibold text-gray-900 dark:text-white">
-                        ${accBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        <span className={`font-medium ${accProfit >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}>
-                          {accProfit >= 0 ? "+" : ""}{accProfitPct.toFixed(1)}%
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-right text-gray-700 dark:text-gray-300">{acc.tradingDays}</td>
-                      <td className="py-3 px-4">
-                        {acc.status === "active" && (
-                          <div className="w-20 mx-auto">
-                            <Progress value={Math.max(accProgress, 0)} className="h-2" />
-                          </div>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        <Link href={`/prop/account/${acc.id}`}>
-                          <Button variant="ghost" size="sm" data-testid={`button-view-challenge-${acc.id}`}>
-                            View <ArrowRight className="w-3 h-3 ml-1" />
-                          </Button>
-                        </Link>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </Card>
 
       <Card className="p-6" data-testid="announcements-section">
         <div className="flex items-center gap-3 mb-6 flex-wrap">

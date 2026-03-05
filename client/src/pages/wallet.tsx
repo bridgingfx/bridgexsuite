@@ -70,6 +70,7 @@ export default function WalletPage() {
   const [withdrawForm, setWithdrawForm] = useState({ method: "", amount: "", details: "", message: "" });
   const [transferForm, setTransferForm] = useState({ fromAccount: "wallet", toAccount: "", amount: "" });
   const [transferEarning, setTransferEarning] = useState<EarningType | null>(null);
+  const [transferAmount, setTransferAmount] = useState("");
 
   const { data: transactions, isLoading } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],
