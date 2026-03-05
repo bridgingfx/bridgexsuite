@@ -2,10 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
-import { useQuery } from "@tanstack/react-query";
-import type { PropAccount } from "@shared/schema";
 import {
   Zap,
   Target,
@@ -23,11 +20,10 @@ import {
   Scale,
   Info,
   Send,
-  XCircle,
 } from "lucide-react";
 
 type ChallengeType = "1-step" | "2-step";
-type MyChallengesTab = "active" | "passed" | "failed";
+
 
 const accountSizes = [
   { label: "$10K", value: "10000" },
@@ -70,21 +66,8 @@ export default function PropChallengesPage() {
   const [, setLocation] = useLocation();
   const [challengeType, setChallengeType] = useState<ChallengeType>("1-step");
   const [selectedSize, setSelectedSize] = useState("50000");
-  const [myChallengesTab, setMyChallengesTab] = useState<MyChallengesTab>("active");
-
-  const { data: accounts = [] } = useQuery<PropAccount[]>({
-    queryKey: ["/api/prop/accounts"],
-  });
-
   const currentData = challengeData[challengeType][selectedSize];
   const userName = user?.fullName?.split(" ")[0] || "Trader";
-
-  const filteredAccounts = accounts.filter((acc) => {
-    if (myChallengesTab === "active") return acc.status === "active";
-    if (myChallengesTab === "passed") return acc.status === "passed" || acc.status === "funded";
-    if (myChallengesTab === "failed") return acc.status === "failed";
-    return false;
-  });
 
   const phaseRules = [
     { icon: Scale, label: "Leverage", value: currentData.leverage },
@@ -315,86 +298,6 @@ export default function PropChallengesPage() {
         </div>
       </div>
 
-      <div>
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4" data-testid="text-my-challenges">
-          My Challenges
-        </h2>
-        <div className="flex gap-1 mb-4 flex-wrap">
-          {(["active", "passed", "failed"] as MyChallengesTab[]).map((tab) => (
-            <Button
-              key={tab}
-              variant={myChallengesTab === tab ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setMyChallengesTab(tab)}
-              data-testid={`button-my-challenges-${tab}`}
-            >
-              {tab === "active" ? "Active" : tab === "passed" ? "Passed" : "Failed"}
-            </Button>
-          ))}
-        </div>
-
-        {filteredAccounts.length === 0 ? (
-          <Card className="p-8 text-center" data-testid="card-no-challenges">
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              {myChallengesTab === "active"
-                ? "No active challenges. Purchase a challenge above to get started!"
-                : myChallengesTab === "passed"
-                ? "No passed challenges yet. Keep trading to pass your evaluation!"
-                : "No failed challenges."}
-            </p>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredAccounts.map((account) => (
-              <Card key={account.id} className="p-4" data-testid={`card-challenge-${account.id}`}>
-                <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {account.accountNumber || `Account #${account.id}`}
-                  </h4>
-                  <Badge
-                    variant={
-                      account.status === "funded" || account.status === "passed"
-                        ? "default"
-                        : account.status === "failed"
-                        ? "destructive"
-                        : "secondary"
-                    }
-                    data-testid={`badge-status-${account.id}`}
-                  >
-                    {account.status}
-                  </Badge>
-                </div>
-                <div className="space-y-2 text-xs text-gray-500 dark:text-gray-400">
-                  <div className="flex items-center justify-between gap-2">
-                    <span>Balance</span>
-                    <span className="font-medium text-gray-900 dark:text-white" data-testid={`text-balance-${account.id}`}>
-                      ${Number(account.currentBalance || 0).toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between gap-2">
-                    <span>Profit</span>
-                    <span className={`font-medium ${Number(account.currentProfit || 0) >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`} data-testid={`text-profit-${account.id}`}>
-                      {Number(account.currentProfit || 0) >= 0 ? "+" : ""}${Number(account.currentProfit || 0).toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between gap-2">
-                    <span>Phase</span>
-                    <span className="font-medium text-gray-900 dark:text-white" data-testid={`text-phase-${account.id}`}>
-                      {account.currentPhase || 1}
-                    </span>
-                  </div>
-                </div>
-                {account.status === "failed" && (
-                  <div className="flex items-center gap-1.5 mt-3 text-xs text-red-500">
-                    <XCircle className="w-3.5 h-3.5" />
-                    <span>Challenge ended</span>
-                  </div>
-                )}
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
     </div>
   );
 }
