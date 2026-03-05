@@ -71,6 +71,28 @@ Browser → Vite (port 5000) → /api/* proxy → Laravel (port 8000) → Postgr
 - **Admin**: admin@forexcrm.com / admin123
 - **Super Admin**: superadmin@forexcrm.com / admin123
 
+## Frontend Directory Structure (Portal Separation)
+Each portal's pages and components are separated into their own directories for clean git history:
+```
+client/src/pages/
+├── client/           # Client/Trader portal pages
+│   ├── prop/         # Prop Trading sub-pages (11 pages)
+│   ├── dashboard.tsx, wallet.tsx, kyc.tsx, etc.
+│   └── login.tsx
+├── admin/            # Admin portal pages (10 pages)
+│   └── login.tsx
+├── super-admin/      # Super Admin portal pages (8 pages)
+│   └── login.tsx
+└── not-found.tsx     # Shared 404 page
+
+client/src/components/
+├── client/           # Client-specific components (app-sidebar, announcement-bar, ticker-bar)
+├── admin/            # Admin-specific components (admin-sidebar)
+├── super-admin/      # Super Admin components (super-admin-sidebar)
+├── ui/               # Shared Shadcn UI components
+└── theme-toggle.tsx  # Shared theme toggle
+```
+
 ## Key Files
 - `laravel-api/bootstrap/app.php` - Laravel app config (routes, middleware)
 - `laravel-api/routes/api.php` - All API routes
@@ -78,8 +100,10 @@ Browser → Vite (port 5000) → /api/* proxy → Laravel (port 8000) → Postgr
 - `laravel-api/app/Models/` - 24 Eloquent models
 - `laravel-api/app/Traits/CamelCaseAttributes.php` - snake_case → camelCase JSON conversion
 - `laravel-api/app/Http/Middleware/` - Auth middleware (EnsureAuthenticated, EnsureAdmin, EnsureSuperAdmin)
-- `client/src/pages/prop/` - 10 Prop Trading sub-pages (includes account-detail.tsx)
-- `client/src/components/app-sidebar.tsx` - Client sidebar with expandable menus
+- `client/src/pages/client/prop/` - 10 Prop Trading sub-pages (includes account-detail.tsx)
+- `client/src/components/client/app-sidebar.tsx` - Client sidebar with expandable menus
+- `client/src/components/admin/admin-sidebar.tsx` - Admin sidebar
+- `client/src/components/super-admin/super-admin-sidebar.tsx` - Super Admin sidebar
 - `vite.config.ts` - Vite config with proxy and allowedHosts
 - `start.sh` - Startup script for both servers
 
