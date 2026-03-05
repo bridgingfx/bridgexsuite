@@ -287,18 +287,6 @@ export default function PropAccounts() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          <button
-            onClick={() => setLocation("/prop/challenges")}
-            className="flex flex-col items-center justify-center gap-3 p-6 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 bg-transparent hover:border-brand-500 hover:bg-brand-500/5 cursor-pointer transition-all min-h-[280px]"
-            data-testid="card-start-new-challenge"
-          >
-            <div className="p-3 rounded-lg bg-gray-100 dark:bg-gray-800">
-              <Plus className="w-6 h-6 text-gray-400" />
-            </div>
-            <p className="font-semibold text-gray-900 dark:text-white">Start New Challenge</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 text-center">Purchase a new prop trading challenge account</p>
-          </button>
-
           {filtered.map((account) => {
             const isVisible = visiblePasswords[account.id] || false;
             const profit = Number(account.currentProfit);
@@ -503,6 +491,17 @@ export default function PropAccounts() {
               </div>
             );
           })}
+          <button
+            onClick={() => setLocation("/prop/challenges")}
+            className="flex flex-col items-center justify-center gap-3 p-6 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 bg-transparent hover:border-brand-500 hover:bg-brand-500/5 cursor-pointer transition-all min-h-[280px]"
+            data-testid="card-start-new-challenge"
+          >
+            <div className="p-3 rounded-lg bg-gray-100 dark:bg-gray-800">
+              <Plus className="w-6 h-6 text-gray-400" />
+            </div>
+            <p className="font-semibold text-gray-900 dark:text-white">Start New Challenge</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 text-center">Purchase a new prop trading challenge account</p>
+          </button>
         </div>
       )}
 
