@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\TradingAccount;
 use App\Models\Transaction;
 use App\Models\SupportTicket;
+use App\Models\Commission;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -24,6 +25,19 @@ class DashboardController extends Controller
             $walletBalance = $totalDeposits - $totalWithdrawals;
             $openTickets = $tickets->where('status', 'open')->count();
 
+            $liveAccounts = $accounts->filter(fn($a) => $a->type !== 'demo')->count();
+            $demoAccounts = $accounts->filter(fn($a) => $a->type === 'demo')->count();
+
+            $totalVolume = $accounts->sum(fn($a) => (float) $a->balance);
+
+            $ibEarnings = 0;
+            try {
+                $ibEarnings = Commission::where('user_id', $userId)
+                    ->where('status', 'paid')
+                    ->sum('amount');
+            } catch (\Exception $e) {
+            }
+
             return response()->json([
                 'walletBalance' => $walletBalance,
                 'totalDeposits' => $totalDeposits,
@@ -32,6 +46,10 @@ class DashboardController extends Controller
                 'tradingAccounts' => $accounts->count(),
                 'openTickets' => $openTickets,
                 'totalReferrals' => 0,
+                'liveAccounts' => $liveAccounts,
+                'demoAccounts' => $demoAccounts,
+                'totalVolume' => (float) $totalVolume,
+                'ibEarnings' => (float) $ibEarnings,
             ]);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to fetch dashboard stats'], 500);

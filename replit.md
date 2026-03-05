@@ -20,6 +20,12 @@ I want the agent to focus on high-level features only and avoid granular impleme
 - Separate login portals for Client (`/login`), Admin (`/admin/login`), and Super Admin (`/super-admin/login`)
 - 50+ pages across three CRM tiers
 
+### Forex Trading Dashboard (`/forex/dashboard`)
+- Two rows of stat cards: Top row (Total Equity, Total Balance, Used Margin, Profit Today), Bottom row (Live Accounts, Demo Accounts, Total Volume Traded, Total IB Earnings)
+- Cards link to relevant pages: `/forex/accounts/live`, `/forex/accounts/demo`, `/forex/ib-dashboard`
+- Profit Growth and Volume Traded charts
+- Transaction History table (latest 5 wallet↔trading transfers) with "View All" linking to `/forex/finance`
+
 ### Prop Trading Module (9 sub-pages)
 - **Dashboard** (`/prop/dashboard`) - KPIs, challenge status, next steps, announcements
 - **Accounts** (`/prop/accounts`) - Prop accounts list with credentials, platform info, reset/retry
