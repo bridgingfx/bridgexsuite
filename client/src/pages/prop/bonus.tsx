@@ -1,17 +1,13 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import {
   Gift,
   Percent,
-  Tag,
   Clock,
   CheckCircle2,
   XCircle,
-  ArrowRight,
 } from "lucide-react";
 
 const demoPromotions = [
@@ -82,16 +78,6 @@ const demoAppliedBonuses = [
 
 export default function PropBonus() {
   const { toast } = useToast();
-  const [promoCode, setPromoCode] = useState("");
-
-  const handleApplyCode = () => {
-    if (!promoCode.trim()) {
-      toast({ title: "Please enter a promo code", variant: "destructive" });
-      return;
-    }
-    toast({ title: `Promo code "${promoCode}" applied successfully!` });
-    setPromoCode("");
-  };
 
   const statusColor = (status: string) => {
     switch (status) {
@@ -113,28 +99,9 @@ export default function PropBonus() {
           Bonus & Promotions
         </h1>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Apply promo codes and view available promotions.
+          View available promotions and your applied bonuses.
         </p>
       </div>
-
-      <Card className="p-6">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4" data-testid="text-promo-input-title">
-          Apply Promo Code
-        </h2>
-        <div className="flex items-center gap-3 flex-wrap">
-          <Input
-            placeholder="Enter promo code"
-            value={promoCode}
-            onChange={(e) => setPromoCode(e.target.value)}
-            className="max-w-xs"
-            data-testid="input-promo-code"
-          />
-          <Button onClick={handleApplyCode} data-testid="button-apply-promo">
-            <Tag className="w-4 h-4 mr-2" />
-            Apply
-          </Button>
-        </div>
-      </Card>
 
       <div>
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4" data-testid="text-active-promos-title">
@@ -169,21 +136,6 @@ export default function PropBonus() {
                 <span>{promo.validity}</span>
               </div>
               <p className="text-xs text-gray-400 dark:text-gray-500">{promo.terms}</p>
-              {promo.active && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-3"
-                  onClick={() => {
-                    setPromoCode(promo.code);
-                    toast({ title: `Code "${promo.code}" copied to input` });
-                  }}
-                  data-testid={`button-use-promo-${promo.id}`}
-                >
-                  <ArrowRight className="w-3 h-3 mr-1" />
-                  Use Code
-                </Button>
-              )}
             </Card>
           ))}
         </div>

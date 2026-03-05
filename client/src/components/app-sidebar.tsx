@@ -93,7 +93,7 @@ const section2Menu: MenuItem[] = [
       { title: "Analytics", url: "/prop/analytics", icon: BarChart3 },
       { title: "Payouts", url: "/prop/payouts", icon: CircleDollarSign },
       { title: "Bonus & Promos", url: "/prop/bonus", icon: Gift },
-      { title: "Referral", url: "/prop/referral", icon: Users },
+      { title: "Affiliate", url: "/prop/referral", icon: Users },
       { title: "Certificates", url: "/prop/certificates", icon: Award },
       { title: "Rules & Compliance", url: "/prop/rules", icon: BookOpen },
     ],
