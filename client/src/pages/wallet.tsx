@@ -54,12 +54,22 @@ const demoTransactions = [
   { id: "TXN-1004", type: "transfer", amount: 500, currency: "USD", status: "completed", date: "2023-10-28", description: "To MT5 Account 88921" },
 ];
 
+type EarningType = "ib_commissions" | "affiliate_earning" | "referral_commission" | "rewards_earning";
+
+const earningsData: { key: EarningType; label: string; amount: number; icon: typeof TrendingUp; iconBg: string }[] = [
+  { key: "ib_commissions", label: "Total IB Commissions", amount: 450.25, icon: TrendingUp, iconBg: "bg-green-50 dark:bg-green-900/20 text-green-600" },
+  { key: "affiliate_earning", label: "Total Affiliate Earning", amount: 320.00, icon: Users, iconBg: "bg-blue-50 dark:bg-blue-900/20 text-blue-600" },
+  { key: "referral_commission", label: "Total Referral Commission", amount: 185.50, icon: Gift, iconBg: "bg-purple-50 dark:bg-purple-900/20 text-purple-600" },
+  { key: "rewards_earning", label: "Total Rewards Earning", amount: 95.75, icon: RefreshCw, iconBg: "bg-amber-50 dark:bg-amber-900/20 text-amber-600" },
+];
+
 export default function WalletPage() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"overview" | "deposit" | "withdraw" | "transfer">("overview");
   const [depositForm, setDepositForm] = useState({ method: "", amount: "" });
   const [withdrawForm, setWithdrawForm] = useState({ method: "", amount: "", details: "", message: "" });
   const [transferForm, setTransferForm] = useState({ fromAccount: "wallet", toAccount: "", amount: "" });
+  const [transferEarning, setTransferEarning] = useState<EarningType | null>(null);
 
   const { data: transactions, isLoading } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],
@@ -217,7 +227,7 @@ export default function WalletPage() {
       </div>
 
       {activeTab === "overview" && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in" data-testid="wallet-overview">
+        <div className="space-y-6 animate-fade-in" data-testid="wallet-overview">
           <div className="bg-gradient-to-br from-brand-600 to-brand-800 p-6 rounded-2xl text-white shadow-lg" data-testid="wallet-hero">
             <p className="text-brand-100 text-sm font-medium mb-1">Total Balance</p>
             <h2 className="text-3xl font-bold mb-4" data-testid="text-total-balance">
@@ -239,30 +249,34 @@ export default function WalletPage() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-dark-card p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm flex items-center justify-between" data-testid="card-trading-credits">
-            <div>
-              <p className="text-gray-500 dark:text-gray-400 text-sm">Trading Credits</p>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">$0.00</h3>
-            </div>
-            <div className="p-3 bg-purple-50 dark:bg-purple-900/20 text-purple-600 rounded-lg">
-              <Gift size={24} />
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-dark-card p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm flex items-center justify-between" data-testid="card-ib-commissions">
-            <div>
-              <p className="text-gray-500 dark:text-gray-400 text-sm">IB Commissions</p>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">$450.25</h3>
-              <button
-                className="text-xs text-brand-600 dark:text-brand-400 font-medium mt-1"
-                data-testid="button-transfer-to-wallet"
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {earningsData.map((earning) => (
+              <div
+                key={earning.key}
+                className="bg-white dark:bg-dark-card p-5 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm flex flex-col justify-between"
+                data-testid={`card-${earning.key}`}
               >
-                Transfer to Wallet
-              </button>
-            </div>
-            <div className="p-3 bg-green-50 dark:bg-green-900/20 text-green-600 rounded-lg">
-              <TrendingUp size={24} />
-            </div>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-gray-500 dark:text-gray-400 text-xs font-medium">{earning.label}</p>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mt-1">
+                      ${earning.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                    </h3>
+                  </div>
+                  <div className={`p-2.5 rounded-lg shrink-0 ${earning.iconBg}`}>
+                    <earning.icon size={20} />
+                  </div>
+                </div>
+                <button
+                  onClick={() => setTransferEarning(earning.key)}
+                  className="text-xs text-brand-600 dark:text-brand-400 font-medium mt-3 text-left hover:underline flex items-center gap-1"
+                  data-testid={`button-transfer-${earning.key}`}
+                >
+                  <ArrowLeftRight size={12} />
+                  Transfer to Wallet
+                </button>
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -654,6 +668,72 @@ export default function WalletPage() {
               )}
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!transferEarning} onOpenChange={(open) => !open && setTransferEarning(null)}>
+        <DialogContent className="max-w-md" data-testid="dialog-transfer-earning">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ArrowLeftRight className="w-5 h-5 text-brand-600" />
+              Transfer to Wallet
+            </DialogTitle>
+            <DialogDescription>Transfer your earnings to your main wallet balance.</DialogDescription>
+          </DialogHeader>
+          {transferEarning && (() => {
+            const earning = earningsData.find((e) => e.key === transferEarning);
+            if (!earning) return null;
+            return (
+              <div className="space-y-4">
+                <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{earning.label}</p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white" data-testid="text-earning-amount">
+                        ${earning.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                    <div className={`p-3 rounded-lg ${earning.iconBg}`}>
+                      <earning.icon size={24} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+                  <div className="flex-1 text-center">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">From</p>
+                    <p className="text-sm font-semibold text-gray-900 dark:text-white">{earning.label.replace("Total ", "")}</p>
+                  </div>
+                  <ArrowLeftRight className="w-5 h-5 text-gray-400 shrink-0" />
+                  <div className="flex-1 text-center">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">To</p>
+                    <p className="text-sm font-semibold text-gray-900 dark:text-white">Main Wallet</p>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-blue-50 dark:bg-blue-900/10 rounded-lg border border-blue-200 dark:border-blue-800/30">
+                  <p className="text-xs text-blue-700 dark:text-blue-300">
+                    The full amount of <span className="font-bold">${earning.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span> will be transferred to your main wallet balance instantly.
+                  </p>
+                </div>
+
+                <Button
+                  className="w-full"
+                  onClick={() => {
+                    toast({
+                      title: "Transfer Successful",
+                      description: `$${earning.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })} from ${earning.label.replace("Total ", "")} has been transferred to your wallet.`,
+                    });
+                    setTransferEarning(null);
+                  }}
+                  data-testid="button-confirm-transfer-earning"
+                >
+                  <ArrowLeftRight className="w-4 h-4 mr-2" />
+                  Transfer ${earning.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })} to Wallet
+                </Button>
+              </div>
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </div>
