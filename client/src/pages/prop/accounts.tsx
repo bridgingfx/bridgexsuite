@@ -24,6 +24,7 @@ import {
   TrendingUp,
   Layers,
   Shield,
+  Zap,
 } from "lucide-react";
 import type { PropAccount } from "@shared/schema";
 import { cn } from "@/lib/utils";
@@ -185,6 +186,14 @@ export default function PropAccounts() {
             Manage your challenge and funded accounts
           </p>
         </div>
+        <Button
+          onClick={() => setLocation("/prop/challenges")}
+          className="bg-brand-600 hover:bg-brand-700 text-white"
+          data-testid="button-start-challenge"
+        >
+          <Zap className="w-4 h-4 mr-1.5" />
+          Start Challenge
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
