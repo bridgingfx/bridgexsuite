@@ -228,56 +228,60 @@ export default function WalletPage() {
       </div>
 
       {activeTab === "overview" && (
-        <div className="space-y-6 animate-fade-in" data-testid="wallet-overview">
-          <div className="bg-gradient-to-br from-brand-600 to-brand-800 p-6 rounded-2xl text-white shadow-lg" data-testid="wallet-hero">
-            <p className="text-brand-100 text-sm font-medium mb-1">Total Balance</p>
-            <h2 className="text-3xl font-bold mb-4" data-testid="text-total-balance">
-              ${walletBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-            </h2>
-            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-brand-500/50">
+        <div className="animate-fade-in" data-testid="wallet-overview">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="bg-gradient-to-br from-brand-600 to-brand-800 p-6 rounded-2xl text-white shadow-lg flex flex-col justify-between" data-testid="wallet-hero">
               <div>
-                <p className="text-xs text-brand-200 uppercase">Available</p>
-                <p className="font-semibold text-lg" data-testid="text-available-balance">
-                  ${(walletBalance * 0.74).toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                </p>
+                <p className="text-brand-100 text-sm font-medium mb-1">Total Balance</p>
+                <h2 className="text-3xl font-bold mb-4" data-testid="text-total-balance">
+                  ${walletBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                </h2>
               </div>
-              <div>
-                <p className="text-xs text-brand-200 uppercase">Locked</p>
-                <p className="font-semibold text-lg" data-testid="text-locked-balance">
-                  ${(walletBalance * 0.26).toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                </p>
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-brand-500/50">
+                <div>
+                  <p className="text-xs text-brand-200 uppercase">Available</p>
+                  <p className="font-semibold text-lg" data-testid="text-available-balance">
+                    ${(walletBalance * 0.74).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-brand-200 uppercase">Locked</p>
+                  <p className="font-semibold text-lg" data-testid="text-locked-balance">
+                    ${(walletBalance * 0.26).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {earningsData.map((earning) => (
-              <div
-                key={earning.key}
-                className="bg-white dark:bg-dark-card p-5 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm flex flex-col justify-between"
-                data-testid={`card-${earning.key}`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-gray-500 dark:text-gray-400 text-xs font-medium">{earning.label}</p>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mt-1">
-                      ${earning.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                    </h3>
-                  </div>
-                  <div className={`p-2.5 rounded-lg shrink-0 ${earning.iconBg}`}>
-                    <earning.icon size={20} />
-                  </div>
-                </div>
-                <button
-                  onClick={() => setTransferEarning(earning.key)}
-                  className="text-xs text-brand-600 dark:text-brand-400 font-medium mt-3 text-left hover:underline flex items-center gap-1"
-                  data-testid={`button-transfer-${earning.key}`}
+            <div className="grid grid-cols-2 gap-4">
+              {earningsData.map((earning) => (
+                <div
+                  key={earning.key}
+                  className="bg-white dark:bg-dark-card p-4 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm flex flex-col justify-between"
+                  data-testid={`card-${earning.key}`}
                 >
-                  <ArrowLeftRight size={12} />
-                  Transfer to Wallet
-                </button>
-              </div>
-            ))}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-gray-500 dark:text-gray-400 text-[11px] font-medium leading-tight">{earning.label}</p>
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white mt-1">
+                        ${earning.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                      </h3>
+                    </div>
+                    <div className={`p-2 rounded-lg shrink-0 ${earning.iconBg}`}>
+                      <earning.icon size={16} />
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => { setTransferEarning(earning.key); setTransferAmount(""); }}
+                    className="text-xs text-brand-600 dark:text-brand-400 font-medium mt-2 text-left hover:underline flex items-center gap-1"
+                    data-testid={`button-transfer-${earning.key}`}
+                  >
+                    <ArrowLeftRight size={12} />
+                    Transfer to Wallet
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -684,6 +688,8 @@ export default function WalletPage() {
           {transferEarning && (() => {
             const earning = earningsData.find((e) => e.key === transferEarning);
             if (!earning) return null;
+            const parsedAmount = Number(transferAmount) || 0;
+            const isValidAmount = parsedAmount > 0 && parsedAmount <= earning.amount;
             return (
               <div className="space-y-4">
                 <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
@@ -693,6 +699,7 @@ export default function WalletPage() {
                       <p className="text-2xl font-bold text-gray-900 dark:text-white" data-testid="text-earning-amount">
                         ${earning.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                       </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Available to transfer</p>
                     </div>
                     <div className={`p-3 rounded-lg ${earning.iconBg}`}>
                       <earning.icon size={24} />
@@ -712,25 +719,70 @@ export default function WalletPage() {
                   </div>
                 </div>
 
-                <div className="p-3 bg-blue-50 dark:bg-blue-900/10 rounded-lg border border-blue-200 dark:border-blue-800/30">
-                  <p className="text-xs text-blue-700 dark:text-blue-300">
-                    The full amount of <span className="font-bold">${earning.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span> will be transferred to your main wallet balance instantly.
-                  </p>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount (USD)</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-sm">$</span>
+                    <input
+                      type="number"
+                      placeholder="0.00"
+                      value={transferAmount}
+                      onChange={(e) => setTransferAmount(e.target.value)}
+                      max={earning.amount}
+                      min={0}
+                      step="0.01"
+                      className="w-full pl-7 p-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none text-lg font-bold"
+                      data-testid="input-transfer-earning-amount"
+                    />
+                  </div>
+                  {transferAmount && parsedAmount > earning.amount && (
+                    <p className="text-xs text-red-500">Amount exceeds available balance</p>
+                  )}
                 </div>
+
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    { label: "25%", pct: 0.25 },
+                    { label: "50%", pct: 0.50 },
+                    { label: "75%", pct: 0.75 },
+                    { label: "100%", pct: 1.0 },
+                  ].map((opt) => (
+                    <Button
+                      key={opt.label}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setTransferAmount((earning.amount * opt.pct).toFixed(2))}
+                      className={transferAmount === (earning.amount * opt.pct).toFixed(2) ? "border-brand-500 bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300" : ""}
+                      data-testid={`button-transfer-pct-${opt.label.replace("%", "")}`}
+                    >
+                      {opt.label}
+                    </Button>
+                  ))}
+                </div>
+
+                {isValidAmount && (
+                  <div className="p-3 bg-blue-50 dark:bg-blue-900/10 rounded-lg border border-blue-200 dark:border-blue-800/30">
+                    <p className="text-xs text-blue-700 dark:text-blue-300">
+                      <span className="font-bold">${parsedAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span> will be transferred from {earning.label.replace("Total ", "")} to your main wallet balance instantly.
+                    </p>
+                  </div>
+                )}
 
                 <Button
                   className="w-full"
+                  disabled={!isValidAmount}
                   onClick={() => {
                     toast({
                       title: "Transfer Successful",
-                      description: `$${earning.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })} from ${earning.label.replace("Total ", "")} has been transferred to your wallet.`,
+                      description: `$${parsedAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })} from ${earning.label.replace("Total ", "")} has been transferred to your wallet.`,
                     });
                     setTransferEarning(null);
+                    setTransferAmount("");
                   }}
                   data-testid="button-confirm-transfer-earning"
                 >
                   <ArrowLeftRight className="w-4 h-4 mr-2" />
-                  Transfer ${earning.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })} to Wallet
+                  Transfer {isValidAmount ? `$${parsedAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}` : "to Wallet"}
                 </Button>
               </div>
             );
