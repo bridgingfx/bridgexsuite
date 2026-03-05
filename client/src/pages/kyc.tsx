@@ -393,6 +393,14 @@ export default function KycPage() {
                     </p>
                   </div>
                 )}
+                {(viewDoc.reviewedAt || viewDoc.status === "approved") && (
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Verified Date</p>
+                    <p className="text-sm text-gray-900 dark:text-white" data-testid="text-view-doc-verified-date">
+                      {viewDoc.reviewedAt ? new Date(viewDoc.reviewedAt).toLocaleDateString() : (viewDoc.createdAt ? new Date(viewDoc.createdAt).toLocaleDateString() : "N/A")}
+                    </p>
+                  </div>
+                )}
                 {viewDoc.notes && (
                   <div className="col-span-2">
                     <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Notes</p>
