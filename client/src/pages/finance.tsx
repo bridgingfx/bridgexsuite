@@ -250,7 +250,7 @@ export default function FinancePage() {
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">${totalCommissions.toLocaleString("en-US", { minimumFractionDigits: 2 })}</h3>
               <button
                 onClick={() => {
-                  setCommissionAmount(totalCommissions.toFixed(2));
+                  setCommissionAmount("");
                   setCommissionDialog(true);
                 }}
                 disabled={totalCommissions <= 0}
@@ -600,26 +600,49 @@ export default function FinancePage() {
       </div>
 
       <Dialog open={commissionDialog} onOpenChange={setCommissionDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Transfer Commission to Wallet</DialogTitle>
-            <DialogDescription>Transfer your earned IB commissions to your main wallet balance.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-5 pt-2">
-            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-100 dark:border-green-800/50">
+        <DialogContent className="sm:max-w-md bg-[#0f172a] border-gray-800 text-white p-0 overflow-hidden">
+          <div className="p-6 space-y-5">
+            <DialogHeader className="space-y-1.5">
+              <DialogTitle className="flex items-center gap-2 text-white text-lg font-bold">
+                <ArrowLeftRight size={20} className="text-brand-400" />
+                Transfer to Wallet
+              </DialogTitle>
+              <DialogDescription className="text-gray-400 text-sm">
+                Transfer your earnings to your main wallet balance.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="flex items-center justify-between p-5 bg-[#1e293b] rounded-xl border border-gray-700/50">
               <div>
-                <p className="text-xs text-green-600 dark:text-green-400 font-medium uppercase tracking-wide">Available Commission</p>
-                <p className="text-2xl font-bold text-green-700 dark:text-green-300 mt-1" data-testid="text-available-commission">${totalCommissions.toLocaleString("en-US", { minimumFractionDigits: 2 })}</p>
+                <p className="text-sm text-purple-400 font-medium">Total IB Commission</p>
+                <p className="text-3xl font-bold text-white mt-1" data-testid="text-available-commission">
+                  ${totalCommissions.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">Available to transfer</p>
               </div>
-              <div className="p-3 bg-green-100 dark:bg-green-800/40 rounded-lg">
-                <TrendingUp size={24} className="text-green-600 dark:text-green-400" />
+              <div className="p-3 bg-purple-600/20 rounded-xl">
+                <Gift size={24} className="text-purple-400" />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between p-4 bg-[#1e293b] rounded-xl border border-gray-700/50">
+              <div className="text-center flex-1">
+                <p className="text-xs text-gray-400 mb-1">From</p>
+                <p className="font-bold text-white text-sm">IB Commission</p>
+              </div>
+              <div className="px-3">
+                <ArrowLeftRight size={18} className="text-gray-500" />
+              </div>
+              <div className="text-center flex-1">
+                <p className="text-xs text-gray-400 mb-1">To</p>
+                <p className="font-bold text-white text-sm">Main Wallet</p>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Amount to Transfer (USD)</label>
+              <label className="block text-sm font-semibold text-gray-300 mb-2">Amount (USD)</label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-lg">$</span>
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-400 font-bold text-lg">$</span>
                 <input
                   type="number"
                   step="0.01"
@@ -628,64 +651,50 @@ export default function FinancePage() {
                   placeholder="0.00"
                   value={commissionAmount}
                   onChange={(e) => setCommissionAmount(e.target.value)}
-                  className="w-full pl-9 p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none text-lg font-bold"
+                  className="w-full pl-9 p-3.5 rounded-xl border-2 border-brand-500 bg-[#1e293b] text-white focus:ring-2 focus:ring-brand-400 focus:border-brand-400 outline-none text-lg font-bold placeholder-gray-600"
                   data-testid="input-commission-amount"
                 />
               </div>
               {parseFloat(commissionAmount) > totalCommissions && (
-                <p className="text-xs text-red-500 mt-1">Amount exceeds available commission balance</p>
+                <p className="text-xs text-red-400 mt-1.5">Amount exceeds available commission balance</p>
               )}
             </div>
 
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setCommissionAmount(totalCommissions.toFixed(2))}
-                className="text-xs px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700"
-                data-testid="button-commission-max"
-              >
-                Max
-              </button>
-              <button
-                onClick={() => setCommissionAmount((totalCommissions / 2).toFixed(2))}
-                className="text-xs px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700"
-                data-testid="button-commission-half"
-              >
-                50%
-              </button>
-              <button
-                onClick={() => setCommissionAmount((totalCommissions * 0.25).toFixed(2))}
-                className="text-xs px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700"
-                data-testid="button-commission-quarter"
-              >
-                25%
-              </button>
+            <div className="grid grid-cols-4 gap-2">
+              {[25, 50, 75, 100].map((pct) => {
+                const pctAmount = (totalCommissions * pct / 100).toFixed(2);
+                const isActive = commissionAmount === pctAmount;
+                return (
+                  <button
+                    key={pct}
+                    onClick={() => setCommissionAmount(pctAmount)}
+                    className={`py-2.5 rounded-lg text-sm font-semibold transition-all border ${
+                      isActive
+                        ? "bg-brand-600 border-brand-500 text-white"
+                        : "bg-[#1e293b] border-gray-700 text-gray-400 hover:border-gray-500 hover:text-gray-300"
+                    }`}
+                    data-testid={`button-commission-${pct}`}
+                  >
+                    {pct}%
+                  </button>
+                );
+              })}
             </div>
 
-            <div className="flex gap-3 pt-2">
-              <button
-                onClick={() => {
-                  setCommissionDialog(false);
-                  setCommissionAmount("");
-                }}
-                className="flex-1 px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium"
-                data-testid="button-cancel-commission"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => commissionTransferMutation.mutate(commissionAmount)}
-                disabled={
-                  commissionTransferMutation.isPending ||
-                  !commissionAmount ||
-                  parseFloat(commissionAmount) <= 0 ||
-                  parseFloat(commissionAmount) > totalCommissions
-                }
-                className="flex-1 px-4 py-3 rounded-xl bg-green-600 hover:bg-green-700 disabled:bg-gray-300 dark:disabled:bg-gray-800 disabled:text-gray-500 text-white font-bold shadow-lg shadow-green-500/20 transition-all flex items-center justify-center gap-2"
-                data-testid="button-confirm-commission"
-              >
-                <Wallet size={18} /> {commissionTransferMutation.isPending ? "Transferring..." : "Transfer to Wallet"}
-              </button>
-            </div>
+            <button
+              onClick={() => commissionTransferMutation.mutate(commissionAmount)}
+              disabled={
+                commissionTransferMutation.isPending ||
+                !commissionAmount ||
+                parseFloat(commissionAmount) <= 0 ||
+                parseFloat(commissionAmount) > totalCommissions
+              }
+              className="w-full py-3.5 rounded-xl bg-brand-600 hover:bg-brand-700 disabled:bg-gray-800 disabled:text-gray-600 text-white font-bold shadow-lg shadow-brand-500/20 transition-all flex items-center justify-center gap-2 text-base"
+              data-testid="button-confirm-commission"
+            >
+              <ArrowLeftRight size={18} />
+              {commissionTransferMutation.isPending ? "Transferring..." : "Transfer to Wallet"}
+            </button>
           </div>
         </DialogContent>
       </Dialog>
