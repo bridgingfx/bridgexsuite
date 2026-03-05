@@ -32,11 +32,14 @@ import {
   Globe,
   Zap,
   CreditCard,
+  Eye,
+  ShieldCheck,
 } from "lucide-react";
 import type { KycDocument } from "@shared/schema";
 
 export default function KycPage() {
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [viewDoc, setViewDoc] = useState<KycDocument | null>(null);
   const { toast } = useToast();
 
   const { data: documents, isLoading } = useQuery<KycDocument[]>({
@@ -128,7 +131,7 @@ export default function KycPage() {
           <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{doc.fileName}</p>
         </div>
       </div>
-      <div className="flex items-center gap-4 flex-wrap">
+      <div className="flex items-center gap-3 flex-wrap">
         <div className="text-right">
           <p className="text-xs text-gray-500 dark:text-gray-400">
             {doc.createdAt ? new Date(doc.createdAt).toLocaleDateString() : "N/A"}
@@ -138,6 +141,14 @@ export default function KycPage() {
           )}
         </div>
         {getStatusBadge(doc.status)}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setViewDoc(doc)}
+          data-testid={`button-view-doc-${doc.id}`}
+        >
+          <Eye className="w-4 h-4" />
+        </Button>
       </div>
       {doc.notes && (
         <p className="text-xs text-gray-500 dark:text-gray-400 w-full pl-12">{doc.notes}</p>
@@ -151,7 +162,20 @@ export default function KycPage() {
         <Shield className="w-6 h-6 text-brand-600 dark:text-brand-400" />
       </div>
       <p className="text-sm text-gray-500 dark:text-gray-400">No documents uploaded yet</p>
-      <Button variant="outline" onClick={() => setUploadOpen(true)} data-testid="button-upload-empty">
+      <Button
+        variant="outline"
+        onClick={() => {
+          if (allApproved && total >= 2) {
+            toast({
+              title: "KYC Already Verified",
+              description: "Your account KYC has been verified already. No further documents are required.",
+            });
+          } else {
+            setUploadOpen(true);
+          }
+        }}
+        data-testid="button-upload-empty"
+      >
         <Upload className="w-4 h-4 mr-2" />
         Upload Document
       </Button>
@@ -165,7 +189,19 @@ export default function KycPage() {
           <h1 className="text-lg font-bold text-gray-900 dark:text-white" data-testid="text-kyc-title">KYC Verification</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">Upload documents and complete your identity verification</p>
         </div>
-        <Button onClick={() => setUploadOpen(true)} data-testid="button-upload-document">
+        <Button
+          onClick={() => {
+            if (allApproved && total >= 2) {
+              toast({
+                title: "KYC Already Verified",
+                description: "Your account KYC has been verified already. No further documents are required.",
+              });
+            } else {
+              setUploadOpen(true);
+            }
+          }}
+          data-testid="button-upload-document"
+        >
           <Upload className="w-4 h-4 mr-2" />
           Upload Document
         </Button>
@@ -312,6 +348,99 @@ export default function KycPage() {
               {uploadMutation.isPending ? "Uploading..." : "Upload Document"}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!viewDoc} onOpenChange={(open) => !open && setViewDoc(null)}>
+        <DialogContent className="max-w-lg" data-testid="dialog-view-document">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+              {viewDoc ? formatDocType(viewDoc.documentType) : "Document"}
+            </DialogTitle>
+            <DialogDescription>Document details and preview</DialogDescription>
+          </DialogHeader>
+          {viewDoc && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Document Type</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white" data-testid="text-view-doc-type">
+                    {formatDocType(viewDoc.documentType)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Status</p>
+                  <div data-testid="text-view-doc-status">{getStatusBadge(viewDoc.status)}</div>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">File Name</p>
+                  <p className="text-sm text-gray-900 dark:text-white" data-testid="text-view-doc-filename">
+                    {viewDoc.fileName}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Uploaded</p>
+                  <p className="text-sm text-gray-900 dark:text-white" data-testid="text-view-doc-date">
+                    {viewDoc.createdAt ? new Date(viewDoc.createdAt).toLocaleDateString() : "N/A"}
+                  </p>
+                </div>
+                {viewDoc.reviewedBy && (
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Reviewed By</p>
+                    <p className="text-sm text-gray-900 dark:text-white" data-testid="text-view-doc-reviewer">
+                      {viewDoc.reviewedBy}
+                    </p>
+                  </div>
+                )}
+                {viewDoc.notes && (
+                  <div className="col-span-2">
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Notes</p>
+                    <p className="text-sm text-gray-900 dark:text-white" data-testid="text-view-doc-notes">
+                      {viewDoc.notes}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 flex flex-col items-center gap-3 bg-gray-50 dark:bg-gray-800/50" data-testid="preview-document-area">
+                {viewDoc.fileName?.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                  <div className="w-full">
+                    <img
+                      src={viewDoc.fileUrl || `/uploads/${viewDoc.fileName}`}
+                      alt={formatDocType(viewDoc.documentType)}
+                      className="max-w-full max-h-64 mx-auto rounded-md object-contain"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = "none";
+                        (e.target as HTMLImageElement).nextElementSibling?.classList.remove("hidden");
+                      }}
+                    />
+                    <div className="hidden flex flex-col items-center gap-2">
+                      <FileText className="w-12 h-12 text-gray-400" />
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Preview not available</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-2">
+                    <FileText className="w-12 h-12 text-brand-500" />
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">{viewDoc.fileName}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {viewDoc.fileName?.endsWith(".pdf") ? "PDF Document" : "Uploaded Document"}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {viewDoc.status === "approved" && (
+                <div className="flex items-center gap-2 p-3 bg-emerald-50 dark:bg-emerald-900/10 rounded-lg border border-emerald-200 dark:border-emerald-800/30">
+                  <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <p className="text-sm text-emerald-700 dark:text-emerald-300" data-testid="text-doc-verified-msg">
+                    This document has been verified and approved.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
