@@ -88,8 +88,8 @@ const section2Menu: MenuItem[] = [
     iconColor: "text-yellow-500 dark:text-yellow-400",
     children: [
       { title: "Dashboard", url: "/prop/dashboard", icon: LayoutDashboard },
-      { title: "Accounts", url: "/prop/accounts", icon: Briefcase },
-      { title: "Challenges", url: "/prop/challenges", icon: Target },
+      { title: "Start Challenge", url: "/prop/challenges", icon: Target },
+      { title: "Prop Accounts", url: "/prop/accounts", icon: Briefcase },
       { title: "Analytics", url: "/prop/analytics", icon: BarChart3 },
       { title: "Payouts", url: "/prop/payouts", icon: CircleDollarSign },
       { title: "Bonus & Promos", url: "/prop/bonus", icon: Gift },
