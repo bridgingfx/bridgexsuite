@@ -135,7 +135,6 @@ const section2Menu: MenuItem[] = [
       { title: "Lock-in Tracker", url: "/investment/lock-tracker", icon: Lock },
       { title: "Referral Commission", url: "/investment/referral", icon: Share2 },
       { title: "Profit Distribution", url: "/investment/profit", icon: PieChart },
-      { title: "Investment Wallet", url: "/investment/wallet", icon: Wallet },
     ],
   },
   { title: "Loyalty Points", url: "/loyalty-points", icon: Star, iconColor: "text-orange-500 dark:text-orange-400" },

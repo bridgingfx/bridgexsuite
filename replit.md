@@ -56,7 +56,6 @@ I want the agent to focus on high-level features only and avoid granular impleme
 - **Lock-in Tracker** (`/investment/lock-tracker`) - Progress bars showing lock-in status with color coding
 - **Referral Commission** (`/investment/referral`) - Stats, charts, referral link, commission history, transfer popup
 - **Profit Distribution** (`/investment/profit`) - Payout summary, distribution history, earnings pie chart
-- **Investment Wallet** (`/investment/wallet`) - Wallet balance, transfer/receive/withdraw actions, transaction history
 
 ### Backend (Migrated: Express.js → Laravel PHP)
 - **PHP 8.4 + Laravel 12** in `laravel-api/` directory

@@ -48,7 +48,7 @@ import InvestmentHistory from "@/pages/client/investment/history";
 import InvestmentLockTracker from "@/pages/client/investment/lock-tracker";
 import InvestmentReferral from "@/pages/client/investment/referral";
 import InvestmentProfit from "@/pages/client/investment/profit";
-import InvestmentWallet from "@/pages/client/investment/wallet";
+
 import CopyTradingPage from "@/pages/client/copy-trading";
 import PammPage from "@/pages/client/pamm";
 import AccountDetail from "@/pages/client/account-detail";
@@ -171,7 +171,7 @@ function ClientRouter() {
       <Route path="/investment/lock-tracker" component={InvestmentLockTracker} />
       <Route path="/investment/referral" component={InvestmentReferral} />
       <Route path="/investment/profit" component={InvestmentProfit} />
-      <Route path="/investment/wallet" component={InvestmentWallet} />
+
       <Route path="/loyalty-points" component={LoyaltyPointsPage} />
       <Route path="/download-platform" component={DownloadPlatformPage} />
       <Route path="/p2p-exchange" component={P2PExchangePage} />
