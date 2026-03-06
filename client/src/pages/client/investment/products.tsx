@@ -219,7 +219,6 @@ const categoryIconBg = (category: string) => {
 
 const wallets = [
   { id: "main", name: "Main Wallet", balance: 25000, icon: Wallet },
-  { id: "investment", name: "Investment Wallet", balance: 12500, icon: PiggyBank },
 ];
 
 const wizardSteps = [

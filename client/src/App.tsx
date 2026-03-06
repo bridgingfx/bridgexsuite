@@ -42,7 +42,7 @@ import InvestmentPage from "@/pages/client/investment";
 import InvestmentDashboard from "@/pages/client/investment/dashboard";
 import InvestmentProducts from "@/pages/client/investment/products";
 import InvestmentMyInvestments from "@/pages/client/investment/my-investments";
-import InvestmentNew from "@/pages/client/investment/new";
+
 import InvestmentROI from "@/pages/client/investment/roi";
 import InvestmentHistory from "@/pages/client/investment/history";
 import InvestmentLockTracker from "@/pages/client/investment/lock-tracker";
@@ -165,7 +165,7 @@ function ClientRouter() {
       <Route path="/investment/dashboard" component={InvestmentDashboard} />
       <Route path="/investment/products" component={InvestmentProducts} />
       <Route path="/investment/my-investments" component={InvestmentMyInvestments} />
-      <Route path="/investment/new" component={InvestmentNew} />
+
       <Route path="/investment/roi" component={InvestmentROI} />
       <Route path="/investment/history" component={InvestmentHistory} />
       <Route path="/investment/lock-tracker" component={InvestmentLockTracker} />

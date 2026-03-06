@@ -1,21 +1,19 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 import {
-  Briefcase,
   Eye,
   RefreshCw,
   ArrowDownToLine,
+  History,
+  Lock,
   TrendingUp,
   TrendingDown,
-  Clock,
-  DollarSign,
   Gem,
   Bitcoin,
   Banknote,
+  DollarSign,
+  Briefcase,
 } from "lucide-react";
 
 const demoInvestments = [
@@ -31,7 +29,6 @@ const demoInvestments = [
     startDate: "2024-06-15",
     maturityDate: "2025-06-15",
     totalValue: 6250,
-    description: "Low-risk gold savings plan with steady monthly returns. Capital preserved in physical gold reserves.",
   },
   {
     id: "inv-2",
@@ -45,7 +42,6 @@ const demoInvestments = [
     startDate: "2024-09-01",
     maturityDate: "2025-03-01",
     totalValue: 12520,
-    description: "Bitcoin-focused growth fund with actively managed positions and DCA strategy.",
   },
   {
     id: "inv-3",
@@ -59,7 +55,6 @@ const demoInvestments = [
     startDate: "2024-08-01",
     maturityDate: "2024-11-01",
     totalValue: 8432,
-    description: "Stable USD-denominated income plan with guaranteed monthly distributions.",
   },
   {
     id: "inv-4",
@@ -73,7 +68,6 @@ const demoInvestments = [
     startDate: "2024-03-10",
     maturityDate: "2026-03-10",
     totalValue: 33750,
-    description: "Premium gold investment with higher allocation in bullion and gold ETFs for enhanced returns.",
   },
   {
     id: "inv-5",
@@ -87,7 +81,6 @@ const demoInvestments = [
     startDate: "2024-11-15",
     maturityDate: "2025-05-15",
     totalValue: 2580,
-    description: "Diversified crypto index tracking the top 20 cryptocurrencies by market cap.",
   },
   {
     id: "inv-6",
@@ -101,245 +94,229 @@ const demoInvestments = [
     startDate: "2024-04-20",
     maturityDate: "2025-04-20",
     totalValue: 18360,
-    description: "Algorithmic forex trading strategy targeting major currency pairs with risk-managed positions.",
   },
 ];
 
-function getStatusVariant(status: string) {
+function getStatusBadge(status: string) {
   switch (status) {
     case "Active":
-      return "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400";
+      return "border-emerald-500 text-emerald-400";
     case "Matured":
-      return "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400";
+      return "border-blue-500 text-blue-400";
     case "Locked":
-      return "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400";
+      return "border-amber-500 text-amber-400";
     default:
-      return "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400";
+      return "border-gray-500 text-gray-400";
   }
 }
 
 function getAssetIcon(assetType: string) {
   switch (assetType) {
     case "Gold":
-      return <Gem className="h-4 w-4 text-amber-500" />;
+      return Gem;
     case "Crypto":
-      return <Bitcoin className="h-4 w-4 text-orange-500" />;
+      return Bitcoin;
     case "Currency":
-      return <Banknote className="h-4 w-4 text-green-500" />;
+      return Banknote;
     default:
-      return <DollarSign className="h-4 w-4" />;
+      return DollarSign;
+  }
+}
+
+function getAssetColor(assetType: string) {
+  switch (assetType) {
+    case "Gold":
+      return "text-amber-400";
+    case "Crypto":
+      return "text-orange-400";
+    case "Currency":
+      return "text-green-400";
+    default:
+      return "text-gray-400";
   }
 }
 
 export default function MyInvestmentsPage() {
-  const { toast } = useToast();
-  const [detailsOpen, setDetailsOpen] = useState(false);
-  const [selectedInvestment, setSelectedInvestment] = useState<typeof demoInvestments[0] | null>(null);
+  const [, navigate] = useLocation();
 
-  const handleViewDetails = (investment: typeof demoInvestments[0]) => {
-    setSelectedInvestment(investment);
-    setDetailsOpen(true);
-  };
+  const totalInvested = demoInvestments.reduce((s, i) => s + i.investmentAmount, 0);
+  const totalValue = demoInvestments.reduce((s, i) => s + i.totalValue, 0);
+  const totalProfit = demoInvestments.reduce((s, i) => s + i.currentProfit, 0);
+  const activeCount = demoInvestments.filter((i) => i.status === "Active").length;
 
-  const handleReinvest = (investment: typeof demoInvestments[0]) => {
-    toast({
-      title: "Profit Reinvested",
-      description: `$${Math.max(0, investment.currentProfit).toLocaleString()} from ${investment.productName} has been reinvested.`,
-    });
-  };
-
-  const handleWithdrawal = (investment: typeof demoInvestments[0]) => {
-    if (investment.status === "Locked") {
-      toast({
-        title: "Withdrawal Not Available",
-        description: "This investment is still within its lock-in period.",
-        variant: "destructive",
-      });
-      return;
-    }
-    toast({
-      title: "Withdrawal Requested",
-      description: `Withdrawal request for ${investment.productName} has been submitted.`,
-    });
-  };
+  const cardActions = [
+    { label: "View", icon: Eye, action: (_inv: typeof demoInvestments[0]) => navigate("/investment/roi") },
+    { label: "Reinvest", icon: RefreshCw, action: (_inv: typeof demoInvestments[0]) => navigate("/investment/products") },
+    { label: "Withdraw", icon: ArrowDownToLine, action: (_inv: typeof demoInvestments[0]) => navigate("/investment/roi") },
+    { label: "History", icon: History, action: (_inv: typeof demoInvestments[0]) => navigate("/investment/history") },
+    { label: "Lock-in", icon: Lock, action: (_inv: typeof demoInvestments[0]) => navigate("/investment/lock-tracker") },
+  ];
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center gap-2 flex-wrap">
-        <Briefcase className="h-6 w-6 text-pink-500 dark:text-pink-400" />
-        <h1 className="text-2xl font-bold" data-testid="text-page-title">My Investments</h1>
+    <div className="space-y-6 max-w-[1600px] mx-auto">
+      <div>
+        <h1 className="text-lg font-bold text-gray-900 dark:text-white" data-testid="text-page-title">
+          My Investments
+        </h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400">Manage your active investment plans</p>
       </div>
 
-      <Card data-testid="card-investments-table">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b text-left text-muted-foreground">
-                <th className="p-4 font-medium">Product Name</th>
-                <th className="p-4 font-medium">Asset Type</th>
-                <th className="p-4 font-medium">Investment Amount</th>
-                <th className="p-4 font-medium">Lock-in Period</th>
-                <th className="p-4 font-medium">Monthly ROI</th>
-                <th className="p-4 font-medium">Current Profit</th>
-                <th className="p-4 font-medium">Status</th>
-                <th className="p-4 font-medium">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {demoInvestments.map((inv) => (
-                <tr key={inv.id} className="border-b last:border-b-0" data-testid={`row-investment-${inv.id}`}>
-                  <td className="p-4 font-medium" data-testid={`text-product-name-${inv.id}`}>{inv.productName}</td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-2" data-testid={`text-asset-type-${inv.id}`}>
-                      {getAssetIcon(inv.assetType)}
-                      <span>{inv.assetType}</span>
-                    </div>
-                  </td>
-                  <td className="p-4" data-testid={`text-amount-${inv.id}`}>${inv.investmentAmount.toLocaleString()}</td>
-                  <td className="p-4" data-testid={`text-lockin-${inv.id}`}>
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                      <span>{inv.lockInPeriod}</span>
-                    </div>
-                  </td>
-                  <td className="p-4" data-testid={`text-roi-${inv.id}`}>{inv.monthlyROI}%</td>
-                  <td className="p-4">
-                    <span
-                      className={`flex items-center gap-1 ${inv.currentProfit >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}
-                      data-testid={`text-profit-${inv.id}`}
-                    >
-                      {inv.currentProfit >= 0 ? (
-                        <TrendingUp className="h-3.5 w-3.5" />
-                      ) : (
-                        <TrendingDown className="h-3.5 w-3.5" />
-                      )}
-                      {inv.currentProfit >= 0 ? "+" : ""}${inv.currentProfit.toLocaleString()}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <Badge className={`${getStatusVariant(inv.status)} no-default-hover-elevate no-default-active-elevate`} data-testid={`badge-status-${inv.id}`}>
-                      {inv.status}
-                    </Badge>
-                  </td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-1 flex-wrap">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => handleViewDetails(inv)}
-                        data-testid={`button-view-details-${inv.id}`}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => handleReinvest(inv)}
-                        disabled={inv.currentProfit <= 0}
-                        data-testid={`button-reinvest-${inv.id}`}
-                      >
-                        <RefreshCw className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => handleWithdrawal(inv)}
-                        disabled={inv.status === "Locked"}
-                        data-testid={`button-withdraw-${inv.id}`}
-                      >
-                        <ArrowDownToLine className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all" data-testid="stat-total-invested">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Total Invested</p>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">${totalInvested.toLocaleString("en-US", { minimumFractionDigits: 2 })}</h3>
+            </div>
+            <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400">
+              <Briefcase className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">{demoInvestments.length} plans</div>
         </div>
-      </Card>
 
-      <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle data-testid="text-dialog-title">Investment Details</DialogTitle>
-          </DialogHeader>
-          {selectedInvestment && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                {getAssetIcon(selectedInvestment.assetType)}
-                <div>
-                  <p className="font-semibold text-lg" data-testid="text-detail-product">{selectedInvestment.productName}</p>
-                  <p className="text-sm text-muted-foreground" data-testid="text-detail-asset-type">{selectedInvestment.assetType}</p>
+        <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all" data-testid="stat-total-value">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Current Value</p>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">${totalValue.toLocaleString("en-US", { minimumFractionDigits: 2 })}</h3>
+            </div>
+            <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400">
+              <DollarSign className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">Across all investments</div>
+        </div>
+
+        <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all" data-testid="stat-total-profit">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Total Profit</p>
+              <h3 className={`text-2xl font-bold ${totalProfit >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
+                {totalProfit >= 0 ? "+" : ""}${totalProfit.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+              </h3>
+            </div>
+            <div className={`p-3 rounded-lg ${totalProfit >= 0 ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400" : "bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400"}`}>
+              {totalProfit >= 0 ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
+            </div>
+          </div>
+          <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">
+            {totalInvested > 0 ? `${((totalProfit / totalInvested) * 100).toFixed(1)}% return` : "No returns"}
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all" data-testid="stat-active-plans">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Active Plans</p>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{activeCount}</h3>
+            </div>
+            <div className="p-3 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400">
+              <TrendingUp className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">Currently generating ROI</div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        {demoInvestments.map((inv) => {
+          const AssetIcon = getAssetIcon(inv.assetType);
+          const assetColor = getAssetColor(inv.assetType);
+          const profitPositive = inv.currentProfit >= 0;
+
+          return (
+            <div
+              key={inv.id}
+              className="bg-[#0f172a] rounded-xl shadow-sm overflow-visible"
+              data-testid={`card-investment-${inv.id}`}
+            >
+              <div className="p-5">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-3">
+                    <span className={`bg-gray-800 p-2 rounded-lg ${assetColor}`}>
+                      <AssetIcon className="w-5 h-5" />
+                    </span>
+                    <div>
+                      <span className="font-bold text-white text-base" data-testid={`text-product-name-${inv.id}`}>
+                        {inv.productName}
+                      </span>
+                      <p className="text-gray-400 text-xs mt-0.5">{inv.assetType} Investment</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className={`border px-3 py-1 rounded-lg text-xs font-bold ${getStatusBadge(inv.status)}`} data-testid={`badge-status-${inv.id}`}>
+                      {inv.status.toUpperCase()}
+                    </span>
+                  </div>
                 </div>
-                <Badge className={`ml-auto ${getStatusVariant(selectedInvestment.status)} no-default-hover-elevate no-default-active-elevate`} data-testid="badge-detail-status">
-                  {selectedInvestment.status}
-                </Badge>
+
+                <div className="border-t border-gray-700 mt-4 pt-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-gray-400 uppercase text-xs font-medium tracking-wider">Invested</p>
+                      <p className="text-white text-2xl font-bold mt-1" data-testid={`text-invested-${inv.id}`}>
+                        ${inv.investmentAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 uppercase text-xs font-medium tracking-wider">Current Value</p>
+                      <p className="text-emerald-400 text-2xl font-bold mt-1" data-testid={`text-value-${inv.id}`}>
+                        ${inv.totalValue.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 uppercase text-xs font-medium tracking-wider">Profit</p>
+                      <p className={`text-base font-semibold mt-1 ${profitPositive ? "text-emerald-400" : "text-red-400"}`} data-testid={`text-profit-${inv.id}`}>
+                        {profitPositive ? "+" : ""}${inv.currentProfit.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 uppercase text-xs font-medium tracking-wider">Monthly ROI</p>
+                      <p className="text-white text-base font-semibold mt-1" data-testid={`text-roi-${inv.id}`}>
+                        {inv.monthlyROI}%
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t border-gray-700 mt-4 pt-3">
+                  <div className="flex items-center justify-between text-xs text-gray-400">
+                    <span>Lock-in: {inv.lockInPeriod}</span>
+                    <span>Maturity: {new Date(inv.maturityDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                  </div>
+                </div>
               </div>
 
-              <p className="text-sm text-muted-foreground" data-testid="text-detail-description">{selectedInvestment.description}</p>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Investment Amount</p>
-                  <p className="font-semibold" data-testid="text-detail-amount">${selectedInvestment.investmentAmount.toLocaleString()}</p>
+              <div className="border-t border-gray-700 px-2 py-3">
+                <div className="grid grid-cols-5">
+                  {cardActions.map((action) => (
+                    <button
+                      key={action.label}
+                      onClick={() => action.action(inv)}
+                      className="flex flex-col items-center justify-center cursor-pointer group"
+                      data-testid={`button-action-${action.label.toLowerCase()}-${inv.id}`}
+                    >
+                      <action.icon className="text-gray-400 w-5 h-5 group-hover:text-white transition-colors" />
+                      <span className="text-gray-400 text-[10px] mt-1 group-hover:text-white transition-colors">{action.label}</span>
+                    </button>
+                  ))}
                 </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Current Value</p>
-                  <p className="font-semibold" data-testid="text-detail-value">${selectedInvestment.totalValue.toLocaleString()}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Current Profit</p>
-                  <p className={`font-semibold ${selectedInvestment.currentProfit >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`} data-testid="text-detail-profit">
-                    {selectedInvestment.currentProfit >= 0 ? "+" : ""}${selectedInvestment.currentProfit.toLocaleString()}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Monthly ROI</p>
-                  <p className="font-semibold" data-testid="text-detail-roi">{selectedInvestment.monthlyROI}%</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Lock-in Period</p>
-                  <p className="font-semibold" data-testid="text-detail-lockin">{selectedInvestment.lockInPeriod}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Start Date</p>
-                  <p className="font-semibold" data-testid="text-detail-start">{selectedInvestment.startDate}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Maturity Date</p>
-                  <p className="font-semibold" data-testid="text-detail-maturity">{selectedInvestment.maturityDate}</p>
-                </div>
-              </div>
-
-              <div className="flex gap-2 pt-2 flex-wrap">
-                <Button
-                  onClick={() => {
-                    handleReinvest(selectedInvestment);
-                    setDetailsOpen(false);
-                  }}
-                  disabled={selectedInvestment.currentProfit <= 0}
-                  data-testid="button-detail-reinvest"
-                >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Reinvest Profit
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    handleWithdrawal(selectedInvestment);
-                    setDetailsOpen(false);
-                  }}
-                  disabled={selectedInvestment.status === "Locked"}
-                  data-testid="button-detail-withdraw"
-                >
-                  <ArrowDownToLine className="h-4 w-4 mr-2" />
-                  Request Withdrawal
-                </Button>
               </div>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+          );
+        })}
+      </div>
+
+      {demoInvestments.length === 0 && (
+        <div className="bg-white dark:bg-dark-card p-12 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm text-center">
+          <div className="w-14 h-14 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-4">
+            <Briefcase className="w-7 h-7 text-gray-400" />
+          </div>
+          <p className="font-medium text-gray-900 dark:text-white mb-1">No investments found</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Browse investment products to get started.</p>
+        </div>
+      )}
     </div>
   );
 }
