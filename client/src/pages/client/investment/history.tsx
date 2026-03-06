@@ -9,6 +9,8 @@ import {
   CheckCircle2,
   XCircle,
   Filter,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 type HistoryType = "Investment Started" | "ROI Received" | "Withdrawal" | "Completed";
@@ -82,13 +84,22 @@ function getStatusBadgeClass(status: HistoryStatus) {
   }
 }
 
+const ITEMS_PER_PAGE = 5;
+
 export default function InvestmentHistoryPage() {
   const [activeTab, setActiveTab] = useState<FilterTab>("All");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [showAll, setShowAll] = useState(false);
 
   const filteredData = demoHistoryData.filter((entry) => {
     if (activeTab === "All") return true;
     return entry.status === activeTab;
   });
+
+  const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
+  const displayedData = showAll
+    ? filteredData
+    : filteredData.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto">
@@ -101,6 +112,26 @@ export default function InvestmentHistoryPage() {
             Complete record of all your investment activities
           </p>
         </div>
+        {!showAll && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => { setShowAll(true); setCurrentPage(1); }}
+            data-testid="button-view-all-history"
+          >
+            View All
+          </Button>
+        )}
+        {showAll && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => { setShowAll(false); setCurrentPage(1); }}
+            data-testid="button-paginate-history"
+          >
+            Show Less
+          </Button>
+        )}
       </div>
 
       <div className="flex items-center gap-2 flex-wrap">
@@ -110,7 +141,7 @@ export default function InvestmentHistoryPage() {
             key={tab}
             variant={activeTab === tab ? "default" : "outline"}
             size="sm"
-            onClick={() => setActiveTab(tab)}
+            onClick={() => { setActiveTab(tab); setCurrentPage(1); }}
             data-testid={`button-filter-${tab.toLowerCase()}`}
           >
             {tab}
@@ -131,7 +162,7 @@ export default function InvestmentHistoryPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredData.length === 0 ? (
+              {displayedData.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="p-8 text-center text-gray-500 dark:text-gray-400">
                     <History className="w-8 h-8 mx-auto mb-2 opacity-50" />
@@ -139,7 +170,7 @@ export default function InvestmentHistoryPage() {
                   </td>
                 </tr>
               ) : (
-                filteredData.map((entry) => (
+                displayedData.map((entry) => (
                   <tr
                     key={entry.id}
                     className="border-b border-gray-100 dark:border-gray-800 last:border-b-0"
@@ -179,9 +210,58 @@ export default function InvestmentHistoryPage() {
         </div>
       </div>
 
-      <div className="text-sm text-gray-500 dark:text-gray-400 text-center" data-testid="text-results-count">
-        Showing {filteredData.length} of {demoHistoryData.length} records
-      </div>
+      {!showAll && totalPages > 1 && (
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <p className="text-sm text-gray-500 dark:text-gray-400" data-testid="text-history-page-info">
+            Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, filteredData.length)} of {filteredData.length}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((p) => p - 1)}
+              data-testid="button-history-prev"
+            >
+              <ChevronLeft className="w-4 h-4 mr-1" />
+              Previous
+            </Button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <Button
+                key={page}
+                variant={currentPage === page ? "default" : "outline"}
+                size="sm"
+                onClick={() => setCurrentPage(page)}
+                data-testid={`button-history-page-${page}`}
+              >
+                {page}
+              </Button>
+            ))}
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((p) => p + 1)}
+              data-testid="button-history-next"
+            >
+              Next
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {showAll && (
+        <p className="text-sm text-gray-500 dark:text-gray-400 text-center" data-testid="text-results-count">
+          Showing all {filteredData.length} of {demoHistoryData.length} records
+        </p>
+      )}
+
+      {!showAll && totalPages <= 1 && (
+        <p className="text-sm text-gray-500 dark:text-gray-400 text-center" data-testid="text-results-count">
+          Showing {filteredData.length} of {demoHistoryData.length} records
+        </p>
+      )}
     </div>
   );
 }

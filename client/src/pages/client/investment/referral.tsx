@@ -11,6 +11,8 @@ import {
   UserCheck,
   ArrowLeftRight,
   Gift,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import {
   AreaChart,
@@ -64,10 +66,14 @@ const demoCommissions = [
   { id: "c-6", investorName: "lisa.p***@email.com", investmentAmount: "$20,000.00", commissionPct: "5%", commissionEarned: "$1,000.00", status: "paid" as const },
 ];
 
+const ITEMS_PER_PAGE = 5;
+
 export default function InvestmentReferral() {
   const { toast } = useToast();
   const [transferOpen, setTransferOpen] = useState(false);
   const [transferAmount, setTransferAmount] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [showAll, setShowAll] = useState(false);
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(referralLink).then(() => {
@@ -218,48 +224,132 @@ export default function InvestmentReferral() {
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white" data-testid="text-commission-history-title">
           Commission History
         </h2>
+        {!showAll && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => { setShowAll(true); setCurrentPage(1); }}
+            data-testid="button-view-all-commissions"
+          >
+            View All
+          </Button>
+        )}
+        {showAll && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => { setShowAll(false); setCurrentPage(1); }}
+            data-testid="button-paginate-commissions"
+          >
+            Show Less
+          </Button>
+        )}
       </div>
 
-      <Card className="overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm" data-testid="table-commissions">
-            <thead>
-              <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
-                <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Investor Name</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Investment Amount</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Commission %</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Commission Earned</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {demoCommissions.map((commission, index) => (
-                <tr
-                  key={commission.id}
-                  className={`border-b border-gray-100 dark:border-gray-800 last:border-0 ${
-                    index % 2 === 0 ? "" : "bg-gray-50/50 dark:bg-gray-800/20"
-                  }`}
-                  data-testid={`row-commission-${index}`}
-                >
-                  <td className="py-3 px-4 font-medium text-gray-900 dark:text-white">{commission.investorName}</td>
-                  <td className="py-3 px-4 text-gray-700 dark:text-gray-300">{commission.investmentAmount}</td>
-                  <td className="py-3 px-4 text-gray-700 dark:text-gray-300">{commission.commissionPct}</td>
-                  <td className="py-3 px-4 text-gray-700 dark:text-gray-300">{commission.commissionEarned}</td>
-                  <td className="py-3 px-4">
-                    <Badge className={
-                      commission.status === "paid"
-                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                        : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
-                    }>
-                      {commission.status === "paid" ? "Paid" : "Pending"}
-                    </Badge>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+      {(() => {
+        const totalPages = Math.ceil(demoCommissions.length / ITEMS_PER_PAGE);
+        const displayedCommissions = showAll
+          ? demoCommissions
+          : demoCommissions.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+        return (
+          <>
+            <Card className="overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm" data-testid="table-commissions">
+                  <thead>
+                    <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+                      <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Investor Name</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Investment Amount</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Commission %</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Commission Earned</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-500 dark:text-gray-400">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {displayedCommissions.map((commission, index) => (
+                      <tr
+                        key={commission.id}
+                        className={`border-b border-gray-100 dark:border-gray-800 last:border-0 ${
+                          index % 2 === 0 ? "" : "bg-gray-50/50 dark:bg-gray-800/20"
+                        }`}
+                        data-testid={`row-commission-${commission.id}`}
+                      >
+                        <td className="py-3 px-4 font-medium text-gray-900 dark:text-white">{commission.investorName}</td>
+                        <td className="py-3 px-4 text-gray-700 dark:text-gray-300">{commission.investmentAmount}</td>
+                        <td className="py-3 px-4 text-gray-700 dark:text-gray-300">{commission.commissionPct}</td>
+                        <td className="py-3 px-4 text-gray-700 dark:text-gray-300">{commission.commissionEarned}</td>
+                        <td className="py-3 px-4">
+                          <Badge className={
+                            commission.status === "paid"
+                              ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                              : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                          }>
+                            {commission.status === "paid" ? "Paid" : "Pending"}
+                          </Badge>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+
+            {!showAll && totalPages > 1 && (
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <p className="text-sm text-gray-500 dark:text-gray-400" data-testid="text-commission-page-info">
+                  Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, demoCommissions.length)} of {demoCommissions.length}
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage((p) => p - 1)}
+                    data-testid="button-commission-prev"
+                  >
+                    <ChevronLeft className="w-4 h-4 mr-1" />
+                    Previous
+                  </Button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(page)}
+                      data-testid={`button-commission-page-${page}`}
+                    >
+                      {page}
+                    </Button>
+                  ))}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage((p) => p + 1)}
+                    data-testid="button-commission-next"
+                  >
+                    Next
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {showAll && (
+              <p className="text-sm text-gray-500 dark:text-gray-400 text-center" data-testid="text-commission-total">
+                Showing all {demoCommissions.length} records
+              </p>
+            )}
+
+            {!showAll && totalPages <= 1 && (
+              <p className="text-sm text-gray-500 dark:text-gray-400 text-center" data-testid="text-commission-total">
+                Showing {demoCommissions.length} records
+              </p>
+            )}
+          </>
+        );
+      })()}
 
       <Dialog open={transferOpen} onOpenChange={setTransferOpen}>
         <DialogContent className="sm:max-w-md bg-[#0f172a] border-gray-800 text-white p-0 overflow-hidden">
