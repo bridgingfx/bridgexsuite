@@ -146,18 +146,21 @@ const section2Menu: MenuItem[] = [
       { title: "Profit Distribution", url: "/investment/profit", icon: PieChart },
     ],
   },
+  { title: "Download Platform", url: "/download-platform", icon: Download, iconColor: "text-cyan-500 dark:text-cyan-400" },
+];
+
+const rewardsMenu: MenuItem[] = [
+  { title: "Loyalty Points", url: "/rewards/loyalty-points", icon: Star, iconColor: "text-amber-500 dark:text-amber-400" },
   {
-    title: "Rewards",
-    url: "/rewards/loyalty-points",
-    icon: Gift,
-    iconColor: "text-orange-500 dark:text-orange-400",
+    title: "Merchandise",
+    url: "/rewards/merchandise",
+    icon: ShoppingBag,
+    iconColor: "text-purple-500 dark:text-purple-400",
     children: [
-      { title: "Loyalty Points", url: "/rewards/loyalty-points", icon: Star },
-      { title: "Products", url: "/rewards/merchandise", icon: ShoppingBag },
+      { title: "Products", url: "/rewards/merchandise", icon: Package },
       { title: "Transaction History", url: "/rewards/transactions", icon: History },
     ],
   },
-  { title: "Download Platform", url: "/download-platform", icon: Download, iconColor: "text-cyan-500 dark:text-cyan-400" },
 ];
 
 const exchangeMenu: MenuItem[] = [
@@ -271,10 +274,11 @@ export function AppSidebar() {
   const initials = user?.fullName?.split(" ").map((n: string) => n[0]).join("").toUpperCase() || "U";
 
   const filteredSection2 = section2Menu.filter((item) => isVisible(item.title));
+  const filteredRewards = isVisible("Rewards") ? rewardsMenu : [];
   const filteredExchange = exchangeMenu.filter((item) => isVisible(item.title));
   const filteredTools = toolsMenu.filter((item) => isVisible(item.title));
 
-  const defaultExpanded = location.startsWith("/forex") ? "Forex Trading" : location.startsWith("/prop") ? "Prop Trading" : location.startsWith("/leagues") ? "Leagues" : location.startsWith("/investment") ? "Investments" : location.startsWith("/rewards") ? "Rewards" : location.startsWith("/crypto") ? "Crypto Exchange" : location.startsWith("/tools") ? "Tools" : "";
+  const defaultExpanded = location.startsWith("/forex") ? "Forex Trading" : location.startsWith("/prop") ? "Prop Trading" : location.startsWith("/leagues") ? "Leagues" : location.startsWith("/investment") ? "Investments" : (location === "/rewards/merchandise" || location === "/rewards/transactions") ? "Merchandise" : location.startsWith("/crypto") ? "Crypto Exchange" : location.startsWith("/tools") ? "Tools" : "";
   const [expandedMenu, setExpandedMenu] = useState(defaultExpanded);
 
   function handleToggle(name: string) {
@@ -340,6 +344,21 @@ export function AppSidebar() {
             <SidebarGroupContent>
               <SidebarMenu className="px-2 space-y-0.5">
                 {filteredSection2.map((item) => (
+                  <NavItem key={item.title} item={item} expandedMenu={expandedMenu} onToggle={handleToggle} />
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        {filteredRewards.length > 0 && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground/70 px-5">
+              Rewards
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu className="px-2 space-y-0.5">
+                {filteredRewards.map((item) => (
                   <NavItem key={item.title} item={item} expandedMenu={expandedMenu} onToggle={handleToggle} />
                 ))}
               </SidebarMenu>
