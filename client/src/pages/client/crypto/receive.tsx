@@ -1,28 +1,86 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, QrCode, Wallet, CheckCircle2, Clock } from "lucide-react";
+import { Copy, QrCode, CheckCircle2, Clock } from "lucide-react";
 
-const cryptoAssets = [
-  { symbol: "BTC", name: "Bitcoin", network: "Bitcoin", address: "bc1q84x2j7pv9n2k8r4f5y3z6w0t1qm9c8h7d5j2l", icon: "₿" },
-  { symbol: "ETH", name: "Ethereum", network: "Ethereum (ERC-20)", address: "0x1A2b3C4d5E6f7G8h9I0j1K2l3M4n5O6p7Q8r9S0t", icon: "Ξ" },
-  { symbol: "USDT", name: "Tether", network: "Ethereum (ERC-20)", address: "0x1A2b3C4d5E6f7G8h9I0j1K2l3M4n5O6p7Q8r9S0t", icon: "₮" },
-  { symbol: "USDC", name: "USD Coin", network: "Ethereum (ERC-20)", address: "0x1A2b3C4d5E6f7G8h9I0j1K2l3M4n5O6p7Q8r9S0t", icon: "$" },
+interface Network {
+  name: string;
+  address: string;
+  minDeposit: string;
+  confirmations: string;
+}
+
+interface CryptoAsset {
+  symbol: string;
+  name: string;
+  networks: Network[];
+}
+
+const cryptoAssets: CryptoAsset[] = [
+  {
+    symbol: "BTC", name: "Bitcoin",
+    networks: [
+      { name: "Bitcoin", address: "bc1q84x2j7pv9n2k8r4f5y3z6w0t1qm9c8h7d5j2l", minDeposit: "0.0001 BTC", confirmations: "2 confirmations" },
+      { name: "BNB Smart Chain (BEP-20)", address: "0x1A2b3C4d5E6f7G8h9I0j1K2l3M4n5O6p7Q8r9S0t", minDeposit: "0.0001 BTC", confirmations: "15 confirmations" },
+      { name: "Lightning Network", address: "lnbc1pvjluezsp5...qqqqqqqqqqqqqq", minDeposit: "0.000001 BTC", confirmations: "Instant" },
+    ],
+  },
+  {
+    symbol: "ETH", name: "Ethereum",
+    networks: [
+      { name: "Ethereum (ERC-20)", address: "0x1A2b3C4d5E6f7G8h9I0j1K2l3M4n5O6p7Q8r9S0t", minDeposit: "0.001 ETH", confirmations: "12 confirmations" },
+      { name: "Arbitrum One", address: "0x1A2b3C4d5E6f7G8h9I0j1K2l3M4n5O6p7Q8r9S0t", minDeposit: "0.001 ETH", confirmations: "12 confirmations" },
+      { name: "Optimism", address: "0x1A2b3C4d5E6f7G8h9I0j1K2l3M4n5O6p7Q8r9S0t", minDeposit: "0.001 ETH", confirmations: "12 confirmations" },
+      { name: "BNB Smart Chain (BEP-20)", address: "0x1A2b3C4d5E6f7G8h9I0j1K2l3M4n5O6p7Q8r9S0t", minDeposit: "0.001 ETH", confirmations: "15 confirmations" },
+    ],
+  },
+  {
+    symbol: "TRX", name: "Tron",
+    networks: [
+      { name: "Tron (TRC-20)", address: "TXk93nFQp8M2R7v6JwZ1K5dL9cY2hN3mP2", minDeposit: "1 TRX", confirmations: "20 confirmations" },
+    ],
+  },
+  {
+    symbol: "USDT", name: "Tether",
+    networks: [
+      { name: "Ethereum (ERC-20)", address: "0x1A2b3C4d5E6f7G8h9I0j1K2l3M4n5O6p7Q8r9S0t", minDeposit: "10 USDT", confirmations: "12 confirmations" },
+      { name: "Tron (TRC-20)", address: "TXk93nFQp8M2R7v6JwZ1K5dL9cY2hN3mP2", minDeposit: "1 USDT", confirmations: "20 confirmations" },
+      { name: "BNB Smart Chain (BEP-20)", address: "0x1A2b3C4d5E6f7G8h9I0j1K2l3M4n5O6p7Q8r9S0t", minDeposit: "1 USDT", confirmations: "15 confirmations" },
+      { name: "Solana", address: "7K5f...9mVq", minDeposit: "1 USDT", confirmations: "32 confirmations" },
+      { name: "Polygon", address: "0x1A2b3C4d5E6f7G8h9I0j1K2l3M4n5O6p7Q8r9S0t", minDeposit: "1 USDT", confirmations: "128 confirmations" },
+    ],
+  },
+  {
+    symbol: "USDC", name: "USD Coin",
+    networks: [
+      { name: "Ethereum (ERC-20)", address: "0x1A2b3C4d5E6f7G8h9I0j1K2l3M4n5O6p7Q8r9S0t", minDeposit: "10 USDC", confirmations: "12 confirmations" },
+      { name: "Tron (TRC-20)", address: "TXk93nFQp8M2R7v6JwZ1K5dL9cY2hN3mP2", minDeposit: "1 USDC", confirmations: "20 confirmations" },
+      { name: "BNB Smart Chain (BEP-20)", address: "0x1A2b3C4d5E6f7G8h9I0j1K2l3M4n5O6p7Q8r9S0t", minDeposit: "1 USDC", confirmations: "15 confirmations" },
+      { name: "Solana", address: "7K5f...9mVq", minDeposit: "1 USDC", confirmations: "32 confirmations" },
+      { name: "Polygon", address: "0x1A2b3C4d5E6f7G8h9I0j1K2l3M4n5O6p7Q8r9S0t", minDeposit: "1 USDC", confirmations: "128 confirmations" },
+      { name: "Arbitrum One", address: "0x1A2b3C4d5E6f7G8h9I0j1K2l3M4n5O6p7Q8r9S0t", minDeposit: "1 USDC", confirmations: "12 confirmations" },
+    ],
+  },
 ];
 
 const recentReceives = [
   { id: "r1", from: "0x7e8f...3b2a", amount: "0.15 BTC", usd: "$6,427.50", time: "5h ago", status: "Completed" },
-  { id: "r2", from: "0x9c0d...5e4f", amount: "500 USDT", usd: "$500.00", time: "1d ago", status: "Completed" },
+  { id: "r2", from: "TXk9...3mP2", amount: "500 USDT", usd: "$500.00", time: "1d ago", status: "Completed" },
   { id: "r3", from: "0x2a1b...8g7h", amount: "1.2 ETH", usd: "$2,773.92", time: "2d ago", status: "Pending" },
 ];
 
 export default function CryptoReceivePage() {
   const { toast } = useToast();
   const [selectedAsset, setSelectedAsset] = useState(cryptoAssets[0]);
+  const [selectedNetwork, setSelectedNetwork] = useState(cryptoAssets[0].networks[0]);
+
+  function handleAssetChange(asset: CryptoAsset) {
+    setSelectedAsset(asset);
+    setSelectedNetwork(asset.networks[0]);
+  }
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(selectedAsset.address).then(() => {
+    navigator.clipboard.writeText(selectedNetwork.address).then(() => {
       toast({ title: "Address copied to clipboard!" });
     });
   };
@@ -42,11 +100,11 @@ export default function CryptoReceivePage() {
         <div className="space-y-6">
           <div className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6 space-y-5">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Select Asset</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
               {cryptoAssets.map((asset) => (
                 <button
                   key={asset.symbol}
-                  onClick={() => setSelectedAsset(asset)}
+                  onClick={() => handleAssetChange(asset)}
                   className={`p-3 rounded-lg border text-left transition-all ${
                     selectedAsset.symbol === asset.symbol
                       ? "border-brand-500 bg-brand-500/5 dark:bg-brand-500/10"
@@ -54,24 +112,41 @@ export default function CryptoReceivePage() {
                   }`}
                   data-testid={`button-asset-${asset.symbol.toLowerCase()}`}
                 >
-                  <p className="text-lg font-bold text-gray-900 dark:text-white">{asset.icon} {asset.symbol}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{asset.name}</p>
+                  <p className="text-base font-bold text-gray-900 dark:text-white">{asset.symbol}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{asset.name}</p>
                 </button>
               ))}
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Network</label>
-              <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
-                <p className="text-sm font-medium text-gray-900 dark:text-white" data-testid="text-network">{selectedAsset.network}</p>
+            <div className="space-y-3">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Select Network</label>
+              <div className="grid gap-2">
+                {selectedAsset.networks.map((network) => (
+                  <button
+                    key={network.name}
+                    onClick={() => setSelectedNetwork(network)}
+                    className={`w-full p-3 rounded-lg border text-left transition-all ${
+                      selectedNetwork.name === network.name
+                        ? "border-brand-500 bg-brand-500/5 dark:bg-brand-500/10"
+                        : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                    }`}
+                    data-testid={`button-network-${network.name.toLowerCase().replace(/[\s()/-]/g, '-')}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">{network.name}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{network.confirmations}</p>
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Min deposit: {network.minDeposit}</p>
+                  </button>
+                ))}
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Your {selectedAsset.symbol} Address</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Your {selectedAsset.symbol} Address ({selectedNetwork.name})</label>
               <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3 border border-gray-200 dark:border-gray-700 flex items-center justify-between gap-3">
                 <p className="text-sm font-mono text-gray-900 dark:text-white break-all" data-testid="text-wallet-address">
-                  {selectedAsset.address}
+                  {selectedNetwork.address}
                 </p>
                 <Button variant="outline" size="sm" onClick={handleCopy} data-testid="button-copy-address">
                   <Copy className="w-4 h-4" />
@@ -88,9 +163,24 @@ export default function CryptoReceivePage() {
               </div>
             </div>
 
+            <div className="bg-gray-50 dark:bg-gray-800/30 rounded-lg p-3 space-y-1.5 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-500 dark:text-gray-400">Network</span>
+                <span className="font-medium text-gray-900 dark:text-white" data-testid="text-selected-network">{selectedNetwork.name}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-500 dark:text-gray-400">Min Deposit</span>
+                <span className="font-mono text-gray-900 dark:text-white" data-testid="text-min-deposit">{selectedNetwork.minDeposit}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-500 dark:text-gray-400">Confirmations</span>
+                <span className="text-gray-900 dark:text-white" data-testid="text-confirmations">{selectedNetwork.confirmations}</span>
+              </div>
+            </div>
+
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
               <p className="text-xs text-blue-700 dark:text-blue-400">
-                Only send {selectedAsset.symbol} on the {selectedAsset.network} network. Sending other assets or using a different network may result in permanent loss.
+                Only send {selectedAsset.symbol} on the <strong>{selectedNetwork.name}</strong> network. Sending other assets or using a different network may result in permanent loss.
               </p>
             </div>
           </div>
