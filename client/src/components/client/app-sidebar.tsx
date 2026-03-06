@@ -153,7 +153,8 @@ const section2Menu: MenuItem[] = [
     iconColor: "text-orange-500 dark:text-orange-400",
     children: [
       { title: "Loyalty Points", url: "/rewards/loyalty-points", icon: Star },
-      { title: "Merchandise", url: "/rewards/merchandise", icon: ShoppingBag },
+      { title: "Products", url: "/rewards/merchandise", icon: ShoppingBag },
+      { title: "Transaction History", url: "/rewards/transactions", icon: History },
     ],
   },
   { title: "Download Platform", url: "/download-platform", icon: Download, iconColor: "text-cyan-500 dark:text-cyan-400" },

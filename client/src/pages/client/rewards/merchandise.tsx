@@ -12,10 +12,7 @@ import {
   ShoppingBag,
   Star,
   ShoppingCart,
-  Package,
-  Truck,
   CheckCircle,
-  Filter,
   Search,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -205,43 +202,6 @@ export default function MerchandisePage() {
             <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Try adjusting your search or category filter</p>
           </div>
         )}
-      </div>
-
-      <div className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-6" data-testid="order-history-section">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Recent Orders</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b text-left">
-                <th className="pb-3 font-medium text-gray-500 dark:text-gray-400">Item</th>
-                <th className="pb-3 font-medium text-gray-500 dark:text-gray-400">Date</th>
-                <th className="pb-3 font-medium text-gray-500 dark:text-gray-400">Points</th>
-                <th className="pb-3 font-medium text-gray-500 dark:text-gray-400">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                { item: "BridgeX Premium T-Shirt", date: "2024-01-20", points: 2000, status: "Delivered" },
-                { item: "Trader's Coffee Mug", date: "2024-01-05", points: 800, status: "Shipped" },
-              ].map((order, i) => (
-                <tr key={i} className="border-b last:border-0" data-testid={`order-row-${i}`}>
-                  <td className="py-3 font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                    <Package className="w-4 h-4 text-gray-400" />
-                    {order.item}
-                  </td>
-                  <td className="py-3 text-gray-500 dark:text-gray-400">{order.date}</td>
-                  <td className="py-3 text-amber-600 dark:text-amber-400 font-semibold">-{order.points.toLocaleString()}</td>
-                  <td className="py-3">
-                    <Badge variant={order.status === "Delivered" ? "default" : "secondary"} className={order.status === "Delivered" ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300" : ""}>
-                      {order.status === "Delivered" ? <CheckCircle className="w-3 h-3 mr-1" /> : <Truck className="w-3 h-3 mr-1" />}
-                      {order.status}
-                    </Badge>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
       </div>
 
       <Dialog open={orderDialogOpen} onOpenChange={setOrderDialogOpen}>
