@@ -87,6 +87,21 @@ export default function PropReferral() {
       </Card>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {demoStats.map((stat) => (
+          <Card key={stat.label} className="p-5" data-testid={`card-stat-${stat.label.toLowerCase().replace(/\s+/g, "-")}`}>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{stat.label}</p>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white" data-testid={`text-stat-${stat.label.toLowerCase().replace(/\s+/g, "-")}`}>
+                  {stat.value}
+                </h3>
+              </div>
+              <div className={`p-3 rounded-lg ${stat.color}`}>
+                <stat.icon className="w-5 h-5" />
+              </div>
+            </div>
+          </Card>
+        ))}
         <Card className="p-5" data-testid="card-stat-total-affiliate-earning">
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -112,21 +127,6 @@ export default function PropReferral() {
             </Button>
           </div>
         </Card>
-        {demoStats.map((stat) => (
-          <Card key={stat.label} className="p-5" data-testid={`card-stat-${stat.label.toLowerCase().replace(/\s+/g, "-")}`}>
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{stat.label}</p>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white" data-testid={`text-stat-${stat.label.toLowerCase().replace(/\s+/g, "-")}`}>
-                  {stat.value}
-                </h3>
-              </div>
-              <div className={`p-3 rounded-lg ${stat.color}`}>
-                <stat.icon className="w-5 h-5" />
-              </div>
-            </div>
-          </Card>
-        ))}
       </div>
 
       <div className="flex items-center justify-between gap-4 flex-wrap">
