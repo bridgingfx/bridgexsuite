@@ -175,7 +175,13 @@ export default function RewardsTransactionsPage() {
   };
 
   const handleConfirmAddress = () => {
-    toast({ title: "Order processing", description: "Your shipping address has been saved and the order is being processed." });
+    const isEdit = viewOrder?.shippingAddress;
+    toast({
+      title: isEdit ? "Address updated" : "Order processing",
+      description: isEdit
+        ? "Your shipping address has been updated and the order is being processed."
+        : "Your shipping address has been saved and the order is being processed.",
+    });
     setAddressDialogOpen(false);
     setOtpSent(false);
     setOtpCode("");
@@ -391,9 +397,30 @@ export default function RewardsTransactionsPage() {
                 )}
 
                 {viewOrder.shippingAddress && (
-                  <div className="flex items-center gap-3 text-sm p-3 bg-gray-800/30 rounded-lg border border-gray-700/50">
-                    <MapPin className="w-4 h-4 text-gray-500 shrink-0" />
-                    <span className="text-gray-400" data-testid="text-detail-address">{viewOrder.shippingAddress}</span>
+                  <div className="flex items-center justify-between text-sm p-3 bg-gray-800/30 rounded-lg border border-gray-700/50">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <MapPin className="w-4 h-4 text-gray-500 shrink-0" />
+                      <span className="text-gray-400 truncate" data-testid="text-detail-address">{viewOrder.shippingAddress}</span>
+                    </div>
+                    {(viewOrder.status === "Pending" || viewOrder.status === "Approved") && (
+                      <button
+                        onClick={() => {
+                          const parts = viewOrder.shippingAddress?.split(", ") || [];
+                          setAddressForm({
+                            street: parts[0] || "",
+                            city: parts[1] || "",
+                            state: parts[2]?.replace(/\s+\d+$/, "") || "",
+                            zip: parts[2]?.match(/\d+$/)?.[0] || "",
+                            country: parts[3] || "",
+                          });
+                          setAddressDialogOpen(true);
+                        }}
+                        className="text-xs text-brand-400 hover:text-brand-300 font-medium hover:underline shrink-0 ml-3"
+                        data-testid="button-edit-address"
+                      >
+                        Edit
+                      </button>
+                    )}
                   </div>
                 )}
 
@@ -461,7 +488,7 @@ export default function RewardsTransactionsPage() {
             </DialogTitle>
             <DialogDescription className="text-gray-400">
               {!otpSent
-                ? "Enter your shipping address to process the order."
+                ? viewOrder?.shippingAddress ? "Update your shipping address. OTP verification required." : "Enter your shipping address to process the order."
                 : !otpVerified
                   ? "Enter the OTP sent to your registered email."
                   : "Your address has been verified. Confirm to process."}
