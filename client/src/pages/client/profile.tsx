@@ -32,23 +32,21 @@ interface BankAccount {
 
 interface CryptoWallet {
   id: number;
-  label: string;
+  asset: string;
   address: string;
   network: string;
   status: "Active" | "Pending Verification";
 }
 
-const cryptoNetworks = [
-  "Bitcoin",
-  "Ethereum (ERC-20)",
-  "Tron (TRC-20)",
-  "BNB Smart Chain (BEP-20)",
-  "Solana",
-  "Polygon",
-  "Arbitrum One",
-  "Optimism",
-  "Lightning Network",
-];
+const cryptoAssetNetworks: Record<string, string[]> = {
+  BTC: ["Bitcoin", "BNB Smart Chain (BEP-20)", "Lightning Network"],
+  ETH: ["Ethereum (ERC-20)", "Arbitrum One", "Optimism", "BNB Smart Chain (BEP-20)"],
+  TRX: ["Tron (TRC-20)"],
+  USDT: ["Ethereum (ERC-20)", "Tron (TRC-20)", "BNB Smart Chain (BEP-20)", "Solana", "Polygon"],
+  USDC: ["Ethereum (ERC-20)", "Tron (TRC-20)", "BNB Smart Chain (BEP-20)", "Solana", "Polygon", "Arbitrum One"],
+};
+
+const cryptoAssets = Object.keys(cryptoAssetNetworks);
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -60,15 +58,15 @@ export default function ProfilePage() {
   ]);
 
   const [cryptoWallets, setCryptoWallets] = useState<CryptoWallet[]>([
-    { id: 1, label: "My BTC Wallet", address: "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh", network: "Bitcoin", status: "Active" },
-    { id: 2, label: "ETH DeFi Wallet", address: "0x742d35Cc6634C0532925a3b844Bc9e7595f2bD18", network: "Ethereum (ERC-20)", status: "Pending Verification" },
+    { id: 1, asset: "BTC", address: "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh", network: "Bitcoin", status: "Active" },
+    { id: 2, asset: "ETH", address: "0x742d35Cc6634C0532925a3b844Bc9e7595f2bD18", network: "Ethereum (ERC-20)", status: "Pending Verification" },
   ]);
 
   const [bankDialogOpen, setBankDialogOpen] = useState(false);
   const [walletDialogOpen, setWalletDialogOpen] = useState(false);
 
   const [bankForm, setBankForm] = useState({ accountHolder: "", bankName: "", accountNumber: "", swiftCode: "" });
-  const [walletForm, setWalletForm] = useState({ label: "", address: "", network: "" });
+  const [walletForm, setWalletForm] = useState({ asset: "", network: "", address: "" });
 
   const [bankOtpStep, setBankOtpStep] = useState<"form" | "otp" | "success">("form");
   const [walletOtpStep, setWalletOtpStep] = useState<"form" | "otp" | "success">("form");
@@ -125,7 +123,7 @@ export default function ProfilePage() {
       setWalletOtpStep("success");
       const newWallet: CryptoWallet = {
         id: Date.now(),
-        label: walletForm.label,
+        asset: walletForm.asset,
         address: walletForm.address,
         network: walletForm.network,
         status: "Pending Verification",
@@ -144,7 +142,7 @@ export default function ProfilePage() {
   const resetWalletDialog = () => {
     setWalletDialogOpen(false);
     setWalletOtpStep("form");
-    setWalletForm({ label: "", address: "", network: "" });
+    setWalletForm({ asset: "", network: "", address: "" });
     setOtpValue("");
   };
 
@@ -332,7 +330,7 @@ export default function ProfilePage() {
                   <Wallet className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                 </div>
                 <div className="min-w-0">
-                  <p className="font-medium text-gray-900 dark:text-white truncate" data-testid={`text-wallet-label-${wallet.id}`}>{wallet.label}</p>
+                  <p className="font-medium text-gray-900 dark:text-white truncate" data-testid={`text-wallet-asset-${wallet.id}`}>{wallet.asset} Wallet</p>
                   <p className="text-sm text-gray-500 dark:text-gray-400 truncate" data-testid={`text-wallet-address-${wallet.id}`}>{wallet.address}</p>
                   <div className="flex items-center gap-2 mt-1 flex-wrap">
                     <Badge variant="secondary" className="text-xs no-default-hover-elevate no-default-active-elevate" data-testid={`badge-wallet-network-${wallet.id}`}>
@@ -470,7 +468,7 @@ export default function ProfilePage() {
           <DialogHeader>
             <DialogTitle className="text-white">Add Crypto Wallet</DialogTitle>
             <DialogDescription className="text-gray-400">
-              {walletOtpStep === "form" && "Enter your crypto wallet details below."}
+              {walletOtpStep === "form" && "Select your asset, network, and enter your wallet address."}
               {walletOtpStep === "otp" && "Enter the OTP sent to your email to verify."}
               {walletOtpStep === "success" && "Your crypto wallet has been submitted for verification."}
             </DialogDescription>
@@ -479,44 +477,53 @@ export default function ProfilePage() {
           {walletOtpStep === "form" && (
             <div className="space-y-4">
               <div>
-                <Label className="text-gray-300">Wallet Label</Label>
-                <Input
-                  className="mt-1 bg-gray-900 border-gray-700 text-white placeholder:text-gray-500"
-                  placeholder="Enter wallet label"
-                  value={walletForm.label}
-                  onChange={(e) => setWalletForm({ ...walletForm, label: e.target.value })}
-                  data-testid="input-wallet-label"
-                />
-              </div>
-              <div>
-                <Label className="text-gray-300">Wallet Address</Label>
-                <Input
-                  className="mt-1 bg-gray-900 border-gray-700 text-white placeholder:text-gray-500"
-                  placeholder="Enter wallet address"
-                  value={walletForm.address}
-                  onChange={(e) => setWalletForm({ ...walletForm, address: e.target.value })}
-                  data-testid="input-wallet-address"
-                />
-              </div>
-              <div>
-                <Label className="text-gray-300">Network</Label>
-                <Select value={walletForm.network} onValueChange={(val) => setWalletForm({ ...walletForm, network: val })}>
-                  <SelectTrigger className="mt-1 bg-gray-900 border-gray-700 text-white" data-testid="select-wallet-network">
-                    <SelectValue placeholder="Select network" />
+                <Label className="text-gray-300">Select Asset</Label>
+                <Select value={walletForm.asset} onValueChange={(val) => setWalletForm({ ...walletForm, asset: val, network: "", address: "" })}>
+                  <SelectTrigger className="mt-1 bg-gray-900 border-gray-700 text-white" data-testid="select-wallet-asset">
+                    <SelectValue placeholder="Select asset" />
                   </SelectTrigger>
                   <SelectContent className="bg-[#0f172a] border-gray-700">
-                    {cryptoNetworks.map((net) => (
-                      <SelectItem key={net} value={net} className="text-white" data-testid={`option-network-${net.toLowerCase().replace(/[\s()/-]+/g, '-')}`}>
-                        {net}
+                    {cryptoAssets.map((asset) => (
+                      <SelectItem key={asset} value={asset} className="text-white" data-testid={`option-asset-${asset.toLowerCase()}`}>
+                        {asset}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
+              {walletForm.asset && (
+                <div>
+                  <Label className="text-gray-300">Select Network</Label>
+                  <Select value={walletForm.network} onValueChange={(val) => setWalletForm({ ...walletForm, network: val })}>
+                    <SelectTrigger className="mt-1 bg-gray-900 border-gray-700 text-white" data-testid="select-wallet-network">
+                      <SelectValue placeholder="Select network" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#0f172a] border-gray-700">
+                      {cryptoAssetNetworks[walletForm.asset]?.map((net) => (
+                        <SelectItem key={net} value={net} className="text-white" data-testid={`option-network-${net.toLowerCase().replace(/[\s()/-]+/g, '-')}`}>
+                          {net}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              {walletForm.asset && walletForm.network && (
+                <div>
+                  <Label className="text-gray-300">Crypto Address</Label>
+                  <Input
+                    className="mt-1 bg-gray-900 border-gray-700 text-white placeholder:text-gray-500"
+                    placeholder="Enter your wallet address"
+                    value={walletForm.address}
+                    onChange={(e) => setWalletForm({ ...walletForm, address: e.target.value })}
+                    data-testid="input-wallet-address"
+                  />
+                </div>
+              )}
               <Button
                 className="w-full"
                 onClick={handleWalletSendOtp}
-                disabled={!walletForm.label || !walletForm.address || !walletForm.network || otpLoading}
+                disabled={!walletForm.asset || !walletForm.network || !walletForm.address || otpLoading}
                 data-testid="button-wallet-send-otp"
               >
                 {otpLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Mail className="w-4 h-4 mr-2" />}

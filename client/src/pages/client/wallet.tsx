@@ -32,8 +32,21 @@ import {
   Eye,
   XCircle,
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import type { Transaction, TradingAccount } from "@shared/schema";
+
+const savedCryptoWallets = [
+  { id: 1, asset: "BTC", address: "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh", network: "Bitcoin", status: "Active" as const },
+  { id: 3, asset: "USDT", address: "TN3W4H6rK2ce4vX9YnFQHwKENnHjoxb3m9", network: "Tron (TRC-20)", status: "Active" as const },
+  { id: 4, asset: "ETH", address: "0x1a2b3c4d5e6f7890abcdef1234567890abcdef12", network: "Ethereum (ERC-20)", status: "Active" as const },
+];
 
 const depositMethods = [
   { id: "crypto", name: "Crypto (USDT)", icon: Bitcoin, desc: "Instant \u2022 Zero Fees" },
@@ -398,19 +411,48 @@ export default function WalletPage() {
                   />
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {withdrawForm.method === "wallet_transfer" ? "Recipient Email Address" : withdrawForm.method === "crypto" ? "Wallet Address (TRC20)" : "Account Number / IBAN"}
-                </label>
-                <input
-                  type={withdrawForm.method === "wallet_transfer" ? "email" : "text"}
-                  placeholder={withdrawForm.method === "wallet_transfer" ? "Enter recipient's email address" : withdrawForm.method === "crypto" ? "Enter wallet address" : "Enter account details"}
-                  value={withdrawForm.details}
-                  onChange={(e) => setWithdrawForm({ ...withdrawForm, details: e.target.value })}
-                  className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none"
-                  data-testid="input-withdraw-details"
-                />
-              </div>
+              {withdrawForm.method === "crypto" ? (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Select Saved Wallet
+                  </label>
+                  <Select value={withdrawForm.details} onValueChange={(val) => setWithdrawForm({ ...withdrawForm, details: val })}>
+                    <SelectTrigger className="w-full p-3 h-auto border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" data-testid="select-withdraw-wallet">
+                      <SelectValue placeholder="Choose a saved crypto wallet" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white dark:bg-[#0f172a] border-gray-200 dark:border-gray-700">
+                      {savedCryptoWallets.map((w) => (
+                        <SelectItem key={w.id} value={w.address} className="text-gray-900 dark:text-white" data-testid={`option-wallet-${w.id}`}>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{w.asset} - {w.network}</span>
+                            <span className="text-xs text-gray-500">{w.address.slice(0, 12)}...{w.address.slice(-8)}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {withdrawForm.details && (
+                    <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg" data-testid="selected-wallet-info">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Withdraw to:</p>
+                      <p className="text-sm font-mono text-gray-900 dark:text-white break-all">{withdrawForm.details}</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    {withdrawForm.method === "wallet_transfer" ? "Recipient Email Address" : "Account Number / IBAN"}
+                  </label>
+                  <input
+                    type={withdrawForm.method === "wallet_transfer" ? "email" : "text"}
+                    placeholder={withdrawForm.method === "wallet_transfer" ? "Enter recipient's email address" : "Enter account details"}
+                    value={withdrawForm.details}
+                    onChange={(e) => setWithdrawForm({ ...withdrawForm, details: e.target.value })}
+                    className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none"
+                    data-testid="input-withdraw-details"
+                  />
+                </div>
+              )}
               {withdrawForm.method === "wallet_transfer" && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
