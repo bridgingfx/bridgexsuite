@@ -189,6 +189,7 @@ export default function MyInvestmentsPage() {
 
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [reinvestOpen, setReinvestOpen] = useState(false);
   const [selectedInvestment, setSelectedInvestment] = useState<Investment | null>(null);
   const [withdrawAmount, setWithdrawAmount] = useState("");
 
@@ -236,9 +237,32 @@ export default function MyInvestmentsPage() {
     setWithdrawAmount("");
   }
 
+  function handleReinvestClick(inv: Investment) {
+    if (inv.currentProfit <= 0) {
+      toast({
+        title: "No Profit to Reinvest",
+        description: "This investment has no available profit to reinvest.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setSelectedInvestment(inv);
+    setReinvestOpen(true);
+  }
+
+  function handleReinvestConfirm() {
+    if (!selectedInvestment) return;
+    const profit = Math.max(0, selectedInvestment.currentProfit);
+    toast({
+      title: "Reinvestment Successful",
+      description: `$${profit.toLocaleString("en-US", { minimumFractionDigits: 2 })} has been added to your ${selectedInvestment.productName}. ROI will be adjusted for the remaining lock-in period.`,
+    });
+    setReinvestOpen(false);
+  }
+
   const cardActions = [
     { label: "View", icon: Eye, action: (inv: Investment) => navigate("/investment/roi") },
-    { label: "Reinvest", icon: RefreshCw, action: (inv: Investment) => navigate("/investment/products") },
+    { label: "Reinvest", icon: RefreshCw, action: (inv: Investment) => handleReinvestClick(inv) },
     { label: "Withdraw", icon: ArrowDownToLine, action: (inv: Investment) => handleWithdrawClick(inv) },
     { label: "History", icon: History, action: (inv: Investment) => handleHistoryClick(inv) },
     { label: "Lock-in", icon: Lock, action: (inv: Investment) => navigate("/investment/lock-tracker") },
@@ -584,6 +608,84 @@ export default function MyInvestmentsPage() {
                   </p>
                 </div>
               )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={reinvestOpen} onOpenChange={setReinvestOpen}>
+        <DialogContent className="max-w-md bg-[#0f172a] border-gray-700 text-white" data-testid="dialog-reinvest">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-white">
+              <RefreshCw className="w-5 h-5 text-brand-500" />
+              Reinvest Profit
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Add your profit back to the same investment plan.
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedInvestment && (
+            <div className="space-y-4">
+              <div className="p-3 rounded-lg bg-gray-800/50 border border-gray-700">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-gray-400">Plan Name</p>
+                    <p className="font-semibold text-white" data-testid="text-reinvest-plan">{selectedInvestment.productName}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400">Profit Amount</p>
+                    <p className="text-lg font-bold text-emerald-400" data-testid="text-reinvest-amount">
+                      ${Math.max(0, selectedInvestment.currentProfit).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-lg bg-blue-900/20 border border-blue-800">
+                <p className="text-sm text-blue-300 mb-3">
+                  Would you like to reinvest <span className="font-bold text-white">${Math.max(0, selectedInvestment.currentProfit).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span> back into <span className="font-bold text-white">{selectedInvestment.productName}</span>?
+                </p>
+                <div className="space-y-2 text-xs text-blue-400">
+                  <div className="flex items-start gap-2">
+                    <CheckCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                    <span>Amount will be added to your current investment of <span className="text-white font-medium">${selectedInvestment.investmentAmount.toLocaleString()}</span></span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                    <span>New investment total: <span className="text-white font-medium">${(selectedInvestment.investmentAmount + Math.max(0, selectedInvestment.currentProfit)).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span></span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                    <span>ROI of <span className="text-white font-medium">{selectedInvestment.monthlyROI}%</span> will be adjusted for next months until the lock-in period ends</span>
+                  </div>
+                  {selectedInvestment.lockMonths - selectedInvestment.monthsCompleted > 0 && (
+                    <div className="flex items-start gap-2">
+                      <CheckCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                      <span><span className="text-white font-medium">{selectedInvestment.lockMonths - selectedInvestment.monthsCompleted}</span> month(s) remaining in lock-in period</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white"
+                  onClick={() => setReinvestOpen(false)}
+                  data-testid="button-reinvest-cancel"
+                >
+                  No, Cancel
+                </Button>
+                <Button
+                  className="flex-1 bg-brand-500 hover:bg-brand-600 text-white"
+                  onClick={handleReinvestConfirm}
+                  data-testid="button-reinvest-confirm"
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Yes, Reinvest
+                </Button>
+              </div>
             </div>
           )}
         </DialogContent>
