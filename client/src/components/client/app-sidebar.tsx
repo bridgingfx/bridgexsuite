@@ -148,7 +148,7 @@ const section2Menu: MenuItem[] = [
   { title: "Download Platform", url: "/download-platform", icon: Download, iconColor: "text-cyan-500 dark:text-cyan-400" },
 ];
 
-const section3Menu: MenuItem[] = [
+const exchangeMenu: MenuItem[] = [
   {
     title: "Crypto Exchange",
     url: "/crypto/send",
@@ -161,19 +161,14 @@ const section3Menu: MenuItem[] = [
       { title: "P2P Exchange", url: "/crypto/p2p", icon: ArrowLeftRight },
     ],
   },
-  {
-    title: "Tools",
-    url: "/tools/economic-calendar",
-    icon: Wrench,
-    iconColor: "text-violet-500 dark:text-violet-400",
-    children: [
-      { title: "Economic Calendar", url: "/tools/economic-calendar", icon: Calendar },
-      { title: "Live Charts", url: "/tools/live-charts", icon: LineChart },
-      { title: "Currency Converter", url: "/tools/currency-converter", icon: ArrowDownUp },
-      { title: "Trading Signals", url: "/tools/trading-signals", icon: Radio },
-      { title: "Market News", url: "/tools/market-news", icon: Newspaper },
-    ],
-  },
+];
+
+const toolsMenu: MenuItem[] = [
+  { title: "Economic Calendar", url: "/tools/economic-calendar", icon: Calendar, iconColor: "text-violet-500 dark:text-violet-400" },
+  { title: "Live Charts", url: "/tools/live-charts", icon: LineChart, iconColor: "text-indigo-500 dark:text-indigo-400" },
+  { title: "Currency Converter", url: "/tools/currency-converter", icon: ArrowDownUp, iconColor: "text-teal-500 dark:text-teal-400" },
+  { title: "Trading Signals", url: "/tools/trading-signals", icon: Radio, iconColor: "text-rose-500 dark:text-rose-400" },
+  { title: "Market News", url: "/tools/market-news", icon: Newspaper, iconColor: "text-amber-500 dark:text-amber-400" },
   { title: "AI Center", url: "/ai-center", icon: Sparkles, iconColor: "text-fuchsia-500 dark:text-fuchsia-400" },
 ];
 
@@ -335,11 +330,24 @@ export function AppSidebar() {
 
         <SidebarGroup>
           <SidebarGroupLabel className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground/70 px-5">
+            Exchange
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu className="px-2 space-y-0.5">
+              {exchangeMenu.map((item) => (
+                <NavItem key={item.title} item={item} expandedMenu={expandedMenu} onToggle={handleToggle} />
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground/70 px-5">
             Tools
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="px-2 space-y-0.5">
-              {section3Menu.map((item) => (
+              {toolsMenu.map((item) => (
                 <NavItem key={item.title} item={item} expandedMenu={expandedMenu} onToggle={handleToggle} />
               ))}
             </SidebarMenu>
