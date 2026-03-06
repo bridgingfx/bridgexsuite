@@ -99,9 +99,12 @@ export default function IBDashboard() {
 
   const referralLink = `${window.location.origin}/?ref=IB-001`;
 
+  const activeIBs = Math.floor(activeClients * 0.35);
+
   const kpis = [
     { title: "Total Referrals", value: totalReferrals.toString(), icon: Users, iconBg: "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400", trend: "+3 this month", isPositive: true },
     { title: "Active Clients", value: activeClients.toString(), icon: UserPlus, iconBg: "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400", trend: "+2 new", isPositive: true },
+    { title: "Active IBs", value: activeIBs.toString(), icon: Link2, iconBg: "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400", trend: "+1 this month", isPositive: true },
     { title: "Total Commission", value: `$${totalCommission.toLocaleString("en-US", { minimumFractionDigits: 2 })}`, icon: DollarSign, iconBg: "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400", trend: "+15.3%", isPositive: true, hasTransfer: true },
   ];
 
@@ -145,7 +148,7 @@ export default function IBDashboard() {
       <div className="space-y-6 max-w-[1600px] mx-auto">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-24 rounded-xl" />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-32 rounded-xl" />)}
         </div>
       </div>
@@ -193,7 +196,7 @@ export default function IBDashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {kpis.map((kpi: any) => (
           <div
             key={kpi.title}
