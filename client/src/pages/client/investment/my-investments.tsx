@@ -1,6 +1,17 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
 import {
   Eye,
   RefreshCw,
@@ -14,6 +25,10 @@ import {
   Banknote,
   DollarSign,
   Briefcase,
+  Wallet,
+  CheckCircle,
+  Calendar,
+  ArrowRight,
 } from "lucide-react";
 
 const demoInvestments = [
@@ -23,12 +38,14 @@ const demoInvestments = [
     assetType: "Gold",
     investmentAmount: 5000,
     lockInPeriod: "12 months",
+    lockMonths: 12,
     monthlyROI: 2.5,
     currentProfit: 1250,
     status: "Active",
     startDate: "2024-06-15",
     maturityDate: "2025-06-15",
     totalValue: 6250,
+    monthsCompleted: 10,
   },
   {
     id: "inv-2",
@@ -36,12 +53,14 @@ const demoInvestments = [
     assetType: "Crypto",
     investmentAmount: 10000,
     lockInPeriod: "6 months",
+    lockMonths: 6,
     monthlyROI: 4.2,
     currentProfit: 2520,
     status: "Active",
     startDate: "2024-09-01",
     maturityDate: "2025-03-01",
     totalValue: 12520,
+    monthsCompleted: 6,
   },
   {
     id: "inv-3",
@@ -49,12 +68,14 @@ const demoInvestments = [
     assetType: "Currency",
     investmentAmount: 8000,
     lockInPeriod: "3 months",
+    lockMonths: 3,
     monthlyROI: 1.8,
     currentProfit: 432,
     status: "Matured",
     startDate: "2024-08-01",
     maturityDate: "2024-11-01",
     totalValue: 8432,
+    monthsCompleted: 3,
   },
   {
     id: "inv-4",
@@ -62,12 +83,14 @@ const demoInvestments = [
     assetType: "Gold",
     investmentAmount: 25000,
     lockInPeriod: "24 months",
+    lockMonths: 24,
     monthlyROI: 3.5,
     currentProfit: 8750,
     status: "Locked",
     startDate: "2024-03-10",
     maturityDate: "2026-03-10",
     totalValue: 33750,
+    monthsCompleted: 10,
   },
   {
     id: "inv-5",
@@ -75,12 +98,14 @@ const demoInvestments = [
     assetType: "Crypto",
     investmentAmount: 3000,
     lockInPeriod: "6 months",
+    lockMonths: 6,
     monthlyROI: 3.8,
     currentProfit: -420,
     status: "Active",
     startDate: "2024-11-15",
     maturityDate: "2025-05-15",
     totalValue: 2580,
+    monthsCompleted: 4,
   },
   {
     id: "inv-6",
@@ -88,14 +113,36 @@ const demoInvestments = [
     assetType: "Currency",
     investmentAmount: 15000,
     lockInPeriod: "12 months",
+    lockMonths: 12,
     monthlyROI: 2.8,
     currentProfit: 3360,
     status: "Active",
     startDate: "2024-04-20",
     maturityDate: "2025-04-20",
     totalValue: 18360,
+    monthsCompleted: 11,
   },
 ];
+
+type Investment = typeof demoInvestments[0];
+
+function generateMonthlyHistory(inv: Investment) {
+  const start = new Date(inv.startDate);
+  const rows = [];
+  for (let m = 0; m < inv.monthsCompleted; m++) {
+    const monthDate = new Date(start);
+    monthDate.setMonth(monthDate.getMonth() + m + 1);
+    const roiAmount = (inv.investmentAmount * inv.monthlyROI) / 100;
+    const isReinvested = m % 3 === 1;
+    rows.push({
+      month: m + 1,
+      date: monthDate.toLocaleDateString("en-US", { month: "short", year: "numeric" }),
+      roiAmount,
+      action: isReinvested ? "Reinvested" : "Transferred to Wallet",
+    });
+  }
+  return rows;
+}
 
 function getStatusBadge(status: string) {
   switch (status) {
@@ -138,19 +185,66 @@ function getAssetColor(assetType: string) {
 
 export default function MyInvestmentsPage() {
   const [, navigate] = useLocation();
+  const { toast } = useToast();
+
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [selectedInvestment, setSelectedInvestment] = useState<Investment | null>(null);
+  const [withdrawAmount, setWithdrawAmount] = useState("");
 
   const totalInvested = demoInvestments.reduce((s, i) => s + i.investmentAmount, 0);
   const totalValue = demoInvestments.reduce((s, i) => s + i.totalValue, 0);
   const totalProfit = demoInvestments.reduce((s, i) => s + i.currentProfit, 0);
   const activeCount = demoInvestments.filter((i) => i.status === "Active").length;
 
+  function handleWithdrawClick(inv: Investment) {
+    if (inv.status === "Locked") {
+      toast({
+        title: "Withdrawal Not Available",
+        description: "This investment is still within its lock-in period.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setSelectedInvestment(inv);
+    setWithdrawAmount("");
+    setWithdrawOpen(true);
+  }
+
+  function handleHistoryClick(inv: Investment) {
+    setSelectedInvestment(inv);
+    setHistoryOpen(true);
+  }
+
+  function handleWithdrawConfirm() {
+    if (!selectedInvestment) return;
+    const amount = Number(withdrawAmount);
+    if (!amount || amount <= 0) return;
+    if (amount > Math.max(0, selectedInvestment.currentProfit)) {
+      toast({
+        title: "Insufficient Profit",
+        description: "Withdrawal amount cannot exceed available profit.",
+        variant: "destructive",
+      });
+      return;
+    }
+    toast({
+      title: "Withdrawal Successful",
+      description: `$${amount.toLocaleString("en-US", { minimumFractionDigits: 2 })} from ${selectedInvestment.productName} has been transferred to your Main Wallet.`,
+    });
+    setWithdrawOpen(false);
+    setWithdrawAmount("");
+  }
+
   const cardActions = [
-    { label: "View", icon: Eye, action: (_inv: typeof demoInvestments[0]) => navigate("/investment/roi") },
-    { label: "Reinvest", icon: RefreshCw, action: (_inv: typeof demoInvestments[0]) => navigate("/investment/products") },
-    { label: "Withdraw", icon: ArrowDownToLine, action: (_inv: typeof demoInvestments[0]) => navigate("/investment/roi") },
-    { label: "History", icon: History, action: (_inv: typeof demoInvestments[0]) => navigate("/investment/history") },
-    { label: "Lock-in", icon: Lock, action: (_inv: typeof demoInvestments[0]) => navigate("/investment/lock-tracker") },
+    { label: "View", icon: Eye, action: (inv: Investment) => navigate("/investment/roi") },
+    { label: "Reinvest", icon: RefreshCw, action: (inv: Investment) => navigate("/investment/products") },
+    { label: "Withdraw", icon: ArrowDownToLine, action: (inv: Investment) => handleWithdrawClick(inv) },
+    { label: "History", icon: History, action: (inv: Investment) => handleHistoryClick(inv) },
+    { label: "Lock-in", icon: Lock, action: (inv: Investment) => navigate("/investment/lock-tracker") },
   ];
+
+  const availableProfit = selectedInvestment ? Math.max(0, selectedInvestment.currentProfit) : 0;
 
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto">
@@ -162,6 +256,19 @@ export default function MyInvestmentsPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all" data-testid="stat-active-plans">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Active Plans</p>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{activeCount}</h3>
+            </div>
+            <div className="p-3 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400">
+              <TrendingUp className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">Currently generating ROI</div>
+        </div>
+
         <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all" data-testid="stat-total-invested">
           <div className="flex justify-between items-start">
             <div>
@@ -203,19 +310,6 @@ export default function MyInvestmentsPage() {
           <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">
             {totalInvested > 0 ? `${((totalProfit / totalInvested) * 100).toFixed(1)}% return` : "No returns"}
           </div>
-        </div>
-
-        <div className="bg-white dark:bg-dark-card p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all" data-testid="stat-active-plans">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Active Plans</p>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{activeCount}</h3>
-            </div>
-            <div className="p-3 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400">
-              <TrendingUp className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">Currently generating ROI</div>
         </div>
       </div>
 
@@ -317,6 +411,183 @@ export default function MyInvestmentsPage() {
           <p className="text-sm text-gray-500 dark:text-gray-400">Browse investment products to get started.</p>
         </div>
       )}
+
+      <Dialog open={withdrawOpen} onOpenChange={setWithdrawOpen}>
+        <DialogContent className="max-w-md bg-[#0f172a] border-gray-700 text-white" data-testid="dialog-withdraw">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-white">
+              <Wallet className="w-5 h-5 text-brand-500" />
+              Withdraw Profit to Wallet
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Transfer investment profits to your Main Wallet.
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedInvestment && (
+            <div className="space-y-4">
+              <div className="p-3 rounded-lg bg-gray-800/50 border border-gray-700">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-400">Investment Plan</p>
+                    <p className="font-semibold text-white" data-testid="text-withdraw-plan">{selectedInvestment.productName}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-gray-400">Available Profit</p>
+                    <p className="text-lg font-bold text-emerald-400" data-testid="text-withdraw-available">
+                      ${availableProfit.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-lg bg-gray-800/30 border border-gray-700">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-blue-900/30 text-blue-400">
+                    <Wallet className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-white">Main Wallet</p>
+                    <p className="text-xs text-gray-400">Destination wallet</p>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-gray-500" />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-gray-300">Withdrawal Amount</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold">$</span>
+                  <Input
+                    type="number"
+                    placeholder="0.00"
+                    value={withdrawAmount}
+                    onChange={(e) => setWithdrawAmount(e.target.value)}
+                    className="pl-7 border-brand-500 bg-gray-900 text-white"
+                    data-testid="input-withdraw-amount"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-4 gap-2">
+                {[25, 50, 75, 100].map((pct) => (
+                  <Button
+                    key={pct}
+                    variant="outline"
+                    size="sm"
+                    className="border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white"
+                    onClick={() => setWithdrawAmount(String(Math.floor(availableProfit * pct / 100)))}
+                    data-testid={`button-withdraw-pct-${pct}`}
+                  >
+                    {pct}%
+                  </Button>
+                ))}
+              </div>
+
+              {Number(withdrawAmount) > availableProfit && (
+                <p className="text-sm text-red-400">Amount exceeds available profit</p>
+              )}
+
+              <Button
+                className="w-full bg-brand-500 hover:bg-brand-600 text-white"
+                onClick={handleWithdrawConfirm}
+                disabled={!withdrawAmount || Number(withdrawAmount) <= 0 || Number(withdrawAmount) > availableProfit}
+                data-testid="button-confirm-withdraw"
+              >
+                <ArrowDownToLine className="w-4 h-4 mr-2" />
+                Withdraw to Main Wallet
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
+        <DialogContent className="max-w-lg bg-[#0f172a] border-gray-700 text-white" data-testid="dialog-history">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-white">
+              <History className="w-5 h-5 text-brand-500" />
+              Investment History
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Monthly ROI distribution details for this investment.
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedInvestment && (
+            <div className="space-y-4">
+              <div className="p-3 rounded-lg bg-gray-800/50 border border-gray-700">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-gray-400">Plan Name</p>
+                    <p className="font-semibold text-white" data-testid="text-history-plan">{selectedInvestment.productName}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400">Investment Amount</p>
+                    <p className="font-semibold text-white">${selectedInvestment.investmentAmount.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400 flex items-center gap-1"><Calendar className="w-3 h-3" /> Start Date</p>
+                    <p className="font-semibold text-white">{new Date(selectedInvestment.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400">Total Months</p>
+                    <p className="font-semibold text-white">{selectedInvestment.lockMonths} months</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400">Months Completed</p>
+                    <p className="font-semibold text-emerald-400">{selectedInvestment.monthsCompleted} of {selectedInvestment.lockMonths}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400">Monthly ROI</p>
+                    <p className="font-semibold text-white">{selectedInvestment.monthlyROI}%</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="max-h-[300px] overflow-y-auto">
+                <table className="w-full text-sm" data-testid="table-history">
+                  <thead>
+                    <tr className="border-b border-gray-700 text-left">
+                      <th className="p-2 text-xs text-gray-400 font-medium">Month</th>
+                      <th className="p-2 text-xs text-gray-400 font-medium">Date</th>
+                      <th className="p-2 text-xs text-gray-400 font-medium">ROI Earned</th>
+                      <th className="p-2 text-xs text-gray-400 font-medium">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {generateMonthlyHistory(selectedInvestment).map((row) => (
+                      <tr key={row.month} className="border-b border-gray-800/50 last:border-0" data-testid={`row-history-${row.month}`}>
+                        <td className="p-2 text-gray-300">#{row.month}</td>
+                        <td className="p-2 text-gray-300">{row.date}</td>
+                        <td className="p-2 text-emerald-400 font-medium">${row.roiAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
+                        <td className="p-2">
+                          <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded ${
+                            row.action === "Reinvested"
+                              ? "bg-blue-900/30 text-blue-400"
+                              : "bg-emerald-900/30 text-emerald-400"
+                          }`}>
+                            {row.action === "Reinvested" ? <RefreshCw className="w-3 h-3" /> : <CheckCircle className="w-3 h-3" />}
+                            {row.action}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {selectedInvestment.monthsCompleted < selectedInvestment.lockMonths && (
+                <div className="p-2 rounded-lg bg-amber-900/20 border border-amber-800 text-center">
+                  <p className="text-xs text-amber-400">
+                    {selectedInvestment.lockMonths - selectedInvestment.monthsCompleted} month(s) remaining until maturity
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1,22 +1,26 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import {
   TrendingUp,
   DollarSign,
   Clock,
-  ArrowRight,
   RefreshCw,
   Wallet,
+  ArrowRight,
+  ArrowDownToLine,
+  CheckCircle,
 } from "lucide-react";
-
-const chartTooltipStyle = {
-  backgroundColor: "#1e293b",
-  borderColor: "#334155",
-  borderRadius: "8px",
-  color: "#fff",
-};
 
 interface RoiRecord {
   id: string;
@@ -25,19 +29,21 @@ interface RoiRecord {
   amountEarned: number;
   distributionDate: string;
   status: "paid" | "pending" | "scheduled";
+  investedAmount: number;
+  lockMonthsRemaining: number;
 }
 
 const demoRoiData: RoiRecord[] = [
-  { id: "ROI-001", investmentPlan: "Gold Saver Plan", roiPercent: 2.5, amountEarned: 125.00, distributionDate: "2025-01-15", status: "paid" },
-  { id: "ROI-002", investmentPlan: "BTC Growth Plan", roiPercent: 4.2, amountEarned: 420.00, distributionDate: "2025-01-15", status: "paid" },
-  { id: "ROI-003", investmentPlan: "USD Income Plan", roiPercent: 1.8, amountEarned: 90.00, distributionDate: "2025-01-15", status: "paid" },
-  { id: "ROI-004", investmentPlan: "Gold Growth Plan", roiPercent: 3.5, amountEarned: 350.00, distributionDate: "2025-02-15", status: "paid" },
-  { id: "ROI-005", investmentPlan: "Crypto Index Fund", roiPercent: 5.0, amountEarned: 500.00, distributionDate: "2025-02-15", status: "paid" },
-  { id: "ROI-006", investmentPlan: "Multi Currency Portfolio", roiPercent: 2.2, amountEarned: 220.00, distributionDate: "2025-02-15", status: "paid" },
-  { id: "ROI-007", investmentPlan: "Gold Saver Plan", roiPercent: 2.5, amountEarned: 125.00, distributionDate: "2025-03-15", status: "paid" },
-  { id: "ROI-008", investmentPlan: "BTC Growth Plan", roiPercent: 4.2, amountEarned: 420.00, distributionDate: "2025-03-15", status: "pending" },
-  { id: "ROI-009", investmentPlan: "Forex Alpha Strategy", roiPercent: 3.0, amountEarned: 300.00, distributionDate: "2025-04-15", status: "scheduled" },
-  { id: "ROI-010", investmentPlan: "Gold Growth Plan", roiPercent: 3.5, amountEarned: 350.00, distributionDate: "2025-04-15", status: "scheduled" },
+  { id: "ROI-001", investmentPlan: "Gold Saver Plan", roiPercent: 2.5, amountEarned: 125.00, distributionDate: "2025-01-15", status: "paid", investedAmount: 5000, lockMonthsRemaining: 4 },
+  { id: "ROI-002", investmentPlan: "BTC Growth Plan", roiPercent: 4.2, amountEarned: 420.00, distributionDate: "2025-01-15", status: "paid", investedAmount: 10000, lockMonthsRemaining: 0 },
+  { id: "ROI-003", investmentPlan: "USD Income Plan", roiPercent: 1.8, amountEarned: 90.00, distributionDate: "2025-01-15", status: "paid", investedAmount: 8000, lockMonthsRemaining: 0 },
+  { id: "ROI-004", investmentPlan: "Gold Growth Plan", roiPercent: 3.5, amountEarned: 350.00, distributionDate: "2025-02-15", status: "paid", investedAmount: 10000, lockMonthsRemaining: 14 },
+  { id: "ROI-005", investmentPlan: "Crypto Index Fund", roiPercent: 5.0, amountEarned: 500.00, distributionDate: "2025-02-15", status: "paid", investedAmount: 10000, lockMonthsRemaining: 2 },
+  { id: "ROI-006", investmentPlan: "Multi Currency Portfolio", roiPercent: 2.2, amountEarned: 220.00, distributionDate: "2025-02-15", status: "paid", investedAmount: 10000, lockMonthsRemaining: 8 },
+  { id: "ROI-007", investmentPlan: "Gold Saver Plan", roiPercent: 2.5, amountEarned: 125.00, distributionDate: "2025-03-15", status: "paid", investedAmount: 5000, lockMonthsRemaining: 3 },
+  { id: "ROI-008", investmentPlan: "BTC Growth Plan", roiPercent: 4.2, amountEarned: 420.00, distributionDate: "2025-03-15", status: "pending", investedAmount: 10000, lockMonthsRemaining: 0 },
+  { id: "ROI-009", investmentPlan: "Forex Alpha Strategy", roiPercent: 3.0, amountEarned: 300.00, distributionDate: "2025-04-15", status: "scheduled", investedAmount: 10000, lockMonthsRemaining: 6 },
+  { id: "ROI-010", investmentPlan: "Gold Growth Plan", roiPercent: 3.5, amountEarned: 350.00, distributionDate: "2025-04-15", status: "scheduled", investedAmount: 10000, lockMonthsRemaining: 13 },
 ];
 
 function getStatusBadge(status: string) {
@@ -55,6 +61,10 @@ function getStatusBadge(status: string) {
 
 export default function InvestmentRoi() {
   const { toast } = useToast();
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [reinvestOpen, setReinvestOpen] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState<RoiRecord | null>(null);
+  const [transferAmount, setTransferAmount] = useState("");
 
   const totalRoiEarned = demoRoiData
     .filter((r) => r.status === "paid")
@@ -75,7 +85,6 @@ export default function InvestmentRoi() {
       icon: <DollarSign className="w-5 h-5" />,
       iconBg: "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400",
       trend: "+12.5% from last quarter",
-      isPositive: true,
     },
     {
       label: "This Month's ROI",
@@ -83,7 +92,6 @@ export default function InvestmentRoi() {
       icon: <TrendingUp className="w-5 h-5" />,
       iconBg: "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400",
       trend: "+8.3% vs last month",
-      isPositive: true,
     },
     {
       label: "Pending Distribution",
@@ -91,22 +99,39 @@ export default function InvestmentRoi() {
       icon: <Clock className="w-5 h-5" />,
       iconBg: "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400",
       trend: "3 payouts upcoming",
-      isPositive: true,
     },
   ];
 
-  function handleTransferToWallet(record: RoiRecord) {
-    toast({
-      title: "Transferred to Wallet",
-      description: `$${record.amountEarned.toFixed(2)} from ${record.investmentPlan} has been transferred to your wallet.`,
-    });
+  function handleTransferClick(record: RoiRecord) {
+    setSelectedRecord(record);
+    setTransferAmount(String(record.amountEarned));
+    setTransferOpen(true);
   }
 
-  function handleReinvest(record: RoiRecord) {
+  function handleTransferConfirm() {
+    if (!selectedRecord) return;
+    const amount = Number(transferAmount);
+    if (!amount || amount <= 0 || amount > selectedRecord.amountEarned) return;
     toast({
-      title: "Reinvested Successfully",
-      description: `$${record.amountEarned.toFixed(2)} from ${record.investmentPlan} has been reinvested.`,
+      title: "Transfer Successful",
+      description: `$${amount.toLocaleString("en-US", { minimumFractionDigits: 2 })} from ${selectedRecord.investmentPlan} has been transferred to your Main Wallet.`,
     });
+    setTransferOpen(false);
+    setTransferAmount("");
+  }
+
+  function handleReinvestClick(record: RoiRecord) {
+    setSelectedRecord(record);
+    setReinvestOpen(true);
+  }
+
+  function handleReinvestConfirm() {
+    if (!selectedRecord) return;
+    toast({
+      title: "Reinvestment Successful",
+      description: `$${selectedRecord.amountEarned.toLocaleString("en-US", { minimumFractionDigits: 2 })} has been added to your ${selectedRecord.investmentPlan}. ROI will be adjusted for the remaining lock-in period.`,
+    });
+    setReinvestOpen(false);
   }
 
   return (
@@ -214,7 +239,7 @@ export default function InvestmentRoi() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleTransferToWallet(record)}
+                            onClick={() => handleTransferClick(record)}
                             data-testid={`button-transfer-${record.id}`}
                           >
                             <Wallet className="w-4 h-4 mr-1" />
@@ -223,7 +248,7 @@ export default function InvestmentRoi() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleReinvest(record)}
+                            onClick={() => handleReinvestClick(record)}
                             data-testid={`button-reinvest-${record.id}`}
                           >
                             <RefreshCw className="w-4 h-4 mr-1" />
@@ -245,6 +270,174 @@ export default function InvestmentRoi() {
           </table>
         </div>
       </div>
+
+      <Dialog open={transferOpen} onOpenChange={setTransferOpen}>
+        <DialogContent className="max-w-md bg-[#0f172a] border-gray-700 text-white" data-testid="dialog-transfer">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-white">
+              <Wallet className="w-5 h-5 text-brand-500" />
+              Transfer ROI to Wallet
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Transfer your ROI earnings to your Main Wallet.
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedRecord && (
+            <div className="space-y-4">
+              <div className="p-3 rounded-lg bg-gray-800/50 border border-gray-700">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-400">Investment Plan</p>
+                    <p className="font-semibold text-white" data-testid="text-transfer-plan">{selectedRecord.investmentPlan}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-gray-400">ROI Earned</p>
+                    <p className="text-lg font-bold text-emerald-400" data-testid="text-transfer-available">
+                      ${selectedRecord.amountEarned.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-lg bg-gray-800/30 border border-gray-700">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-blue-900/30 text-blue-400">
+                    <Wallet className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-white">Main Wallet</p>
+                    <p className="text-xs text-gray-400">Destination wallet</p>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-gray-500" />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-gray-300">Transfer Amount</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold">$</span>
+                  <Input
+                    type="number"
+                    placeholder="0.00"
+                    value={transferAmount}
+                    onChange={(e) => setTransferAmount(e.target.value)}
+                    className="pl-7 border-brand-500 bg-gray-900 text-white"
+                    data-testid="input-transfer-amount"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-4 gap-2">
+                {[25, 50, 75, 100].map((pct) => (
+                  <Button
+                    key={pct}
+                    variant="outline"
+                    size="sm"
+                    className="border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white"
+                    onClick={() => setTransferAmount(String(Math.floor(selectedRecord.amountEarned * pct / 100)))}
+                    data-testid={`button-transfer-pct-${pct}`}
+                  >
+                    {pct}%
+                  </Button>
+                ))}
+              </div>
+
+              {Number(transferAmount) > selectedRecord.amountEarned && (
+                <p className="text-sm text-red-400">Amount exceeds ROI earned</p>
+              )}
+
+              <Button
+                className="w-full bg-brand-500 hover:bg-brand-600 text-white"
+                onClick={handleTransferConfirm}
+                disabled={!transferAmount || Number(transferAmount) <= 0 || Number(transferAmount) > selectedRecord.amountEarned}
+                data-testid="button-confirm-transfer"
+              >
+                <ArrowDownToLine className="w-4 h-4 mr-2" />
+                Transfer to Main Wallet
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={reinvestOpen} onOpenChange={setReinvestOpen}>
+        <DialogContent className="max-w-md bg-[#0f172a] border-gray-700 text-white" data-testid="dialog-reinvest">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-white">
+              <RefreshCw className="w-5 h-5 text-brand-500" />
+              Reinvest ROI Earnings
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Add your ROI earnings back to the same investment plan.
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedRecord && (
+            <div className="space-y-4">
+              <div className="p-3 rounded-lg bg-gray-800/50 border border-gray-700">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-gray-400">Plan Name</p>
+                    <p className="font-semibold text-white" data-testid="text-reinvest-plan">{selectedRecord.investmentPlan}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400">ROI Amount</p>
+                    <p className="text-lg font-bold text-emerald-400" data-testid="text-reinvest-amount">
+                      ${selectedRecord.amountEarned.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-lg bg-blue-900/20 border border-blue-800">
+                <p className="text-sm text-blue-300 mb-3">
+                  Would you like to reinvest <span className="font-bold text-white">${selectedRecord.amountEarned.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span> back into <span className="font-bold text-white">{selectedRecord.investmentPlan}</span>?
+                </p>
+                <div className="space-y-2 text-xs text-blue-400">
+                  <div className="flex items-start gap-2">
+                    <CheckCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                    <span>Amount will be added to your current investment of <span className="text-white font-medium">${selectedRecord.investedAmount.toLocaleString()}</span></span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                    <span>New investment total: <span className="text-white font-medium">${(selectedRecord.investedAmount + selectedRecord.amountEarned).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span></span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                    <span>ROI of <span className="text-white font-medium">{selectedRecord.roiPercent}%</span> will be adjusted for next months until the lock-in period ends</span>
+                  </div>
+                  {selectedRecord.lockMonthsRemaining > 0 && (
+                    <div className="flex items-start gap-2">
+                      <CheckCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                      <span><span className="text-white font-medium">{selectedRecord.lockMonthsRemaining}</span> month(s) remaining in lock-in period</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white"
+                  onClick={() => setReinvestOpen(false)}
+                  data-testid="button-reinvest-cancel"
+                >
+                  No, Cancel
+                </Button>
+                <Button
+                  className="flex-1 bg-brand-500 hover:bg-brand-600 text-white"
+                  onClick={handleReinvestConfirm}
+                  data-testid="button-reinvest-confirm"
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Yes, Reinvest
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
