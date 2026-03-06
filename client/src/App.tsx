@@ -61,6 +61,14 @@ import DownloadPlatformPage from "@/pages/client/download-platform";
 import P2PExchangePage from "@/pages/client/p2p-exchange";
 import AICenterPage from "@/pages/client/ai-center";
 import WidgetsPage from "@/pages/client/widgets";
+import EconomicCalendarPage from "@/pages/client/tools/economic-calendar";
+import LiveChartsPage from "@/pages/client/tools/live-charts";
+import CurrencyConverterPage from "@/pages/client/tools/currency-converter";
+import TradingSignalsPage from "@/pages/client/tools/trading-signals";
+import MarketNewsPage from "@/pages/client/tools/market-news";
+import CryptoSendPage from "@/pages/client/crypto/send";
+import CryptoReceivePage from "@/pages/client/crypto/receive";
+import CryptoConvertPage from "@/pages/client/crypto/convert";
 import ProfilePage from "@/pages/client/profile";
 import LeaguesDashboard from "@/pages/client/leagues/dashboard";
 import LeaguesTournaments from "@/pages/client/leagues/tournaments";
@@ -175,6 +183,15 @@ function ClientRouter() {
       <Route path="/loyalty-points" component={LoyaltyPointsPage} />
       <Route path="/download-platform" component={DownloadPlatformPage} />
       <Route path="/p2p-exchange" component={P2PExchangePage} />
+      <Route path="/crypto/send" component={CryptoSendPage} />
+      <Route path="/crypto/receive" component={CryptoReceivePage} />
+      <Route path="/crypto/convert" component={CryptoConvertPage} />
+      <Route path="/crypto/p2p" component={P2PExchangePage} />
+      <Route path="/tools/economic-calendar" component={EconomicCalendarPage} />
+      <Route path="/tools/live-charts" component={LiveChartsPage} />
+      <Route path="/tools/currency-converter" component={CurrencyConverterPage} />
+      <Route path="/tools/trading-signals" component={TradingSignalsPage} />
+      <Route path="/tools/market-news" component={MarketNewsPage} />
       <Route path="/ai-center" component={AICenterPage} />
       <Route path="/widgets" component={WidgetsPage} />
       <Route path="/support" component={Support} />

@@ -35,6 +35,15 @@ import {
   Lock,
   Share2,
   PieChart,
+  Wrench,
+  Calendar,
+  LineChart,
+  ArrowDownUp,
+  Radio,
+  Newspaper,
+  Bitcoin,
+  Send,
+  ArrowDownToLine,
 } from "lucide-react";
 import { useState } from "react";
 import {
@@ -140,7 +149,31 @@ const section2Menu: MenuItem[] = [
 ];
 
 const section3Menu: MenuItem[] = [
-  { title: "P2P Exchange", url: "/p2p-exchange", icon: ArrowLeftRight, iconColor: "text-violet-500 dark:text-violet-400" },
+  {
+    title: "Crypto Exchange",
+    url: "/crypto/send",
+    icon: Bitcoin,
+    iconColor: "text-orange-500 dark:text-orange-400",
+    children: [
+      { title: "Send", url: "/crypto/send", icon: Send },
+      { title: "Receive", url: "/crypto/receive", icon: ArrowDownToLine },
+      { title: "Convert", url: "/crypto/convert", icon: ArrowDownUp },
+      { title: "P2P Exchange", url: "/crypto/p2p", icon: ArrowLeftRight },
+    ],
+  },
+  {
+    title: "Tools",
+    url: "/tools/economic-calendar",
+    icon: Wrench,
+    iconColor: "text-violet-500 dark:text-violet-400",
+    children: [
+      { title: "Economic Calendar", url: "/tools/economic-calendar", icon: Calendar },
+      { title: "Live Charts", url: "/tools/live-charts", icon: LineChart },
+      { title: "Currency Converter", url: "/tools/currency-converter", icon: ArrowDownUp },
+      { title: "Trading Signals", url: "/tools/trading-signals", icon: Radio },
+      { title: "Market News", url: "/tools/market-news", icon: Newspaper },
+    ],
+  },
   { title: "AI Center", url: "/ai-center", icon: Sparkles, iconColor: "text-fuchsia-500 dark:text-fuchsia-400" },
 ];
 
@@ -229,7 +262,7 @@ export function AppSidebar() {
   const [location] = useLocation();
   const initials = user?.fullName?.split(" ").map((n: string) => n[0]).join("").toUpperCase() || "U";
 
-  const defaultExpanded = location.startsWith("/forex") ? "Forex Trading" : location.startsWith("/prop") ? "Prop Trading" : location.startsWith("/leagues") ? "Leagues" : location.startsWith("/investment") ? "Investments" : "";
+  const defaultExpanded = location.startsWith("/forex") ? "Forex Trading" : location.startsWith("/prop") ? "Prop Trading" : location.startsWith("/leagues") ? "Leagues" : location.startsWith("/investment") ? "Investments" : location.startsWith("/crypto") ? "Crypto Exchange" : location.startsWith("/tools") ? "Tools" : "";
   const [expandedMenu, setExpandedMenu] = useState(defaultExpanded);
 
   function handleToggle(name: string) {

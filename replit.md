@@ -95,6 +95,10 @@ Each portal's pages and components are separated into their own directories for 
 client/src/pages/
 ├── client/           # Client/Trader portal pages
 │   ├── prop/         # Prop Trading sub-pages (11 pages)
+│   ├── tools/        # Tools sub-pages (5 pages: economic-calendar, live-charts, currency-converter, trading-signals, market-news)
+│   ├── crypto/       # Crypto Exchange sub-pages (3 pages: send, receive, convert) + P2P Exchange reuse
+│   ├── investment/   # Investment sub-pages (8 pages)
+│   ├── leagues/      # Leagues sub-pages (5 pages)
 │   ├── dashboard.tsx, wallet.tsx, kyc.tsx, etc.
 │   └── login.tsx
 ├── admin/            # Admin portal pages (10 pages)
