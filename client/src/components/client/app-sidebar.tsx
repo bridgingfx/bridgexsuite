@@ -27,6 +27,7 @@ import {
   Target,
   Award,
   BookOpen,
+  Swords,
 } from "lucide-react";
 import { useState } from "react";
 import {
@@ -96,6 +97,19 @@ const section2Menu: MenuItem[] = [
       { title: "Affiliate", url: "/prop/referral", icon: Users },
       { title: "Certificates", url: "/prop/certificates", icon: Award },
       { title: "Rules & Compliance", url: "/prop/rules", icon: BookOpen },
+    ],
+  },
+  {
+    title: "Leagues",
+    url: "/leagues/dashboard",
+    icon: Swords,
+    iconColor: "text-rose-500 dark:text-rose-400",
+    children: [
+      { title: "Dashboard", url: "/leagues/dashboard", icon: LayoutDashboard },
+      { title: "Tournaments", url: "/leagues/tournaments", icon: Trophy },
+      { title: "My Leagues", url: "/leagues/my-leagues", icon: Award },
+      { title: "Leaderboard", url: "/leagues/leaderboard", icon: BarChart3 },
+      { title: "Referral", url: "/leagues/referral", icon: Users },
     ],
   },
   { title: "Investments", url: "/investment", icon: PiggyBank, iconColor: "text-pink-500 dark:text-pink-400" },
@@ -193,7 +207,7 @@ export function AppSidebar() {
   const [location] = useLocation();
   const initials = user?.fullName?.split(" ").map((n: string) => n[0]).join("").toUpperCase() || "U";
 
-  const defaultExpanded = location.startsWith("/forex") ? "Forex Trading" : location.startsWith("/prop") ? "Prop Trading" : "";
+  const defaultExpanded = location.startsWith("/forex") ? "Forex Trading" : location.startsWith("/prop") ? "Prop Trading" : location.startsWith("/leagues") ? "Leagues" : "";
   const [expandedMenu, setExpandedMenu] = useState(defaultExpanded);
 
   function handleToggle(name: string) {

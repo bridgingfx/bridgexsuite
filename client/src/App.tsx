@@ -52,6 +52,11 @@ import P2PExchangePage from "@/pages/client/p2p-exchange";
 import AICenterPage from "@/pages/client/ai-center";
 import WidgetsPage from "@/pages/client/widgets";
 import ProfilePage from "@/pages/client/profile";
+import LeaguesDashboard from "@/pages/client/leagues/dashboard";
+import LeaguesTournaments from "@/pages/client/leagues/tournaments";
+import MyLeagues from "@/pages/client/leagues/my-leagues";
+import LeaguesLeaderboard from "@/pages/client/leagues/leaderboard";
+import LeaguesReferral from "@/pages/client/leagues/referral";
 
 import AdminDashboard from "@/pages/admin/dashboard";
 import AdminClients from "@/pages/admin/clients";
@@ -141,6 +146,11 @@ function ClientRouter() {
       <Route path="/prop/referral" component={PropReferral} />
       <Route path="/prop/certificates" component={PropCertificates} />
       <Route path="/prop/rules" component={PropRules} />
+      <Route path="/leagues/dashboard" component={LeaguesDashboard} />
+      <Route path="/leagues/tournaments" component={LeaguesTournaments} />
+      <Route path="/leagues/my-leagues" component={MyLeagues} />
+      <Route path="/leagues/leaderboard" component={LeaguesLeaderboard} />
+      <Route path="/leagues/referral" component={LeaguesReferral} />
       <Route path="/investment" component={InvestmentPage} />
       <Route path="/loyalty-points" component={LoyaltyPointsPage} />
       <Route path="/download-platform" component={DownloadPlatformPage} />

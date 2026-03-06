@@ -39,6 +39,13 @@ I want the agent to focus on high-level features only and avoid granular impleme
 - **Certificates** (`/prop/certificates`) - Download purchase/withdrawal/achievement certificates
 - **Rules & Compliance** (`/prop/rules`) - Trading rules, policies, breach logs, T&C
 
+### Leagues Module (5 sub-pages)
+- **Dashboard** (`/leagues/dashboard`) - Stats, active leagues, recent results, upcoming tournaments
+- **Tournaments** (`/leagues/tournaments`) - Browse/filter tournaments (live, upcoming, completed), join tournaments
+- **My Leagues** (`/leagues/my-leagues`) - Track joined leagues with status tabs, stats, progress
+- **Leaderboard** (`/leagues/leaderboard`) - League-specific rankings with top-3 podium and full table
+- **Referral** (`/leagues/referral`) - Referral link, commission tiers, referral history
+
 ### Backend (Migrated: Express.js → Laravel PHP)
 - **PHP 8.4 + Laravel 12** in `laravel-api/` directory
 - **70+ API routes** in `laravel-api/routes/api.php`
