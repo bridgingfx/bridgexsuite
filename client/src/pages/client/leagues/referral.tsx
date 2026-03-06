@@ -23,6 +23,39 @@ import {
   ArrowRight,
   ArrowLeftRight,
 } from "lucide-react";
+import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+
+const referralGrowthData = [
+  { month: "Aug", referrals: 1 },
+  { month: "Sep", referrals: 2 },
+  { month: "Oct", referrals: 4 },
+  { month: "Nov", referrals: 5 },
+  { month: "Dec", referrals: 7 },
+  { month: "Jan", referrals: 9 },
+  { month: "Feb", referrals: 10 },
+  { month: "Mar", referrals: 12 },
+];
+
+const earningsActiveData = [
+  { month: "Aug", earnings: 30, activeReferrals: 1 },
+  { month: "Sep", earnings: 50, activeReferrals: 2 },
+  { month: "Oct", earnings: 100, activeReferrals: 3 },
+  { month: "Nov", earnings: 125, activeReferrals: 4 },
+  { month: "Dec", earnings: 175, activeReferrals: 5 },
+  { month: "Jan", earnings: 250, activeReferrals: 6 },
+  { month: "Feb", earnings: 225, activeReferrals: 7 },
+  { month: "Mar", earnings: 295, activeReferrals: 8 },
+];
 
 const referralStats = {
   totalReferred: 12,
@@ -161,6 +194,62 @@ export default function LeaguesReferral() {
               <ArrowLeftRight className="w-3.5 h-3.5 mr-1.5" />
               Transfer to Wallet
             </Button>
+          </div>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="p-6" data-testid="chart-referral-growth">
+          <h3 className="text-base font-bold text-gray-900 dark:text-white mb-4">Referral Growth</h3>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={referralGrowthData}>
+                <defs>
+                  <linearGradient id="refGrowthGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(128,128,128,0.1)" />
+                <XAxis dataKey="month" tick={{ fill: "#9ca3af", fontSize: 12 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: "#9ca3af", fontSize: 12 }} axisLine={false} tickLine={false} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: "#1e293b", borderColor: "#334155", borderRadius: "8px", color: "#fff" }}
+                  formatter={(value: number) => [value, "Referrals"]}
+                />
+                <Area type="monotone" dataKey="referrals" stroke="#0ea5e9" fill="url(#refGrowthGrad)" strokeWidth={2} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+
+        <Card className="p-6" data-testid="chart-earnings-active">
+          <h3 className="text-base font-bold text-gray-900 dark:text-white mb-4">Monthly Earnings & Active Referrals</h3>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={earningsActiveData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(128,128,128,0.1)" />
+                <XAxis dataKey="month" tick={{ fill: "#9ca3af", fontSize: 12 }} axisLine={false} tickLine={false} />
+                <YAxis yAxisId="left" tick={{ fill: "#9ca3af", fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${v}`} />
+                <YAxis yAxisId="right" orientation="right" tick={{ fill: "#9ca3af", fontSize: 12 }} axisLine={false} tickLine={false} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: "#1e293b", borderColor: "#334155", borderRadius: "8px", color: "#fff" }}
+                  formatter={(value: number, name: string) => [name === "earnings" ? `$${value}` : value, name === "earnings" ? "Earnings" : "Active Referrals"]}
+                />
+                <Bar yAxisId="left" dataKey="earnings" fill="#10b981" radius={[4, 4, 0, 0]} />
+                <Bar yAxisId="right" dataKey="activeReferrals" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="flex items-center justify-center gap-6 mt-3">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-sm bg-emerald-500" />
+              <span className="text-xs text-gray-500 dark:text-gray-400">Earnings</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-sm bg-purple-500" />
+              <span className="text-xs text-gray-500 dark:text-gray-400">Active Referrals</span>
+            </div>
           </div>
         </Card>
       </div>
