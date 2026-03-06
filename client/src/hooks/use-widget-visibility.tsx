@@ -7,7 +7,7 @@ const defaultVisibility: Record<string, boolean> = {
   "Prop Trading": true,
   "Leagues": true,
   "Investments": true,
-  "Loyalty Points": true,
+  "Rewards": true,
   "Download Platform": true,
   "Crypto Exchange": true,
   "Economic Calendar": true,

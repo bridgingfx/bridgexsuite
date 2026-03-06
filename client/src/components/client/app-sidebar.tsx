@@ -44,6 +44,7 @@ import {
   Bitcoin,
   Send,
   ArrowDownToLine,
+  ShoppingBag,
 } from "lucide-react";
 import { useState } from "react";
 import {
@@ -145,7 +146,16 @@ const section2Menu: MenuItem[] = [
       { title: "Profit Distribution", url: "/investment/profit", icon: PieChart },
     ],
   },
-  { title: "Loyalty Points", url: "/loyalty-points", icon: Star, iconColor: "text-orange-500 dark:text-orange-400" },
+  {
+    title: "Rewards",
+    url: "/rewards/loyalty-points",
+    icon: Gift,
+    iconColor: "text-orange-500 dark:text-orange-400",
+    children: [
+      { title: "Loyalty Points", url: "/rewards/loyalty-points", icon: Star },
+      { title: "Merchandise", url: "/rewards/merchandise", icon: ShoppingBag },
+    ],
+  },
   { title: "Download Platform", url: "/download-platform", icon: Download, iconColor: "text-cyan-500 dark:text-cyan-400" },
 ];
 
@@ -263,7 +273,7 @@ export function AppSidebar() {
   const filteredExchange = exchangeMenu.filter((item) => isVisible(item.title));
   const filteredTools = toolsMenu.filter((item) => isVisible(item.title));
 
-  const defaultExpanded = location.startsWith("/forex") ? "Forex Trading" : location.startsWith("/prop") ? "Prop Trading" : location.startsWith("/leagues") ? "Leagues" : location.startsWith("/investment") ? "Investments" : location.startsWith("/crypto") ? "Crypto Exchange" : location.startsWith("/tools") ? "Tools" : "";
+  const defaultExpanded = location.startsWith("/forex") ? "Forex Trading" : location.startsWith("/prop") ? "Prop Trading" : location.startsWith("/leagues") ? "Leagues" : location.startsWith("/investment") ? "Investments" : location.startsWith("/rewards") ? "Rewards" : location.startsWith("/crypto") ? "Crypto Exchange" : location.startsWith("/tools") ? "Tools" : "";
   const [expandedMenu, setExpandedMenu] = useState(defaultExpanded);
 
   function handleToggle(name: string) {

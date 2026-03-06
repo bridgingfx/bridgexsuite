@@ -346,7 +346,7 @@ export default function Dashboard() {
           isPositive={true}
           icon={<Star size={20} />}
           iconBg="bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400"
-          link="/loyalty-points"
+          link="/rewards/loyalty-points"
         />
       </div>
 

@@ -59,6 +59,7 @@ import OffersPage from "@/pages/client/offers";
 import IBDashboard from "@/pages/client/ib-dashboard";
 import FinancePage from "@/pages/client/finance";
 import LoyaltyPointsPage from "@/pages/client/loyalty-points";
+import MerchandisePage from "@/pages/client/rewards/merchandise";
 import DownloadPlatformPage from "@/pages/client/download-platform";
 import P2PExchangePage from "@/pages/client/p2p-exchange";
 import AICenterPage from "@/pages/client/ai-center";
@@ -182,7 +183,8 @@ function ClientRouter() {
       <Route path="/investment/referral" component={InvestmentReferral} />
       <Route path="/investment/profit" component={InvestmentProfit} />
 
-      <Route path="/loyalty-points" component={LoyaltyPointsPage} />
+      <Route path="/rewards/loyalty-points" component={LoyaltyPointsPage} />
+      <Route path="/rewards/merchandise" component={MerchandisePage} />
       <Route path="/download-platform" component={DownloadPlatformPage} />
       <Route path="/p2p-exchange" component={P2PExchangePage} />
       <Route path="/crypto/send" component={CryptoSendPage} />

@@ -65,8 +65,8 @@ const widgetDefs: WidgetDef[] = [
     bg: "bg-emerald-50 dark:bg-emerald-900/20",
   },
   {
-    title: "Loyalty Points",
-    description: "Earn loyalty points through trading activity and engagement, redeem for exclusive rewards, fee discounts, and premium features.",
+    title: "Rewards",
+    description: "Earn loyalty points and redeem for exclusive merchandise, fee discounts, and premium features through trading activity.",
     icon: Star,
     category: "Rewards",
     color: "text-orange-600 dark:text-orange-400",

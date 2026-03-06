@@ -99,7 +99,8 @@ client/src/pages/
 │   ├── crypto/       # Crypto Exchange sub-pages (3 pages: send, receive, convert) + P2P Exchange reuse
 │   ├── investment/   # Investment sub-pages (8 pages)
 │   ├── leagues/      # Leagues sub-pages (5 pages)
-│   ├── dashboard.tsx, wallet.tsx, kyc.tsx, etc.
+│   ├── rewards/      # Rewards sub-pages (merchandise.tsx)
+│   ├── dashboard.tsx, wallet.tsx, kyc.tsx, loyalty-points.tsx, etc.
 │   └── login.tsx
 ├── admin/            # Admin portal pages (10 pages)
 │   └── login.tsx
