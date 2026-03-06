@@ -11,7 +11,6 @@ import {
   DollarSign,
   UserPlus,
   UserCheck,
-  Clock,
   ArrowLeftRight,
   Gift,
 } from "lucide-react";
@@ -23,7 +22,6 @@ const totalEarned = 1240.00;
 const demoStats = [
   { label: "Total Affiliates", value: "24", icon: Users, color: "bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400" },
   { label: "Active Affiliates", value: "18", icon: UserCheck, color: "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400" },
-  { label: "Pending Rewards", value: "$185.00", icon: Clock, color: "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400" },
 ];
 
 const demoCommissions = [
@@ -88,7 +86,7 @@ export default function PropReferral() {
         </p>
       </Card>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="p-5" data-testid="card-stat-total-affiliate-earning">
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -96,17 +94,22 @@ export default function PropReferral() {
               <h3 className="text-xl font-bold text-gray-900 dark:text-white" data-testid="text-stat-total-affiliate-earning">
                 ${totalEarned.toLocaleString("en-US", { minimumFractionDigits: 2 })}
               </h3>
-              <button
-                onClick={() => { setTransferAmount(""); setTransferOpen(true); }}
-                className="text-xs text-brand-600 dark:text-brand-400 font-medium mt-1"
-                data-testid="button-transfer-affiliate"
-              >
-                Transfer to Wallet
-              </button>
             </div>
             <div className="p-3 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400">
               <DollarSign className="w-5 h-5" />
             </div>
+          </div>
+          <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={() => { setTransferAmount(""); setTransferOpen(true); }}
+              data-testid="button-transfer-affiliate"
+            >
+              <ArrowLeftRight className="w-3.5 h-3.5 mr-1.5" />
+              Transfer to Wallet
+            </Button>
           </div>
         </Card>
         {demoStats.map((stat) => (

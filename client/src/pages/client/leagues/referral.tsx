@@ -117,7 +117,7 @@ export default function LeaguesReferral() {
         </p>
       </Card>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="p-6" data-testid="stat-total-referred">
           <div className="flex justify-between items-start gap-2">
             <div>
@@ -161,17 +161,6 @@ export default function LeaguesReferral() {
               <ArrowLeftRight className="w-3.5 h-3.5 mr-1.5" />
               Transfer to Wallet
             </Button>
-          </div>
-        </Card>
-        <Card className="p-6" data-testid="stat-pending-earnings">
-          <div className="flex justify-between items-start gap-2">
-            <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Pending</p>
-              <h3 className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">${referralStats.pendingEarnings}</h3>
-            </div>
-            <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400 rounded-md">
-              <Clock className="w-5 h-5" />
-            </div>
           </div>
         </Card>
       </div>

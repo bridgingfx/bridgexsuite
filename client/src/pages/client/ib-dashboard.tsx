@@ -5,6 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
   Users,
   DollarSign,
   Link2,
@@ -18,6 +25,8 @@ import {
   CheckCircle2,
   Clock,
   Award,
+  ArrowLeftRight,
+  Gift,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -70,6 +79,8 @@ const demoReferrals = [
 export default function IBDashboard() {
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [transferAmount, setTransferAmount] = useState("");
 
   const { data: referrals, isLoading: refLoading } = useQuery<any[]>({
     queryKey: ["/api/ib/referrals"],
@@ -91,9 +102,23 @@ export default function IBDashboard() {
   const kpis = [
     { title: "Total Referrals", value: totalReferrals.toString(), icon: Users, iconBg: "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400", trend: "+3 this month", isPositive: true },
     { title: "Active Clients", value: activeClients.toString(), icon: UserPlus, iconBg: "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400", trend: "+2 new", isPositive: true },
-    { title: "Total Commission", value: `$${totalCommission.toLocaleString("en-US", { minimumFractionDigits: 2 })}`, icon: DollarSign, iconBg: "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400", trend: "+15.3%", isPositive: true },
-    { title: "Pending Commission", value: `$${pendingCommission.toLocaleString("en-US", { minimumFractionDigits: 2 })}`, icon: Clock, iconBg: "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400", trend: "Processing", isPositive: true },
+    { title: "Total Commission", value: `$${totalCommission.toLocaleString("en-US", { minimumFractionDigits: 2 })}`, icon: DollarSign, iconBg: "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400", trend: "+15.3%", isPositive: true, hasTransfer: true },
   ];
+
+  function handleTransfer() {
+    const amount = Number(transferAmount);
+    if (!amount || amount <= 0 || amount > totalCommission) return;
+    toast({
+      title: "Transfer Successful",
+      description: `$${amount.toFixed(2)} transferred from IB Commission to Main Wallet`,
+    });
+    setTransferOpen(false);
+    setTransferAmount("");
+  }
+
+  function setPercentage(pct: number) {
+    setTransferAmount((totalCommission * pct / 100).toFixed(2));
+  }
 
   function copyLink() {
     navigator.clipboard.writeText(referralLink);
@@ -168,8 +193,8 @@ export default function IBDashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {kpis.map((kpi) => (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {kpis.map((kpi: any) => (
           <div
             key={kpi.title}
             className="bg-white dark:bg-[#1c1c2e] p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm"
@@ -187,6 +212,20 @@ export default function IBDashboard() {
             <div className="mt-1">
               <span className="text-xs font-medium text-emerald-500">{kpi.trend}</span>
             </div>
+            {kpi.hasTransfer && (
+              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => { setTransferAmount(""); setTransferOpen(true); }}
+                  data-testid="button-transfer-commission"
+                >
+                  <ArrowLeftRight className="w-3.5 h-3.5 mr-1.5" />
+                  Transfer to Wallet
+                </Button>
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -299,6 +338,87 @@ export default function IBDashboard() {
           </table>
         </div>
       </div>
+
+      <Dialog open={transferOpen} onOpenChange={(open) => { if (!open) setTransferOpen(false); }}>
+        <DialogContent className="max-w-md bg-[#0f172a] border-gray-800 text-white" data-testid="dialog-transfer-wallet">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-white">
+              <ArrowLeftRight className="w-5 h-5 text-brand-400" />
+              Transfer to Wallet
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Transfer your earnings to your main wallet balance.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-5">
+            <div className="flex items-center justify-between p-4 rounded-lg border border-gray-700 bg-gray-800/50">
+              <div>
+                <p className="text-sm text-purple-400 font-medium">Total IB Commission</p>
+                <p className="text-2xl font-bold text-white" data-testid="text-transfer-available">
+                  ${totalCommission.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                </p>
+                <p className="text-xs text-gray-500">Available to transfer</p>
+              </div>
+              <div className="p-3 rounded-lg bg-purple-900/30">
+                <Gift className="w-6 h-6 text-purple-400" />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between p-4 rounded-lg border border-gray-700 bg-gray-800/30">
+              <div className="text-center flex-1">
+                <p className="text-xs text-gray-400 mb-1">From</p>
+                <p className="text-sm font-bold text-white">IB Commission</p>
+              </div>
+              <ArrowLeftRight className="w-5 h-5 text-gray-500 mx-3 shrink-0" />
+              <div className="text-center flex-1">
+                <p className="text-xs text-gray-400 mb-1">To</p>
+                <p className="text-sm font-bold text-white">Main Wallet</p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-white">Amount (USD)</p>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-400 font-semibold">$</span>
+                <Input
+                  type="number"
+                  value={transferAmount}
+                  onChange={(e) => setTransferAmount(e.target.value)}
+                  placeholder="0.00"
+                  min={0}
+                  max={totalCommission}
+                  step={0.01}
+                  className="pl-8 bg-gray-900 border-brand-500 text-white text-lg font-semibold h-12 focus:ring-brand-500"
+                  data-testid="input-transfer-amount"
+                />
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                {[25, 50, 75, 100].map((pct) => (
+                  <button
+                    key={pct}
+                    onClick={() => setPercentage(pct)}
+                    className="py-2 px-3 rounded-lg border border-gray-700 bg-gray-800/50 text-sm font-medium text-gray-300 hover:border-brand-500 hover:text-white transition-colors"
+                    data-testid={`button-pct-${pct}`}
+                  >
+                    {pct}%
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <Button
+              className="w-full h-12 text-base bg-blue-600 hover:bg-blue-700"
+              disabled={!transferAmount || Number(transferAmount) <= 0 || Number(transferAmount) > totalCommission}
+              onClick={handleTransfer}
+              data-testid="button-confirm-transfer"
+            >
+              <ArrowLeftRight className="w-4 h-4 mr-2" />
+              Transfer to Wallet
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
