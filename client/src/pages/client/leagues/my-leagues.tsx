@@ -3,6 +3,15 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
 import {
   Swords,
   Trophy,
@@ -12,6 +21,8 @@ import {
   TrendingDown,
   Calendar,
   ArrowRight,
+  ArrowLeftRight,
+  Gift,
 } from "lucide-react";
 import { Link } from "wouter";
 
@@ -46,7 +57,13 @@ const statusConfig: Record<LeagueStatus, { color: string; label: string }> = {
 };
 
 export default function MyLeagues() {
+  const { toast } = useToast();
   const [tab, setTab] = useState<LeagueStatus | "all">("all");
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [transferLeague, setTransferLeague] = useState<MyLeague | null>(null);
+  const [transferAmount, setTransferAmount] = useState("");
+
+  const totalProfit = myLeagues.reduce((sum, l) => sum + l.profit, 0);
 
   const filtered = tab === "all" ? myLeagues : myLeagues.filter((l) => l.status === tab);
 
@@ -56,6 +73,29 @@ export default function MyLeagues() {
     { key: "completed", label: "Completed" },
     { key: "upcoming", label: "Upcoming" },
   ];
+
+  function openTransfer(league: MyLeague) {
+    setTransferLeague(league);
+    setTransferAmount("");
+    setTransferOpen(true);
+  }
+
+  function handleTransfer() {
+    const amount = Number(transferAmount);
+    if (!amount || amount <= 0 || !transferLeague || amount > transferLeague.profit) return;
+    toast({
+      title: "Transfer Successful",
+      description: `$${amount.toFixed(2)} transferred from ${transferLeague.name} to Main Wallet`,
+    });
+    setTransferOpen(false);
+    setTransferAmount("");
+    setTransferLeague(null);
+  }
+
+  function setPercentage(pct: number) {
+    if (!transferLeague) return;
+    setTransferAmount((transferLeague.profit * pct / 100).toFixed(2));
+  }
 
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto" data-testid="my-leagues-page">
@@ -88,7 +128,7 @@ export default function MyLeagues() {
         <Card className="p-6" data-testid="stat-total-profit">
           <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Total Profit</p>
           <h3 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-            ${myLeagues.reduce((sum, l) => sum + l.profit, 0).toLocaleString()}
+            ${totalProfit.toLocaleString()}
           </h3>
         </Card>
       </div>
@@ -167,12 +207,109 @@ export default function MyLeagues() {
                       <Progress value={league.progress} className="h-1.5" />
                     </div>
                   )}
+
+                  {league.profit > 0 && league.status !== "upcoming" && (
+                    <div className="pt-2 border-t border-gray-100 dark:border-gray-800">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openTransfer(league)}
+                        data-testid={`button-transfer-${league.id}`}
+                      >
+                        <ArrowLeftRight className="w-3.5 h-3.5 mr-1.5" />
+                        Transfer to Wallet
+                      </Button>
+                    </div>
+                  )}
                 </div>
               );
             })
           )}
         </div>
       </Card>
+
+      <Dialog open={transferOpen} onOpenChange={(open) => { if (!open) { setTransferOpen(false); setTransferLeague(null); } }}>
+        <DialogContent className="max-w-md bg-[#0f172a] border-gray-800 text-white" data-testid="dialog-transfer-wallet">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-white">
+              <ArrowLeftRight className="w-5 h-5 text-brand-400" />
+              Transfer to Wallet
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Transfer your earnings to your main wallet balance.
+            </DialogDescription>
+          </DialogHeader>
+
+          {transferLeague && (
+            <div className="space-y-5">
+              <div className="flex items-center justify-between p-4 rounded-lg border border-gray-700 bg-gray-800/50">
+                <div>
+                  <p className="text-sm text-gray-400">League Winnings</p>
+                  <p className="text-2xl font-bold text-white" data-testid="text-transfer-available">
+                    ${transferLeague.profit.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                  </p>
+                  <p className="text-xs text-gray-500">Available to transfer</p>
+                </div>
+                <div className="p-3 rounded-lg bg-purple-900/30">
+                  <Gift className="w-6 h-6 text-purple-400" />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-4 rounded-lg border border-gray-700 bg-gray-800/30">
+                <div className="text-center flex-1">
+                  <p className="text-xs text-gray-400 mb-1">From</p>
+                  <p className="text-sm font-bold text-white">{transferLeague.name}</p>
+                </div>
+                <ArrowLeftRight className="w-5 h-5 text-gray-500 mx-3 shrink-0" />
+                <div className="text-center flex-1">
+                  <p className="text-xs text-gray-400 mb-1">To</p>
+                  <p className="text-sm font-bold text-white">Main Wallet</p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-white">Amount (USD)</p>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-400 font-semibold">$</span>
+                  <Input
+                    type="number"
+                    value={transferAmount}
+                    onChange={(e) => setTransferAmount(e.target.value)}
+                    placeholder="0.00"
+                    min={0}
+                    max={transferLeague.profit}
+                    step={0.01}
+                    className="pl-8 bg-gray-900 border-brand-500 text-white text-lg font-semibold h-12 focus:ring-brand-500"
+                    data-testid="input-transfer-amount"
+                  />
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  {[25, 50, 75, 100].map((pct) => (
+                    <button
+                      key={pct}
+                      onClick={() => setPercentage(pct)}
+                      className="py-2 px-3 rounded-lg border border-gray-700 bg-gray-800/50 text-sm font-medium text-gray-300 hover:border-brand-500 hover:text-white transition-colors"
+                      data-testid={`button-pct-${pct}`}
+                    >
+                      {pct}%
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <Button
+                className="w-full h-12 text-base bg-blue-600 hover:bg-blue-700"
+                disabled={!transferAmount || Number(transferAmount) <= 0 || Number(transferAmount) > transferLeague.profit}
+                onClick={handleTransfer}
+                data-testid="button-confirm-transfer"
+              >
+                <ArrowLeftRight className="w-4 h-4 mr-2" />
+                Transfer to Wallet
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -3,6 +3,13 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import {
   Users,
@@ -14,6 +21,7 @@ import {
   CheckCircle2,
   Clock,
   ArrowRight,
+  ArrowLeftRight,
 } from "lucide-react";
 
 const referralStats = {
@@ -44,12 +52,36 @@ const tiers = [
 export default function LeaguesReferral() {
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [transferAmount, setTransferAmount] = useState("");
+
+  const availableToTransfer = referralStats.totalEarnings;
 
   function copyLink() {
     navigator.clipboard.writeText(referralLink);
     setCopied(true);
     toast({ title: "Link Copied!", description: "Referral link copied to clipboard" });
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  function openTransfer() {
+    setTransferAmount("");
+    setTransferOpen(true);
+  }
+
+  function handleTransfer() {
+    const amount = Number(transferAmount);
+    if (!amount || amount <= 0 || amount > availableToTransfer) return;
+    toast({
+      title: "Transfer Successful",
+      description: `$${amount.toFixed(2)} transferred from Referral Commission to Main Wallet`,
+    });
+    setTransferOpen(false);
+    setTransferAmount("");
+  }
+
+  function setPercentage(pct: number) {
+    setTransferAmount((availableToTransfer * pct / 100).toFixed(2));
   }
 
   return (
@@ -108,7 +140,7 @@ export default function LeaguesReferral() {
             </div>
           </div>
         </Card>
-        <Card className="p-6" data-testid="stat-total-earnings">
+        <Card className="p-6 relative" data-testid="stat-total-earnings">
           <div className="flex justify-between items-start gap-2">
             <div>
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Total Earnings</p>
@@ -117,6 +149,18 @@ export default function LeaguesReferral() {
             <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-md">
               <DollarSign className="w-5 h-5" />
             </div>
+          </div>
+          <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={openTransfer}
+              data-testid="button-transfer-earnings"
+            >
+              <ArrowLeftRight className="w-3.5 h-3.5 mr-1.5" />
+              Transfer to Wallet
+            </Button>
           </div>
         </Card>
         <Card className="p-6" data-testid="stat-pending-earnings">
@@ -197,6 +241,87 @@ export default function LeaguesReferral() {
           </table>
         </div>
       </Card>
+
+      <Dialog open={transferOpen} onOpenChange={(open) => { if (!open) setTransferOpen(false); }}>
+        <DialogContent className="max-w-md bg-[#0f172a] border-gray-800 text-white" data-testid="dialog-transfer-wallet">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-white">
+              <ArrowLeftRight className="w-5 h-5 text-brand-400" />
+              Transfer to Wallet
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Transfer your earnings to your main wallet balance.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-5">
+            <div className="flex items-center justify-between p-4 rounded-lg border border-gray-700 bg-gray-800/50">
+              <div>
+                <p className="text-sm text-gray-400">Total Referral Commission</p>
+                <p className="text-2xl font-bold text-white" data-testid="text-transfer-available">
+                  ${availableToTransfer.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                </p>
+                <p className="text-xs text-gray-500">Available to transfer</p>
+              </div>
+              <div className="p-3 rounded-lg bg-purple-900/30">
+                <Gift className="w-6 h-6 text-purple-400" />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between p-4 rounded-lg border border-gray-700 bg-gray-800/30">
+              <div className="text-center flex-1">
+                <p className="text-xs text-gray-400 mb-1">From</p>
+                <p className="text-sm font-bold text-white">Referral Commission</p>
+              </div>
+              <ArrowLeftRight className="w-5 h-5 text-gray-500 mx-3 shrink-0" />
+              <div className="text-center flex-1">
+                <p className="text-xs text-gray-400 mb-1">To</p>
+                <p className="text-sm font-bold text-white">Main Wallet</p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-white">Amount (USD)</p>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-400 font-semibold">$</span>
+                <Input
+                  type="number"
+                  value={transferAmount}
+                  onChange={(e) => setTransferAmount(e.target.value)}
+                  placeholder="0.00"
+                  min={0}
+                  max={availableToTransfer}
+                  step={0.01}
+                  className="pl-8 bg-gray-900 border-brand-500 text-white text-lg font-semibold h-12 focus:ring-brand-500"
+                  data-testid="input-transfer-amount"
+                />
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                {[25, 50, 75, 100].map((pct) => (
+                  <button
+                    key={pct}
+                    onClick={() => setPercentage(pct)}
+                    className="py-2 px-3 rounded-lg border border-gray-700 bg-gray-800/50 text-sm font-medium text-gray-300 hover:border-brand-500 hover:text-white transition-colors"
+                    data-testid={`button-pct-${pct}`}
+                  >
+                    {pct}%
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <Button
+              className="w-full h-12 text-base bg-blue-600 hover:bg-blue-700"
+              disabled={!transferAmount || Number(transferAmount) <= 0 || Number(transferAmount) > availableToTransfer}
+              onClick={handleTransfer}
+              data-testid="button-confirm-transfer"
+            >
+              <ArrowLeftRight className="w-4 h-4 mr-2" />
+              Transfer to Wallet
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
