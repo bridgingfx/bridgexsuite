@@ -41,10 +41,22 @@ I want the agent to focus on high-level features only and avoid granular impleme
 
 ### Leagues Module (5 sub-pages)
 - **Dashboard** (`/leagues/dashboard`) - Stats, active leagues, recent results, upcoming tournaments
-- **Tournaments** (`/leagues/tournaments`) - Browse/filter tournaments (live, upcoming, completed), join tournaments
+- **Tournaments** (`/leagues/tournaments`) - Browse/filter tournaments (live, upcoming, completed), join tournaments with wallet payment popup
 - **My Leagues** (`/leagues/my-leagues`) - Track joined leagues with status tabs, stats, progress
 - **Leaderboard** (`/leagues/leaderboard`) - League-specific rankings with top-3 podium and full table
 - **Referral** (`/leagues/referral`) - Referral link, commission tiers, referral history
+
+### Investment Module (10 sub-pages)
+- **Dashboard** (`/investment/dashboard`) - 6 KPI cards (Total Invested, Portfolio Value, Monthly ROI, Active Plans, Locked Capital, Available Profit), Portfolio Growth/Monthly ROI/Asset Allocation charts
+- **Products** (`/investment/products`) - Marketplace with Gold/Crypto/Currency tabs, 3 products per category with details
+- **My Investments** (`/investment/my-investments`) - Active investments table with View Details, Reinvest, Withdrawal actions
+- **Start New** (`/investment/new`) - 4-step wizard (Choose Product → Enter Amount → Select Wallet → Confirm)
+- **ROI Earnings** (`/investment/roi`) - ROI summary cards, payout history table with Transfer/Reinvest actions
+- **Investment History** (`/investment/history`) - Full history with filter tabs (All/Active/Completed/Cancelled)
+- **Lock-in Tracker** (`/investment/lock-tracker`) - Progress bars showing lock-in status with color coding
+- **Referral Commission** (`/investment/referral`) - Stats, charts, referral link, commission history, transfer popup
+- **Profit Distribution** (`/investment/profit`) - Payout summary, distribution history, earnings pie chart
+- **Investment Wallet** (`/investment/wallet`) - Wallet balance, transfer/receive/withdraw actions, transaction history
 
 ### Backend (Migrated: Express.js → Laravel PHP)
 - **PHP 8.4 + Laravel 12** in `laravel-api/` directory
@@ -108,6 +120,7 @@ client/src/components/
 - `laravel-api/app/Traits/CamelCaseAttributes.php` - snake_case → camelCase JSON conversion
 - `laravel-api/app/Http/Middleware/` - Auth middleware (EnsureAuthenticated, EnsureAdmin, EnsureSuperAdmin)
 - `client/src/pages/client/prop/` - 10 Prop Trading sub-pages (includes account-detail.tsx)
+- `client/src/pages/client/investment/` - 10 Investment sub-pages
 - `client/src/components/client/app-sidebar.tsx` - Client sidebar with expandable menus
 - `client/src/components/admin/admin-sidebar.tsx` - Admin sidebar
 - `client/src/components/super-admin/super-admin-sidebar.tsx` - Super Admin sidebar

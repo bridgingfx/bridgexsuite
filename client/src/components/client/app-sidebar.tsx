@@ -28,6 +28,14 @@ import {
   Award,
   BookOpen,
   Swords,
+  Package,
+  FolderOpen,
+  PlusCircle,
+  Percent,
+  History,
+  Lock,
+  Share2,
+  PieChart,
 } from "lucide-react";
 import { useState } from "react";
 import {
@@ -112,7 +120,24 @@ const section2Menu: MenuItem[] = [
       { title: "Referral", url: "/leagues/referral", icon: Users },
     ],
   },
-  { title: "Investments", url: "/investment", icon: PiggyBank, iconColor: "text-pink-500 dark:text-pink-400" },
+  {
+    title: "Investments",
+    url: "/investment/dashboard",
+    icon: PiggyBank,
+    iconColor: "text-pink-500 dark:text-pink-400",
+    children: [
+      { title: "Dashboard", url: "/investment/dashboard", icon: LayoutDashboard },
+      { title: "Products", url: "/investment/products", icon: Package },
+      { title: "My Investments", url: "/investment/my-investments", icon: FolderOpen },
+      { title: "Start New", url: "/investment/new", icon: PlusCircle },
+      { title: "ROI Earnings", url: "/investment/roi", icon: Percent },
+      { title: "Investment History", url: "/investment/history", icon: History },
+      { title: "Lock-in Tracker", url: "/investment/lock-tracker", icon: Lock },
+      { title: "Referral Commission", url: "/investment/referral", icon: Share2 },
+      { title: "Profit Distribution", url: "/investment/profit", icon: PieChart },
+      { title: "Investment Wallet", url: "/investment/wallet", icon: Wallet },
+    ],
+  },
   { title: "Loyalty Points", url: "/loyalty-points", icon: Star, iconColor: "text-orange-500 dark:text-orange-400" },
   { title: "Download Platform", url: "/download-platform", icon: Download, iconColor: "text-cyan-500 dark:text-cyan-400" },
 ];
@@ -207,7 +232,7 @@ export function AppSidebar() {
   const [location] = useLocation();
   const initials = user?.fullName?.split(" ").map((n: string) => n[0]).join("").toUpperCase() || "U";
 
-  const defaultExpanded = location.startsWith("/forex") ? "Forex Trading" : location.startsWith("/prop") ? "Prop Trading" : location.startsWith("/leagues") ? "Leagues" : "";
+  const defaultExpanded = location.startsWith("/forex") ? "Forex Trading" : location.startsWith("/prop") ? "Prop Trading" : location.startsWith("/leagues") ? "Leagues" : location.startsWith("/investment") ? "Investments" : "";
   const [expandedMenu, setExpandedMenu] = useState(defaultExpanded);
 
   function handleToggle(name: string) {

@@ -1,0 +1,265 @@
+Main Menu → Investment
+1️⃣ Investment Dashboard
+
+Overview of all investments.
+
+Widgets:
+
+Total Invested Amount
+
+Current Portfolio Value
+
+Monthly ROI Earned
+
+Active Investment Plans
+
+Locked Capital
+
+Available Profit
+
+Charts:
+
+Portfolio growth chart
+
+Monthly ROI graph
+
+Asset allocation (Gold / Crypto / Forex)
+
+2️⃣ Investment Products
+
+Marketplace of all investment products.
+
+Sub menus:
+
+Gold Investment
+
+Example products:
+
+Gold Saver Plan
+
+Gold Growth Plan
+
+Gold Premium Plan
+
+Details shown:
+
+Minimum Investment
+
+Lock-in Period
+
+Monthly ROI %
+
+Risk Level
+
+Expected Return
+
+Crypto Investment
+
+Example products:
+
+BTC Growth Plan
+
+Crypto Index Fund
+
+Stablecoin Yield Plan
+
+Details:
+
+Supported crypto
+
+Monthly ROI
+
+Lock period
+
+Currency Investment
+
+Forex based investment plans.
+
+Examples:
+
+USD Income Plan
+
+Forex Alpha Strategy
+
+Multi Currency Portfolio
+
+Details:
+
+Monthly ROI
+
+Lock-in period
+
+Risk profile
+
+3️⃣ My Investments
+
+User’s active investments.
+
+Columns:
+
+Product Name
+
+Asset Type (Gold / Crypto / Currency)
+
+Investment Amount
+
+Lock-in Period
+
+Monthly ROI
+
+Current Profit
+
+Status
+
+Actions:
+
+View Details
+
+Reinvest Profit
+
+Request Withdrawal (after lock-in)
+
+4️⃣ Start New Investment
+
+Steps:
+
+Step 1
+Choose product
+
+Step 2
+Enter investment amount
+
+Step 3
+Select wallet
+
+Step 4
+Confirm lock-in agreement
+
+Example:
+
+Product: Gold Growth Plan
+Investment: $5000
+Lock Period: 6 months
+ROI: 4% monthly
+5️⃣ ROI Earnings
+
+Shows all ROI payouts.
+
+Columns:
+
+Investment Plan
+
+ROI %
+
+Amount Earned
+
+Distribution Date
+
+Status
+
+Options:
+
+Transfer to wallet
+
+Reinvest
+
+6️⃣ Investment History
+
+Full history.
+
+Includes:
+
+Investments started
+
+ROI received
+
+Withdrawals
+
+Completed investments
+
+Filters:
+
+Active
+
+Completed
+
+Cancelled
+
+7️⃣ Lock-in Tracker
+
+Shows time remaining.
+
+Columns:
+
+Investment Product
+
+Start Date
+
+Lock Period
+
+Remaining Days
+
+Maturity Date
+
+8️⃣ Referral Commission
+
+Since your investment has referral rewards.
+
+Sub menus:
+
+Referral Dashboard
+
+Total Referral Earnings
+
+Active Investors
+
+Commission Earned
+
+My Referral Link
+
+Unique referral link
+
+Invite friends
+
+Referral Commission History
+
+Columns:
+
+Investor Name
+
+Investment Amount
+
+Commission %
+
+Commission Earned
+
+Status
+
+9️⃣ Profit Distribution
+
+Shows payout summary.
+
+Example:
+
+Monthly ROI: $400
+Referral Commission: $120
+Total Earnings: $520
+🔟 Investment Wallet
+
+Separate wallet for investment.
+
+Features:
+
+Transfer to investment
+
+Receive ROI
+
+Withdraw profit
+
+Transactions:
+
+Investment purchase
+
+ROI credit
+
+Referral commission

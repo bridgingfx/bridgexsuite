@@ -39,6 +39,16 @@ import PropRules from "@/pages/client/prop/rules";
 import PropAccountDetail from "@/pages/client/prop/account-detail";
 import PropPurchase from "@/pages/client/prop/purchase";
 import InvestmentPage from "@/pages/client/investment";
+import InvestmentDashboard from "@/pages/client/investment/dashboard";
+import InvestmentProducts from "@/pages/client/investment/products";
+import InvestmentMyInvestments from "@/pages/client/investment/my-investments";
+import InvestmentNew from "@/pages/client/investment/new";
+import InvestmentROI from "@/pages/client/investment/roi";
+import InvestmentHistory from "@/pages/client/investment/history";
+import InvestmentLockTracker from "@/pages/client/investment/lock-tracker";
+import InvestmentReferral from "@/pages/client/investment/referral";
+import InvestmentProfit from "@/pages/client/investment/profit";
+import InvestmentWallet from "@/pages/client/investment/wallet";
 import CopyTradingPage from "@/pages/client/copy-trading";
 import PammPage from "@/pages/client/pamm";
 import AccountDetail from "@/pages/client/account-detail";
@@ -151,7 +161,17 @@ function ClientRouter() {
       <Route path="/leagues/my-leagues" component={MyLeagues} />
       <Route path="/leagues/leaderboard" component={LeaguesLeaderboard} />
       <Route path="/leagues/referral" component={LeaguesReferral} />
-      <Route path="/investment" component={InvestmentPage} />
+      <Route path="/investment" component={InvestmentDashboard} />
+      <Route path="/investment/dashboard" component={InvestmentDashboard} />
+      <Route path="/investment/products" component={InvestmentProducts} />
+      <Route path="/investment/my-investments" component={InvestmentMyInvestments} />
+      <Route path="/investment/new" component={InvestmentNew} />
+      <Route path="/investment/roi" component={InvestmentROI} />
+      <Route path="/investment/history" component={InvestmentHistory} />
+      <Route path="/investment/lock-tracker" component={InvestmentLockTracker} />
+      <Route path="/investment/referral" component={InvestmentReferral} />
+      <Route path="/investment/profit" component={InvestmentProfit} />
+      <Route path="/investment/wallet" component={InvestmentWallet} />
       <Route path="/loyalty-points" component={LoyaltyPointsPage} />
       <Route path="/download-platform" component={DownloadPlatformPage} />
       <Route path="/p2p-exchange" component={P2PExchangePage} />
