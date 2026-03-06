@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Users,
   Copy,
   DollarSign,
   UserCheck,
@@ -52,9 +51,8 @@ const earningsReferralsData = [
 ];
 
 const demoStats = [
-  { label: "Total Referral Earnings", value: `$${totalEarned.toLocaleString("en-US", { minimumFractionDigits: 2 })}`, icon: DollarSign, color: "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400", hasTransfer: true },
   { label: "Active Investors", value: "24", icon: UserCheck, color: "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400", hasTransfer: false },
-  { label: "Commission Earned", value: "$2,850.00", icon: Users, color: "bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400", hasTransfer: false },
+  { label: "Total Referral Earnings", value: `$${totalEarned.toLocaleString("en-US", { minimumFractionDigits: 2 })}`, icon: DollarSign, color: "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400", hasTransfer: true },
 ];
 
 const demoCommissions = [
@@ -98,27 +96,6 @@ export default function InvestmentReferral() {
         </p>
       </div>
 
-      <Card className="p-6">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4" data-testid="text-referral-link-title">
-          Your Referral Link
-        </h2>
-        <div className="flex items-center gap-3 flex-wrap">
-          <Input
-            value={referralLink}
-            readOnly
-            className="max-w-md font-mono text-sm"
-            data-testid="input-referral-link"
-          />
-          <Button onClick={handleCopyLink} data-testid="button-copy-referral">
-            <Copy className="w-4 h-4 mr-2" />
-            Copy Link
-          </Button>
-        </div>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-          Share this link with potential investors. You earn a commission when they make an investment.
-        </p>
-      </Card>
-
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {demoStats.map((stat) => (
           <Card key={stat.label} className="p-5" data-testid={`card-stat-${stat.label.toLowerCase().replace(/\s+/g, "-")}`}>
@@ -149,6 +126,36 @@ export default function InvestmentReferral() {
             )}
           </Card>
         ))}
+
+        <Card className="p-5" data-testid="card-referral-link">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Your Referral Link</p>
+              <div className="flex items-center gap-2 mt-2">
+                <Input
+                  value={referralLink}
+                  readOnly
+                  className="font-mono text-xs h-9"
+                  data-testid="input-referral-link"
+                />
+              </div>
+            </div>
+            <div className="p-3 rounded-lg bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400">
+              <Copy className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+            <Button
+              size="sm"
+              className="w-full"
+              onClick={handleCopyLink}
+              data-testid="button-copy-referral"
+            >
+              <Copy className="w-3.5 h-3.5 mr-1.5" />
+              Copy Link
+            </Button>
+          </div>
+        </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
