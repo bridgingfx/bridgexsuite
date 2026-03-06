@@ -5,6 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
+import {
   Trophy,
   Search,
   Calendar,
@@ -13,6 +22,10 @@ import {
   Clock,
   Flame,
   Filter,
+  Wallet,
+  ArrowRight,
+  CheckCircle2,
+  AlertTriangle,
 } from "lucide-react";
 
 type TournamentStatus = "upcoming" | "live" | "completed";
@@ -46,9 +59,15 @@ const statusConfig: Record<TournamentStatus, { color: string; label: string }> =
   completed: { color: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400", label: "Completed" },
 };
 
+const walletBalance = 75.00;
+
 export default function LeaguesTournaments() {
+  const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<TournamentStatus | "all">("all");
+  const [joinOpen, setJoinOpen] = useState(false);
+  const [joinTournament, setJoinTournament] = useState<Tournament | null>(null);
 
   const filtered = tournaments.filter((t) => {
     const matchesSearch = t.name.toLowerCase().includes(search.toLowerCase());
@@ -62,6 +81,30 @@ export default function LeaguesTournaments() {
     { key: "upcoming", label: "Upcoming", icon: Calendar },
     { key: "completed", label: "Completed", icon: Clock },
   ];
+
+  function openJoin(tournament: Tournament) {
+    setJoinTournament(tournament);
+    setJoinOpen(true);
+  }
+
+  function handleJoin() {
+    if (!joinTournament) return;
+    if (walletBalance < joinTournament.entryFee) return;
+    toast({
+      title: "Successfully Joined!",
+      description: `You've joined ${joinTournament.name}. $${joinTournament.entryFee.toFixed(2)} deducted from your wallet.`,
+    });
+    setJoinOpen(false);
+    setJoinTournament(null);
+  }
+
+  function goToDeposit() {
+    setJoinOpen(false);
+    setJoinTournament(null);
+    setLocation("/forex/finance");
+  }
+
+  const hasEnoughBalance = joinTournament ? walletBalance >= joinTournament.entryFee : false;
 
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto" data-testid="leagues-tournaments-page">
@@ -147,7 +190,7 @@ export default function LeaguesTournaments() {
               </div>
 
               {tournament.status === "upcoming" && (
-                <Button className="w-full" data-testid={`button-join-${tournament.id}`}>
+                <Button className="w-full" onClick={() => openJoin(tournament)} data-testid={`button-join-${tournament.id}`}>
                   <DollarSign className="w-4 h-4 mr-1" />
                   Join for ${tournament.entryFee}
                 </Button>
@@ -174,6 +217,112 @@ export default function LeaguesTournaments() {
           <p className="text-gray-500 dark:text-gray-400">No tournaments found</p>
         </div>
       )}
+
+      <Dialog open={joinOpen} onOpenChange={(open) => { if (!open) { setJoinOpen(false); setJoinTournament(null); } }}>
+        <DialogContent className="max-w-md bg-[#0f172a] border-gray-800 text-white" data-testid="dialog-join-tournament">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-white">
+              <Trophy className="w-5 h-5 text-yellow-400" />
+              Join Tournament
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Pay from your main wallet to join this tournament.
+            </DialogDescription>
+          </DialogHeader>
+
+          {joinTournament && (
+            <div className="space-y-5">
+              <div className="p-4 rounded-lg border border-gray-700 bg-gray-800/50">
+                <p className="font-bold text-white text-base" data-testid="text-join-tournament-name">{joinTournament.name}</p>
+                <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
+                  <span className="flex items-center gap-1">
+                    <Users className="w-3 h-3" />
+                    {joinTournament.participants}/{joinTournament.maxParticipants}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    {new Date(joinTournament.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })} - {new Date(joinTournament.endDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                  </span>
+                  <Badge variant="outline" className="text-xs border-gray-600 text-gray-300">{joinTournament.type}</Badge>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 rounded-lg border border-gray-700 bg-gray-800/30 text-center">
+                  <p className="text-xs text-gray-400 mb-1">Prize Pool</p>
+                  <p className="text-lg font-bold text-brand-400">${joinTournament.prize.toLocaleString()}</p>
+                </div>
+                <div className="p-3 rounded-lg border border-gray-700 bg-gray-800/30 text-center">
+                  <p className="text-xs text-gray-400 mb-1">Entry Fee</p>
+                  <p className="text-lg font-bold text-white">${joinTournament.entryFee.toFixed(2)}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-4 rounded-lg border border-gray-700 bg-gray-800/30">
+                <div className="text-center flex-1">
+                  <p className="text-xs text-gray-400 mb-1">Pay From</p>
+                  <p className="text-sm font-bold text-white flex items-center justify-center gap-1.5">
+                    <Wallet className="w-4 h-4 text-brand-400" />
+                    Main Wallet
+                  </p>
+                </div>
+                <ArrowRight className="w-5 h-5 text-gray-500 mx-3 shrink-0" />
+                <div className="text-center flex-1">
+                  <p className="text-xs text-gray-400 mb-1">Tournament</p>
+                  <p className="text-sm font-bold text-white">{joinTournament.name.length > 20 ? joinTournament.name.substring(0, 20) + "..." : joinTournament.name}</p>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-lg border border-gray-700 bg-gray-800/50">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-gray-400">Wallet Balance</p>
+                  <p className={`text-lg font-bold ${hasEnoughBalance ? "text-emerald-400" : "text-red-400"}`} data-testid="text-wallet-balance">
+                    ${walletBalance.toFixed(2)}
+                  </p>
+                </div>
+                <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-700">
+                  <p className="text-sm text-gray-400">Entry Fee</p>
+                  <p className="text-sm font-bold text-white">- ${joinTournament.entryFee.toFixed(2)}</p>
+                </div>
+                <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-700">
+                  <p className="text-sm font-medium text-gray-300">Remaining Balance</p>
+                  <p className={`text-sm font-bold ${hasEnoughBalance ? "text-emerald-400" : "text-red-400"}`}>
+                    ${(walletBalance - joinTournament.entryFee).toFixed(2)}
+                  </p>
+                </div>
+              </div>
+
+              {hasEnoughBalance ? (
+                <Button
+                  className="w-full h-12 text-base bg-blue-600 hover:bg-blue-700"
+                  onClick={handleJoin}
+                  data-testid="button-confirm-join"
+                >
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  Pay ${joinTournament.entryFee.toFixed(2)} & Join
+                </Button>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-red-900/20 border border-red-800/50">
+                    <AlertTriangle className="w-5 h-5 text-red-400 shrink-0" />
+                    <p className="text-sm text-red-300" data-testid="text-insufficient-balance">
+                      Insufficient wallet balance. Please top up your wallet to join this tournament.
+                    </p>
+                  </div>
+                  <Button
+                    className="w-full h-12 text-base bg-emerald-600 hover:bg-emerald-700"
+                    onClick={goToDeposit}
+                    data-testid="button-goto-deposit"
+                  >
+                    <Wallet className="w-4 h-4 mr-2" />
+                    Top Up Wallet
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
