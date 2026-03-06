@@ -26,10 +26,12 @@ import {
   Plus,
   Search,
   MessageSquare,
+  MessageCircle,
   CheckCircle,
   ChevronDown,
   ChevronUp,
   Send,
+  X,
 } from "lucide-react";
 import type { SupportTicket, TicketReply } from "@shared/schema";
 
@@ -168,8 +170,17 @@ function TicketDetail({ ticket }: { ticket: SupportTicket }) {
   );
 }
 
+const demoChatMessages = [
+  { id: 1, sender: "agent", text: "Hello! Welcome to live support. How can I help you today?", time: "10:30 AM" },
+  { id: 2, sender: "user", text: "Hi, I have a question about my recent deposit.", time: "10:31 AM" },
+  { id: 3, sender: "agent", text: "Sure, I'd be happy to help with that. Could you please provide your transaction ID?", time: "10:31 AM" },
+];
+
 export default function Support() {
   const [createOpen, setCreateOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatMessage, setChatMessage] = useState("");
+  const [chatMessages, setChatMessages] = useState(demoChatMessages);
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const { toast } = useToast();
@@ -220,10 +231,16 @@ export default function Support() {
           <h1 className="text-lg font-bold text-gray-900 dark:text-white" data-testid="text-support-title">Support</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">Create and manage your support tickets</p>
         </div>
-        <Button onClick={() => setCreateOpen(true)} data-testid="button-create-ticket">
-          <Plus className="w-4 h-4 mr-2" />
-          New Ticket
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button variant="outline" onClick={() => setChatOpen(true)} data-testid="button-live-chat">
+            <MessageCircle className="w-4 h-4 mr-2" />
+            Live Chat
+          </Button>
+          <Button onClick={() => setCreateOpen(true)} data-testid="button-create-ticket">
+            <Plus className="w-4 h-4 mr-2" />
+            New Ticket
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -380,6 +397,89 @@ export default function Support() {
             >
               {createMutation.isPending ? "Creating..." : "Submit Ticket"}
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={chatOpen} onOpenChange={setChatOpen}>
+        <DialogContent className="max-w-md bg-[#0f172a] border-gray-800 text-white p-0" data-testid="dialog-live-chat">
+          <DialogHeader className="p-4 border-b border-gray-800">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <MessageCircle className="w-5 h-5 text-brand-400" />
+                  <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-[#0f172a]" data-testid="status-online-indicator" />
+                </div>
+                <div>
+                  <DialogTitle className="text-white text-sm font-semibold" data-testid="text-live-support-title">Live Support</DialogTitle>
+                  <DialogDescription className="text-emerald-400 text-xs mt-0.5" data-testid="text-online-status">Online</DialogDescription>
+                </div>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="flex flex-col h-[400px]">
+            <div className="flex-1 overflow-y-auto p-4 space-y-3" data-testid="chat-messages-area">
+              {chatMessages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
+                  data-testid={`chat-message-${msg.id}`}
+                >
+                  <div
+                    className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
+                      msg.sender === "user"
+                        ? "bg-brand-600 text-white"
+                        : "bg-gray-800 text-gray-200"
+                    }`}
+                  >
+                    <p>{msg.text}</p>
+                    <p className={`text-xs mt-1 ${msg.sender === "user" ? "text-brand-200" : "text-gray-500"}`}>{msg.time}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="p-3 border-t border-gray-800">
+              <div className="flex items-center gap-2">
+                <Input
+                  value={chatMessage}
+                  onChange={(e) => setChatMessage(e.target.value)}
+                  placeholder="Type a message..."
+                  className="flex-1 bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && chatMessage.trim()) {
+                      const now = new Date();
+                      const timeStr = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+                      setChatMessages((prev) => [
+                        ...prev,
+                        { id: prev.length + 1, sender: "user", text: chatMessage.trim(), time: timeStr },
+                      ]);
+                      setChatMessage("");
+                    }
+                  }}
+                  data-testid="input-chat-message"
+                />
+                <Button
+                  size="icon"
+                  onClick={() => {
+                    if (chatMessage.trim()) {
+                      const now = new Date();
+                      const timeStr = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+                      setChatMessages((prev) => [
+                        ...prev,
+                        { id: prev.length + 1, sender: "user", text: chatMessage.trim(), time: timeStr },
+                      ]);
+                      setChatMessage("");
+                    }
+                  }}
+                  disabled={!chatMessage.trim()}
+                  data-testid="button-send-chat"
+                >
+                  <Send className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
