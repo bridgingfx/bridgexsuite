@@ -180,7 +180,7 @@ export default function RewardsTransactionsPage() {
       title: isEdit ? "Address updated" : "Order processing",
       description: isEdit
         ? "Your shipping address has been updated and the order is being processed."
-        : "Your shipping address has been saved and the order is being processed.",
+        : "Your shipping address has been saved successfully.",
     });
     setAddressDialogOpen(false);
     setOtpSent(false);
@@ -433,7 +433,7 @@ export default function RewardsTransactionsPage() {
                         data-testid="button-add-address"
                       >
                         <MapPin className="w-4 h-4 mr-2" />
-                        Add Shipping Address to Process
+                        Add Shipping Address (Optional)
                       </Button>
                     )}
                     {!cancelConfirm ? (
@@ -488,7 +488,7 @@ export default function RewardsTransactionsPage() {
             </DialogTitle>
             <DialogDescription className="text-gray-400">
               {!otpSent
-                ? viewOrder?.shippingAddress ? "Update your shipping address. OTP verification required." : "Enter your shipping address to process the order."
+                ? viewOrder?.shippingAddress ? "Update your shipping address. OTP verification required." : "Add a shipping address for this order. OTP verification required."
                 : !otpVerified
                   ? "Enter the OTP sent to your registered email."
                   : "Your address has been verified. Confirm to process."}
