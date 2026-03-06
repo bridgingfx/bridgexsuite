@@ -9,6 +9,7 @@ import { AppSidebar } from "@/components/client/app-sidebar";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { SuperAdminSidebar } from "@/components/super-admin/super-admin-sidebar";
 import { ThemeProvider } from "@/lib/theme-provider";
+import { WidgetVisibilityProvider } from "@/hooks/use-widget-visibility";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AnnouncementBar } from "@/components/client/announcement-bar";
 import { TickerBar } from "@/components/client/ticker-bar";
@@ -495,10 +496,12 @@ function App() {
   return (
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <AppContent />
-          <Toaster />
-        </TooltipProvider>
+        <WidgetVisibilityProvider>
+          <TooltipProvider>
+            <AppContent />
+            <Toaster />
+          </TooltipProvider>
+        </WidgetVisibilityProvider>
       </QueryClientProvider>
     </ThemeProvider>
   );

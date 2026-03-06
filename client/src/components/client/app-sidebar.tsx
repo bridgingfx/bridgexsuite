@@ -59,6 +59,7 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/use-auth";
+import { useWidgetVisibility } from "@/hooks/use-widget-visibility";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 
@@ -253,9 +254,14 @@ function NavItem({ item, expandedMenu, onToggle }: { item: MenuItem; expandedMen
 
 export function AppSidebar() {
   const { user } = useAuth();
+  const { isVisible } = useWidgetVisibility();
   const [, setLocation] = useLocation();
   const [location] = useLocation();
   const initials = user?.fullName?.split(" ").map((n: string) => n[0]).join("").toUpperCase() || "U";
+
+  const filteredSection2 = section2Menu.filter((item) => isVisible(item.title));
+  const filteredExchange = exchangeMenu.filter((item) => isVisible(item.title));
+  const filteredTools = toolsMenu.filter((item) => isVisible(item.title));
 
   const defaultExpanded = location.startsWith("/forex") ? "Forex Trading" : location.startsWith("/prop") ? "Prop Trading" : location.startsWith("/leagues") ? "Leagues" : location.startsWith("/investment") ? "Investments" : location.startsWith("/crypto") ? "Crypto Exchange" : location.startsWith("/tools") ? "Tools" : "";
   const [expandedMenu, setExpandedMenu] = useState(defaultExpanded);
@@ -315,44 +321,50 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground/70 px-5">
-            Trading
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu className="px-2 space-y-0.5">
-              {section2Menu.map((item) => (
-                <NavItem key={item.title} item={item} expandedMenu={expandedMenu} onToggle={handleToggle} />
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {filteredSection2.length > 0 && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground/70 px-5">
+              Trading
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu className="px-2 space-y-0.5">
+                {filteredSection2.map((item) => (
+                  <NavItem key={item.title} item={item} expandedMenu={expandedMenu} onToggle={handleToggle} />
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground/70 px-5">
-            Exchange
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu className="px-2 space-y-0.5">
-              {exchangeMenu.map((item) => (
-                <NavItem key={item.title} item={item} expandedMenu={expandedMenu} onToggle={handleToggle} />
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {filteredExchange.length > 0 && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground/70 px-5">
+              Exchange
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu className="px-2 space-y-0.5">
+                {filteredExchange.map((item) => (
+                  <NavItem key={item.title} item={item} expandedMenu={expandedMenu} onToggle={handleToggle} />
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground/70 px-5">
-            Tools
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu className="px-2 space-y-0.5">
-              {toolsMenu.map((item) => (
-                <NavItem key={item.title} item={item} expandedMenu={expandedMenu} onToggle={handleToggle} />
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {filteredTools.length > 0 && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground/70 px-5">
+              Tools
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu className="px-2 space-y-0.5">
+                {filteredTools.map((item) => (
+                  <NavItem key={item.title} item={item} expandedMenu={expandedMenu} onToggle={handleToggle} />
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
         <SidebarGroup className="mt-auto pt-2 border-t">
           <SidebarGroupLabel className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground/70 px-5">

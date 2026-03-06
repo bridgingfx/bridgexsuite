@@ -126,7 +126,7 @@ export default function ProfilePage() {
         asset: walletForm.asset,
         address: walletForm.address,
         network: walletForm.network,
-        status: "Pending Verification",
+        status: "Active",
       };
       setCryptoWallets((prev) => [...prev, newWallet]);
     }, 1500);
@@ -562,11 +562,11 @@ export default function ProfilePage() {
                 <CheckCircle className="w-8 h-8 text-emerald-400" />
               </div>
               <div>
-                <p className="text-lg font-semibold text-white" data-testid="text-wallet-success">Crypto Wallet Added</p>
-                <p className="text-sm text-gray-400 mt-1">Your crypto wallet is now pending admin verification.</p>
+                <p className="text-lg font-semibold text-white" data-testid="text-wallet-success">Crypto Wallet Activated</p>
+                <p className="text-sm text-gray-400 mt-1" data-testid="text-wallet-activation-status">Your crypto wallet has been verified and is now active.</p>
               </div>
-              <Badge variant="secondary" className="bg-amber-500/10 text-amber-400 no-default-hover-elevate no-default-active-elevate" data-testid="badge-wallet-pending">
-                Pending Verification
+              <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-400 no-default-hover-elevate no-default-active-elevate" data-testid="badge-wallet-active">
+                Active
               </Badge>
               <div>
                 <Button variant="outline" className="border-gray-700 text-gray-300" onClick={resetWalletDialog} data-testid="button-wallet-close">
