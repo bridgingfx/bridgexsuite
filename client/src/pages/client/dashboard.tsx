@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useWalletCurrency } from "@/hooks/use-wallet-currency";
 import {
   Dialog,
   DialogContent,
@@ -147,6 +148,7 @@ function StatCard({ title, value, trend, isPositive = true, icon, iconBg, link }
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { formatAmount } = useWalletCurrency();
 
   const { data: stats } = useQuery<{
     walletBalance: number;
@@ -201,7 +203,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" data-testid="stat-row-1">
         <StatCard
           title="Wallet Balance"
-          value={`$${(stats?.walletBalance ?? 24592.5).toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
+          value={formatAmount(stats?.walletBalance ?? 24592.5)}
           trend="+12.5%"
           isPositive={true}
           icon={<Wallet size={20} />}
@@ -210,7 +212,7 @@ export default function Dashboard() {
         />
         <StatCard
           title="Wallet Deposit"
-          value={`$${(stats?.totalDeposits ?? 12500).toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
+          value={formatAmount(stats?.totalDeposits ?? 12500)}
           trend="+8.4%"
           isPositive={true}
           icon={<ArrowUpRight size={20} />}
@@ -219,7 +221,7 @@ export default function Dashboard() {
         />
         <StatCard
           title="Wallet Withdrawal"
-          value={`$${(stats?.totalWithdrawals ?? 8450).toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
+          value={formatAmount(stats?.totalWithdrawals ?? 8450)}
           trend="+5.2%"
           isPositive={false}
           icon={<ArrowDownRight size={20} />}
@@ -228,7 +230,7 @@ export default function Dashboard() {
         />
         <StatCard
           title="Commissions"
-          value={`$${(stats?.totalCommissions ?? 2121.25).toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
+          value={formatAmount(stats?.totalCommissions ?? 2121.25)}
           trend="+$340.00"
           isPositive={true}
           icon={<DollarSign size={20} />}

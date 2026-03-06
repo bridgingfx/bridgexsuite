@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import {
@@ -31,6 +33,10 @@ import {
   MessageSquare,
   Eye,
   XCircle,
+  Banknote,
+  Coins,
+  Star,
+  CheckCircle,
 } from "lucide-react";
 import {
   Select,
@@ -41,6 +47,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import type { Transaction, TradingAccount } from "@shared/schema";
+import { useWalletCurrency, fiatCurrencies, cryptoCurrencies, exchangeRates } from "@/hooks/use-wallet-currency";
 
 const savedCryptoWallets = [
   { id: 1, asset: "BTC", address: "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh", network: "Bitcoin", status: "Active" as const },
@@ -78,12 +85,17 @@ const earningsData: { key: EarningType; label: string; amount: number; icon: typ
 
 export default function WalletPage() {
   const { toast } = useToast();
+  const { wallets, defaultCurrency, addWallet, setDefaultCurrency, formatAmount, getDefaultSymbol, convertFromUSD } = useWalletCurrency();
   const [activeTab, setActiveTab] = useState<"overview" | "deposit" | "withdraw" | "transfer">("overview");
   const [depositForm, setDepositForm] = useState({ method: "", amount: "" });
   const [withdrawForm, setWithdrawForm] = useState({ method: "", amount: "", details: "", message: "" });
   const [transferForm, setTransferForm] = useState({ fromAccount: "wallet", toAccount: "", amount: "" });
   const [transferEarning, setTransferEarning] = useState<EarningType | null>(null);
   const [transferAmount, setTransferAmount] = useState("");
+  const [createWalletOpen, setCreateWalletOpen] = useState(false);
+  const [walletType, setWalletType] = useState<"" | "fiat" | "crypto">("");
+  const [selectedCurrency, setSelectedCurrency] = useState("");
+  const [setAsDefault, setSetAsDefault] = useState(false);
 
   const { data: transactions, isLoading } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],
@@ -199,7 +211,7 @@ export default function WalletPage() {
   const withdrawals = (transactions || []).filter((t) => t.type === "withdrawal");
   const totalDeposits = deposits.reduce((sum, d) => sum + Number(d.amount), 0);
   const totalWithdrawals = withdrawals.reduce((sum, w) => sum + Number(w.amount), 0);
-  const walletBalance = totalDeposits - totalWithdrawals || 24592.50;
+  const walletBalanceUSD = totalDeposits - totalWithdrawals || 24592.50;
 
   const activeAccounts = (tradingAccounts || []).filter((a) => a.status === "active");
 
@@ -211,11 +223,41 @@ export default function WalletPage() {
     }));
   };
 
+  const resetCreateWallet = () => {
+    setCreateWalletOpen(false);
+    setWalletType("");
+    setSelectedCurrency("");
+    setSetAsDefault(false);
+  };
+
+  const handleCreateWallet = () => {
+    if (!walletType || !selectedCurrency) return;
+    const exists = wallets.find((w) => w.currency === selectedCurrency);
+    if (exists) {
+      toast({ title: `${selectedCurrency} wallet already exists`, variant: "destructive" });
+      return;
+    }
+    addWallet(walletType, selectedCurrency, setAsDefault);
+    toast({ title: `${selectedCurrency} wallet created successfully${setAsDefault ? " and set as default" : ""}` });
+    resetCreateWallet();
+  };
+
+  const availableFiat = fiatCurrencies.filter((f) => !wallets.find((w) => w.currency === f.code));
+  const availableCrypto = cryptoCurrencies.filter((c) => !wallets.find((w) => w.currency === c.code));
+
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white" data-testid="text-wallet-title">My Wallet</h1>
-        <div className="flex gap-2" data-testid="wallet-tabs">
+        <div className="flex gap-2 flex-wrap" data-testid="wallet-tabs">
+          <Button
+            variant="default"
+            onClick={() => setCreateWalletOpen(true)}
+            data-testid="button-create-wallet"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Create Wallet
+          </Button>
           <button
             onClick={() => setActiveTab("overview")}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === "overview" ? "bg-brand-600 text-white" : "bg-white dark:bg-dark-card text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700"}`}
@@ -241,26 +283,31 @@ export default function WalletPage() {
       </div>
 
       {activeTab === "overview" && (
-        <div className="animate-fade-in" data-testid="wallet-overview">
+        <div className="animate-fade-in space-y-6" data-testid="wallet-overview">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="bg-gradient-to-br from-brand-600 to-brand-800 p-6 rounded-2xl text-white shadow-lg flex flex-col justify-between" data-testid="wallet-hero">
               <div>
-                <p className="text-brand-100 text-sm font-medium mb-1">Total Balance</p>
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="text-brand-100 text-sm font-medium">Total Balance</p>
+                  <Badge className="bg-white/15 text-white border-0 text-[10px] no-default-hover-elevate no-default-active-elevate" data-testid="badge-default-currency">
+                    {defaultCurrency}
+                  </Badge>
+                </div>
                 <h2 className="text-3xl font-bold mb-4" data-testid="text-total-balance">
-                  ${walletBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                  {formatAmount(walletBalanceUSD)}
                 </h2>
               </div>
               <div className="grid grid-cols-2 gap-4 pt-4 border-t border-brand-500/50">
                 <div>
                   <p className="text-xs text-brand-200 uppercase">Available</p>
                   <p className="font-semibold text-lg" data-testid="text-available-balance">
-                    ${(walletBalance * 0.74).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                    {formatAmount(walletBalanceUSD * 0.74)}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-brand-200 uppercase">Locked</p>
                   <p className="font-semibold text-lg" data-testid="text-locked-balance">
-                    ${(walletBalance * 0.26).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                    {formatAmount(walletBalanceUSD * 0.26)}
                   </p>
                 </div>
               </div>
@@ -277,7 +324,7 @@ export default function WalletPage() {
                     <div className="min-w-0">
                       <p className="text-gray-500 dark:text-gray-400 text-[11px] font-medium leading-tight">{earning.label}</p>
                       <h3 className="text-lg font-bold text-gray-900 dark:text-white mt-1">
-                        ${earning.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                        {formatAmount(earning.amount)}
                       </h3>
                     </div>
                     <div className={`p-2 rounded-lg shrink-0 ${earning.iconBg}`}>
@@ -296,6 +343,82 @@ export default function WalletPage() {
               ))}
             </div>
           </div>
+
+          {wallets.length > 0 && (
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4" data-testid="text-wallet-currencies-title">My Wallets</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {wallets.map((w) => {
+                  const isCrypto = cryptoCurrencies.some((c) => c.code === w.currency);
+                  return (
+                    <div
+                      key={w.id}
+                      className={`relative bg-white dark:bg-dark-card p-5 rounded-2xl border shadow-sm transition-all ${
+                        w.isDefault
+                          ? "border-brand-500 ring-1 ring-brand-500/30"
+                          : "border-gray-100 dark:border-gray-800"
+                      }`}
+                      data-testid={`card-wallet-${w.currency.toLowerCase()}`}
+                    >
+                      {w.isDefault && (
+                        <div className="absolute -top-2 right-3">
+                          <Badge className="bg-brand-600 text-white text-[10px] no-default-hover-elevate no-default-active-elevate" data-testid={`badge-default-${w.currency.toLowerCase()}`}>
+                            <Star className="w-3 h-3 mr-1" /> Default
+                          </Badge>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className={`p-2.5 rounded-lg ${isCrypto ? "bg-amber-50 dark:bg-amber-900/20" : "bg-emerald-50 dark:bg-emerald-900/20"}`}>
+                          {isCrypto ? (
+                            <Coins className={`w-5 h-5 ${isCrypto ? "text-amber-600 dark:text-amber-400" : ""}`} />
+                          ) : (
+                            <Banknote className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-bold text-gray-900 dark:text-white" data-testid={`text-wallet-name-${w.currency.toLowerCase()}`}>
+                            {w.currency} Wallet
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{w.type}</p>
+                        </div>
+                      </div>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white" data-testid={`text-wallet-balance-${w.currency.toLowerCase()}`}>
+                        {isCrypto
+                          ? `${w.balance.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 8 })} ${w.symbol}`
+                          : `${w.symbol}${w.balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}`
+                        }
+                      </p>
+                      {!w.isDefault && (
+                        <div className="flex items-center justify-between mt-2">
+                          <p className="text-xs text-gray-400" data-testid={`text-wallet-usd-equiv-${w.currency.toLowerCase()}`}>
+                            ~ ${(w.balance / (exchangeRates[w.currency] || 1)).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD
+                          </p>
+                          <button
+                            onClick={() => {
+                              setDefaultCurrency(w.currency);
+                              toast({ title: `${w.currency} set as default currency` });
+                            }}
+                            className="text-[10px] text-brand-500 hover:text-brand-400 font-medium hover:underline"
+                            data-testid={`button-set-default-${w.currency.toLowerCase()}`}
+                          >
+                            Set Default
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+                <div
+                  onClick={() => setCreateWalletOpen(true)}
+                  className="flex flex-col items-center justify-center p-5 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700 cursor-pointer hover:border-brand-400 hover:bg-brand-50/50 dark:hover:bg-brand-900/10 transition-all min-h-[140px]"
+                  data-testid="card-add-wallet"
+                >
+                  <Plus className="w-8 h-8 text-gray-400 dark:text-gray-500 mb-2" />
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Add New Wallet</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -829,6 +952,141 @@ export default function WalletPage() {
               </div>
             );
           })()}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={createWalletOpen} onOpenChange={(open) => { if (!open) resetCreateWallet(); }}>
+        <DialogContent className="max-w-md bg-[#0f172a] border-gray-800 text-white" data-testid="dialog-create-wallet">
+          <DialogHeader>
+            <DialogTitle className="text-white flex items-center gap-2">
+              <WalletIcon className="w-5 h-5 text-brand-400" />
+              Create New Wallet
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Choose a wallet type and currency to create a new wallet.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-5">
+            <div>
+              <Label className="text-gray-300 text-sm mb-2 block">Wallet Type</Label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => { setWalletType("fiat"); setSelectedCurrency(""); }}
+                  className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${
+                    walletType === "fiat"
+                      ? "border-brand-500 bg-brand-900/30 text-brand-300"
+                      : "border-gray-700 text-gray-400 hover:border-gray-600"
+                  }`}
+                  data-testid="button-type-fiat"
+                >
+                  <Banknote className="w-6 h-6" />
+                  <span className="font-semibold text-sm">Fiat</span>
+                  <span className="text-[10px] text-gray-500">USD, EUR, GBP...</span>
+                </button>
+                <button
+                  onClick={() => { setWalletType("crypto"); setSelectedCurrency(""); }}
+                  className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${
+                    walletType === "crypto"
+                      ? "border-brand-500 bg-brand-900/30 text-brand-300"
+                      : "border-gray-700 text-gray-400 hover:border-gray-600"
+                  }`}
+                  data-testid="button-type-crypto"
+                >
+                  <Coins className="w-6 h-6" />
+                  <span className="font-semibold text-sm">Crypto</span>
+                  <span className="text-[10px] text-gray-500">USDT, BTC, ETH...</span>
+                </button>
+              </div>
+            </div>
+
+            {walletType && (
+              <div className="animate-fade-in">
+                <Label className="text-gray-300 text-sm mb-2 block">
+                  {walletType === "fiat" ? "Select Fiat Currency" : "Select Cryptocurrency"}
+                </Label>
+                <Select value={selectedCurrency} onValueChange={setSelectedCurrency}>
+                  <SelectTrigger className="bg-gray-900 border-gray-700 text-white" data-testid="select-wallet-currency">
+                    <SelectValue placeholder={walletType === "fiat" ? "Choose currency" : "Choose cryptocurrency"} />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#0f172a] border-gray-700">
+                    {walletType === "fiat"
+                      ? availableFiat.map((f) => (
+                          <SelectItem key={f.code} value={f.code} className="text-white" data-testid={`option-currency-${f.code.toLowerCase()}`}>
+                            <span className="flex items-center gap-2">
+                              <span className="font-bold">{f.symbol}</span>
+                              <span>{f.code} - {f.name}</span>
+                            </span>
+                          </SelectItem>
+                        ))
+                      : availableCrypto.map((c) => (
+                          <SelectItem key={c.code} value={c.code} className="text-white" data-testid={`option-currency-${c.code.toLowerCase()}`}>
+                            <span className="flex items-center gap-2">
+                              <span className="font-bold">{c.symbol}</span>
+                              <span>{c.code} - {c.name}</span>
+                            </span>
+                          </SelectItem>
+                        ))
+                    }
+                    {((walletType === "fiat" && availableFiat.length === 0) || (walletType === "crypto" && availableCrypto.length === 0)) && (
+                      <div className="p-3 text-center text-gray-500 text-sm">
+                        All {walletType} currencies already have wallets
+                      </div>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {selectedCurrency && (
+              <div className="animate-fade-in space-y-4">
+                <div className="p-4 bg-gray-800/50 border border-gray-700 rounded-xl">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs text-gray-400">Preview Balance</p>
+                      <p className="text-xl font-bold text-white" data-testid="text-preview-balance">
+                        {(() => {
+                          const rate = exchangeRates[selectedCurrency] || 1;
+                          const converted = walletBalanceUSD * rate;
+                          const isCrypto = cryptoCurrencies.some((c) => c.code === selectedCurrency);
+                          const sym = fiatCurrencies.find((f) => f.code === selectedCurrency)?.symbol || selectedCurrency;
+                          return isCrypto
+                            ? `${converted.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 8 })} ${selectedCurrency}`
+                            : `${sym}${converted.toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
+                        })()}
+                      </p>
+                      <p className="text-[10px] text-gray-500 mt-0.5">Converted from ${walletBalanceUSD.toLocaleString("en-US", { minimumFractionDigits: 2 })} USD</p>
+                    </div>
+                    <Badge className="bg-brand-500/20 text-brand-300 border-0 no-default-hover-elevate no-default-active-elevate">
+                      {selectedCurrency}
+                    </Badge>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between gap-3 p-3 bg-gray-800/30 rounded-lg border border-gray-700">
+                  <div>
+                    <p className="text-sm font-medium text-white">Set as default currency</p>
+                    <p className="text-[11px] text-gray-500">Main wallet and dashboard will display in {selectedCurrency}</p>
+                  </div>
+                  <Switch
+                    checked={setAsDefault}
+                    onCheckedChange={setSetAsDefault}
+                    data-testid="switch-set-default"
+                  />
+                </div>
+              </div>
+            )}
+
+            <Button
+              className="w-full"
+              disabled={!walletType || !selectedCurrency}
+              onClick={handleCreateWallet}
+              data-testid="button-confirm-create-wallet"
+            >
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Create {selectedCurrency || ""} Wallet
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
