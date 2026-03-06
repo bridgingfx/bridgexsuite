@@ -11,6 +11,20 @@ import {
   ChevronDown,
   FileCheck,
   ArrowLeft,
+  CreditCard,
+  Fingerprint,
+  Server,
+  Monitor,
+  Trophy,
+  PieChart,
+  Gift,
+  Star,
+  ShoppingBag,
+  Bitcoin,
+  ArrowLeftRight,
+  Wrench,
+  Wallet,
+  Layers,
 } from "lucide-react";
 import {
   Sidebar,
@@ -38,25 +52,64 @@ interface AdminMenuItem {
   testId?: string;
 }
 
-const adminMenu: AdminMenuItem[] = [
-  { 
-    title: "Dashboard", 
-    url: "/admin", 
+const mainMenu: AdminMenuItem[] = [
+  {
+    title: "Dashboard",
+    url: "/admin",
     icon: LayoutDashboard,
-    testId: "admin-nav-dashboard"
+    testId: "admin-nav-dashboard",
   },
-  { 
-    title: "Client Management", 
-    url: "/admin/clients", 
+  {
+    title: "Client Management",
+    url: "/admin/clients",
     icon: Users,
-    testId: "admin-nav-clients"
+    testId: "admin-nav-clients",
   },
-  { 
-    title: "Trading Accounts", 
-    url: "/admin/accounts", 
+];
+
+const tradingMenu: AdminMenuItem[] = [
+  {
+    title: "Trading Accounts",
+    url: "/admin/accounts",
     icon: TrendingUp,
-    testId: "admin-nav-accounts"
+    testId: "admin-nav-accounts",
   },
+  {
+    title: "Prop Trading",
+    url: "/admin/trading/prop",
+    icon: Trophy,
+    testId: "admin-nav-prop",
+    children: [
+      { title: "Challenges", url: "/admin/trading/prop" },
+      { title: "Active Accounts", url: "/admin/trading/prop/accounts" },
+      { title: "Payouts", url: "/admin/trading/prop/payouts" },
+    ],
+  },
+  {
+    title: "Leagues",
+    url: "/admin/trading/leagues",
+    icon: Trophy,
+    testId: "admin-nav-leagues",
+    children: [
+      { title: "Tournaments", url: "/admin/trading/leagues" },
+      { title: "Participants", url: "/admin/trading/leagues/participants" },
+      { title: "Prize Distribution", url: "/admin/trading/leagues/prizes" },
+    ],
+  },
+  {
+    title: "Investments",
+    url: "/admin/trading/investments",
+    icon: PieChart,
+    testId: "admin-nav-investments",
+    children: [
+      { title: "Plans", url: "/admin/trading/investments" },
+      { title: "Active Investments", url: "/admin/trading/investments/active" },
+      { title: "Payouts", url: "/admin/trading/investments/payouts" },
+    ],
+  },
+];
+
+const financeMenu: AdminMenuItem[] = [
   {
     title: "Financial Operations",
     url: "/admin/finance",
@@ -69,35 +122,113 @@ const adminMenu: AdminMenuItem[] = [
       { title: "Withdrawals", url: "/admin/finance/withdrawals" },
     ],
   },
-  { 
-    title: "KYC Verification", 
-    url: "/admin/kyc", 
+  {
+    title: "Wallet Management",
+    url: "/admin/wallets",
+    icon: Wallet,
+    testId: "admin-nav-wallets",
+  },
+];
+
+const rewardsMenu: AdminMenuItem[] = [
+  {
+    title: "Loyalty Points",
+    url: "/admin/rewards/loyalty-config",
+    icon: Star,
+    testId: "admin-nav-loyalty",
+  },
+  {
+    title: "Merchandise Orders",
+    url: "/admin/rewards/merchandise-orders",
+    icon: ShoppingBag,
+    testId: "admin-nav-merch-orders",
+  },
+];
+
+const exchangeMenu: AdminMenuItem[] = [
+  {
+    title: "Exchange Settings",
+    url: "/admin/crypto/exchange-settings",
+    icon: Bitcoin,
+    testId: "admin-nav-exchange-settings",
+  },
+  {
+    title: "P2P Management",
+    url: "/admin/crypto/p2p",
+    icon: ArrowLeftRight,
+    testId: "admin-nav-p2p",
+  },
+];
+
+const operationsMenu: AdminMenuItem[] = [
+  {
+    title: "KYC Verification",
+    url: "/admin/kyc",
     icon: FileCheck,
-    testId: "admin-nav-kyc"
+    testId: "admin-nav-kyc",
   },
-  { 
-    title: "IB Management", 
-    url: "/admin/ib", 
+  {
+    title: "IB Management",
+    url: "/admin/ib",
     icon: Network,
-    testId: "admin-nav-ib"
+    testId: "admin-nav-ib",
   },
-  { 
-    title: "Support Tickets", 
-    url: "/admin/support", 
+  {
+    title: "Support Tickets",
+    url: "/admin/support",
     icon: HelpCircle,
-    testId: "admin-nav-support"
+    testId: "admin-nav-support",
   },
-  { 
-    title: "Reports & Analytics", 
-    url: "/admin/reports", 
+  {
+    title: "Tools Configuration",
+    url: "/admin/tools/config",
+    icon: Wrench,
+    testId: "admin-nav-tools",
+  },
+  {
+    title: "Reports & Analytics",
+    url: "/admin/reports",
     icon: BarChart3,
-    testId: "admin-nav-reports"
+    testId: "admin-nav-reports",
   },
-  { 
-    title: "System Settings", 
-    url: "/admin/settings", 
+];
+
+const configMenu: AdminMenuItem[] = [
+  {
+    title: "Payment Gateways",
+    url: "/admin/config/payment-gateways",
+    icon: CreditCard,
+    testId: "admin-nav-payment-gateways",
+  },
+  {
+    title: "KYC Providers",
+    url: "/admin/config/kyc-providers",
+    icon: Fingerprint,
+    testId: "admin-nav-kyc-providers",
+  },
+  {
+    title: "Trading Platforms",
+    url: "/admin/config/trading-platforms",
+    icon: Monitor,
+    testId: "admin-nav-trading-platforms",
+  },
+  {
+    title: "Group Configuration",
+    url: "/admin/config/groups",
+    icon: Layers,
+    testId: "admin-nav-groups",
+  },
+  {
+    title: "MT5 Settings",
+    url: "/admin/config/mt5-settings",
+    icon: Server,
+    testId: "admin-nav-mt5",
+  },
+  {
+    title: "System Settings",
+    url: "/admin/settings",
     icon: Settings,
-    testId: "admin-nav-settings"
+    testId: "admin-nav-settings",
   },
 ];
 
@@ -110,8 +241,8 @@ function AdminNavItem({ item }: { item: AdminMenuItem }) {
       <Collapsible defaultOpen={isActive}>
         <SidebarMenuItem>
           <CollapsibleTrigger asChild>
-            <SidebarMenuButton 
-              data-testid={item.testId} 
+            <SidebarMenuButton
+              data-testid={item.testId}
               isActive={isActive}
             >
               <item.icon className="w-4 h-4" />
@@ -125,8 +256,8 @@ function AdminNavItem({ item }: { item: AdminMenuItem }) {
                 const childTestId = `admin-nav-${child.title.toLowerCase().replace(/\s+/g, '-')}`;
                 return (
                   <SidebarMenuSubItem key={child.url}>
-                    <SidebarMenuSubButton 
-                      asChild 
+                    <SidebarMenuSubButton
+                      asChild
                       isActive={location === child.url}
                       data-testid={childTestId}
                     >
@@ -156,6 +287,21 @@ function AdminNavItem({ item }: { item: AdminMenuItem }) {
   );
 }
 
+function AdminMenuSection({ label, items }: { label: string; items: AdminMenuItem[] }) {
+  return (
+    <SidebarGroup>
+      <SidebarGroupLabel>{label}</SidebarGroupLabel>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {items.map((item) => (
+            <AdminNavItem key={item.url} item={item} />
+          ))}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  );
+}
+
 export function AdminSidebar() {
   return (
     <Sidebar>
@@ -173,15 +319,21 @@ export function AdminSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Administration</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {adminMenu.map((item) => (
+              {mainMenu.map((item) => (
                 <AdminNavItem key={item.url} item={item} />
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        <AdminMenuSection label="Trading" items={tradingMenu} />
+        <AdminMenuSection label="Finance" items={financeMenu} />
+        <AdminMenuSection label="Rewards" items={rewardsMenu} />
+        <AdminMenuSection label="Exchange" items={exchangeMenu} />
+        <AdminMenuSection label="Operations" items={operationsMenu} />
+        <AdminMenuSection label="Configuration" items={configMenu} />
       </SidebarContent>
 
       <SidebarFooter className="p-3">
@@ -196,7 +348,7 @@ export function AdminSidebar() {
             </div>
           </div>
           <Link href="/">
-            <button 
+            <button
               className="w-full flex items-center gap-2 p-2 rounded-md hover:bg-sidebar-accent text-sm text-muted-foreground hover:text-sidebar-accent-foreground transition-colors"
               data-testid="admin-nav-back-to-crm"
             >

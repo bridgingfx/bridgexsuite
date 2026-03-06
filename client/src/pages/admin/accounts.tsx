@@ -21,7 +21,8 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Plus, Search, TrendingUp, Activity, DollarSign, BarChart3, Edit } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, Search, TrendingUp, Activity, DollarSign, BarChart3, Edit, Filter } from "lucide-react";
 import type { TradingAccount, User } from "@shared/schema";
 
 function StatusBadge({ status }: { status: string }) {
@@ -35,9 +36,14 @@ function StatusBadge({ status }: { status: string }) {
 
 export default function AdminAccounts() {
   const [search, setSearch] = useState("");
+  const [platformFilter, setPlatformFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [addOpen, setAddOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [editData, setEditData] = useState({ balance: "", leverage: "", status: "" });
+  const [selectedAccounts, setSelectedAccounts] = useState<Set<string>>(new Set());
+  const [bulkAction, setBulkAction] = useState<string | null>(null);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -59,9 +65,36 @@ export default function AdminAccounts() {
 
   const clientMap = new Map((clients || []).map((c) => [c.id, c.fullName]));
 
-  const filtered = (accounts || []).filter((a) =>
-    a.accountNumber.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = (accounts || []).filter((a) => {
+    const matchSearch = a.accountNumber.toLowerCase().includes(search.toLowerCase());
+    const matchPlatform = platformFilter === "all" || a.platform === platformFilter;
+    const matchType = typeFilter === "all" || a.type === typeFilter;
+    const matchStatus = statusFilter === "all" || a.status === statusFilter;
+    return matchSearch && matchPlatform && matchType && matchStatus;
+  });
+
+  const toggleSelectAccount = (id: string) => {
+    setSelectedAccounts(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedAccounts.size === filtered.length) {
+      setSelectedAccounts(new Set());
+    } else {
+      setSelectedAccounts(new Set(filtered.map(a => a.id)));
+    }
+  };
+
+  const handleBulkAction = (action: string) => {
+    const count = selectedAccounts.size;
+    toast({ title: `Bulk ${action}`, description: `${count} account(s) will be ${action === "activate" ? "activated" : action === "suspend" ? "suspended" : "updated"}.` });
+    setSelectedAccounts(new Set());
+    setBulkAction(null);
+  };
 
   const totalBalance = filtered.reduce((s, a) => s + Number(a.balance), 0);
   const activeCount = filtered.filter((a) => a.status === "active").length;
@@ -149,16 +182,58 @@ export default function AdminAccounts() {
       </div>
 
       <Card>
-        <CardHeader className="pb-4">
-          <div className="relative max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input placeholder="Search by account number..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} data-testid="input-search-accounts" />
+        <CardHeader className="pb-4 space-y-4">
+          <div className="flex flex-wrap gap-3 items-end">
+            <div className="relative flex-1 min-w-[200px] max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input placeholder="Search by account number..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} data-testid="input-search-accounts" />
+            </div>
+            <Select value={platformFilter} onValueChange={setPlatformFilter}>
+              <SelectTrigger className="w-[140px]" data-testid="filter-platform"><SelectValue placeholder="Platform" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Platforms</SelectItem>
+                <SelectItem value="MT5">MT5</SelectItem>
+                <SelectItem value="MT4">MT4</SelectItem>
+                <SelectItem value="cTrader">cTrader</SelectItem>
+                <SelectItem value="Vertex">Vertex</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger className="w-[130px]" data-testid="filter-type"><SelectValue placeholder="Type" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="standard">Standard</SelectItem>
+                <SelectItem value="ecn">ECN</SelectItem>
+                <SelectItem value="demo">Demo</SelectItem>
+                <SelectItem value="raw">Raw Spread</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[130px]" data-testid="filter-status"><SelectValue placeholder="Status" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+                <SelectItem value="suspended">Suspended</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
+          {selectedAccounts.size > 0 && (
+            <div className="flex items-center gap-3 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+              <span className="text-sm font-medium">{selectedAccounts.size} account(s) selected</span>
+              <Button size="sm" variant="outline" onClick={() => handleBulkAction("activate")} data-testid="button-bulk-activate">Activate</Button>
+              <Button size="sm" variant="outline" onClick={() => handleBulkAction("suspend")} data-testid="button-bulk-suspend">Suspend</Button>
+              <Button size="sm" variant="ghost" onClick={() => setSelectedAccounts(new Set())} data-testid="button-bulk-clear">Clear</Button>
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           <Table data-testid="table-admin-accounts">
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10">
+                  <Checkbox checked={filtered.length > 0 && selectedAccounts.size === filtered.length} onCheckedChange={toggleSelectAll} data-testid="checkbox-select-all" />
+                </TableHead>
                 <TableHead>Account #</TableHead>
                 <TableHead>Client</TableHead>
                 <TableHead>Platform</TableHead>
@@ -174,12 +249,15 @@ export default function AdminAccounts() {
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={11} className="text-center text-muted-foreground py-12">Loading...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={12} className="text-center text-muted-foreground py-12">Loading...</TableCell></TableRow>
               ) : filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={11} className="text-center text-muted-foreground py-12">No accounts found</TableCell></TableRow>
+                <TableRow><TableCell colSpan={12} className="text-center text-muted-foreground py-12">No accounts found</TableCell></TableRow>
               ) : (
                 filtered.map((a) => (
                   <TableRow key={a.id} data-testid={`row-admin-account-${a.id}`}>
+                    <TableCell>
+                      <Checkbox checked={selectedAccounts.has(a.id)} onCheckedChange={() => toggleSelectAccount(a.id)} data-testid={`checkbox-account-${a.id}`} />
+                    </TableCell>
                     <TableCell className="font-mono font-medium">{a.accountNumber}</TableCell>
                     <TableCell>{clientMap.get(a.userId) || a.userId.slice(0, 8)}</TableCell>
                     <TableCell><Badge variant="secondary" className="text-xs">{a.platform}</Badge></TableCell>

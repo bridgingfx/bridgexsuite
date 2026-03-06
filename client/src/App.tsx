@@ -90,6 +90,20 @@ import AdminIbManagement from "@/pages/admin/ib-management";
 import AdminSupport from "@/pages/admin/support-admin";
 import AdminReports from "@/pages/admin/reports";
 import AdminSettings from "@/pages/admin/system-settings";
+import AdminPropTrading from "@/pages/admin/trading/prop-trading";
+import AdminLeagues from "@/pages/admin/trading/leagues";
+import AdminInvestments from "@/pages/admin/trading/investments";
+import AdminPaymentGateways from "@/pages/admin/config/payment-gateways";
+import AdminKycProviders from "@/pages/admin/config/kyc-providers";
+import AdminTradingPlatforms from "@/pages/admin/config/trading-platforms";
+import AdminGroupConfig from "@/pages/admin/config/group-config";
+import AdminMt5Settings from "@/pages/admin/config/mt5-settings";
+import AdminLoyaltyConfig from "@/pages/admin/rewards/loyalty-config";
+import AdminMerchOrders from "@/pages/admin/rewards/merchandise-orders";
+import AdminExchangeSettings from "@/pages/admin/crypto/exchange-settings";
+import AdminP2PManagement from "@/pages/admin/crypto/p2p-management";
+import AdminToolsConfig from "@/pages/admin/tools/tools-config";
+import AdminWalletManagement from "@/pages/admin/wallet-management";
 
 import SuperAdminDashboard from "@/pages/super-admin/dashboard";
 import SuperAdminBrokers from "@/pages/super-admin/brokers";
@@ -221,10 +235,30 @@ function AdminRouter() {
       <Route path="/admin/finance/deposits" component={AdminFinance} />
       <Route path="/admin/finance/withdrawals" component={AdminFinance} />
       <Route path="/admin/accounts" component={AdminAccounts} />
+      <Route path="/admin/trading/prop" component={AdminPropTrading} />
+      <Route path="/admin/trading/prop/accounts" component={AdminPropTrading} />
+      <Route path="/admin/trading/prop/payouts" component={AdminPropTrading} />
+      <Route path="/admin/trading/leagues" component={AdminLeagues} />
+      <Route path="/admin/trading/leagues/participants" component={AdminLeagues} />
+      <Route path="/admin/trading/leagues/prizes" component={AdminLeagues} />
+      <Route path="/admin/trading/investments" component={AdminInvestments} />
+      <Route path="/admin/trading/investments/active" component={AdminInvestments} />
+      <Route path="/admin/trading/investments/payouts" component={AdminInvestments} />
+      <Route path="/admin/wallets" component={AdminWalletManagement} />
+      <Route path="/admin/rewards/loyalty-config" component={AdminLoyaltyConfig} />
+      <Route path="/admin/rewards/merchandise-orders" component={AdminMerchOrders} />
+      <Route path="/admin/crypto/exchange-settings" component={AdminExchangeSettings} />
+      <Route path="/admin/crypto/p2p" component={AdminP2PManagement} />
       <Route path="/admin/kyc" component={AdminKycVerification} />
       <Route path="/admin/ib" component={AdminIbManagement} />
       <Route path="/admin/support" component={AdminSupport} />
+      <Route path="/admin/tools/config" component={AdminToolsConfig} />
       <Route path="/admin/reports" component={AdminReports} />
+      <Route path="/admin/config/payment-gateways" component={AdminPaymentGateways} />
+      <Route path="/admin/config/kyc-providers" component={AdminKycProviders} />
+      <Route path="/admin/config/trading-platforms" component={AdminTradingPlatforms} />
+      <Route path="/admin/config/groups" component={AdminGroupConfig} />
+      <Route path="/admin/config/mt5-settings" component={AdminMt5Settings} />
       <Route path="/admin/settings" component={AdminSettings} />
       <Route component={NotFound} />
     </Switch>
