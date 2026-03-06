@@ -14,8 +14,11 @@ import {
   ShoppingCart,
   CheckCircle,
   Search,
+  Mail,
+  ShieldCheck,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 
 interface MerchItem {
@@ -64,12 +67,16 @@ const imageGradients: Record<string, string> = {
   badge: "from-fuchsia-500 to-purple-600",
 };
 
+type RedeemStep = "review" | "otp" | "verified";
+
 export default function MerchandisePage() {
   const { toast } = useToast();
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedItem, setSelectedItem] = useState<MerchItem | null>(null);
   const [orderDialogOpen, setOrderDialogOpen] = useState(false);
+  const [redeemStep, setRedeemStep] = useState<RedeemStep>("review");
+  const [otpCode, setOtpCode] = useState("");
   const userPoints = 3250;
 
   const filteredItems = merchItems.filter((item) => {
@@ -84,7 +91,23 @@ export default function MerchandisePage() {
       return;
     }
     setSelectedItem(item);
+    setRedeemStep("review");
+    setOtpCode("");
     setOrderDialogOpen(true);
+  };
+
+  const handleSendOtp = () => {
+    setRedeemStep("otp");
+    toast({ title: "OTP sent", description: "A verification code has been sent to your registered email." });
+  };
+
+  const handleVerifyOtp = () => {
+    if (otpCode.length === 6) {
+      setRedeemStep("verified");
+      toast({ title: "OTP verified", description: "Your identity has been confirmed." });
+    } else {
+      toast({ title: "Invalid OTP", description: "Please enter a valid 6-digit code.", variant: "destructive" });
+    }
   };
 
   const confirmOrder = () => {
@@ -92,7 +115,16 @@ export default function MerchandisePage() {
       toast({ title: "Order placed successfully", description: `${selectedItem.name} will be shipped to your registered address.` });
       setOrderDialogOpen(false);
       setSelectedItem(null);
+      setRedeemStep("review");
+      setOtpCode("");
     }
+  };
+
+  const resetDialog = () => {
+    setOrderDialogOpen(false);
+    setSelectedItem(null);
+    setRedeemStep("review");
+    setOtpCode("");
   };
 
   return (
@@ -204,47 +236,122 @@ export default function MerchandisePage() {
         )}
       </div>
 
-      <Dialog open={orderDialogOpen} onOpenChange={setOrderDialogOpen}>
+      <Dialog open={orderDialogOpen} onOpenChange={(open) => { if (!open) resetDialog(); }}>
         <DialogContent className="max-w-md bg-[#0f172a] border-gray-800 text-white" data-testid="dialog-confirm-order">
           <DialogHeader>
             <DialogTitle className="text-white flex items-center gap-2">
               <ShoppingCart className="w-5 h-5 text-brand-400" />
-              Confirm Redemption
+              {redeemStep === "review" ? "Confirm Redemption" : redeemStep === "otp" ? "Email Verification" : "Order Confirmed"}
             </DialogTitle>
             <DialogDescription className="text-gray-400">
-              Review your order details before confirming.
+              {redeemStep === "review"
+                ? "Review your order and verify via OTP to process."
+                : redeemStep === "otp"
+                  ? "Enter the verification code sent to your email."
+                  : "Your identity has been verified. Confirm to place the order."}
             </DialogDescription>
           </DialogHeader>
           {selectedItem && (
             <div className="space-y-4">
-              <div className={`h-32 bg-gradient-to-br ${imageGradients[selectedItem.image] || "from-gray-400 to-gray-600"} rounded-xl flex items-center justify-center`}>
-                <ShoppingBag className="w-10 h-10 text-white/40" />
-              </div>
-              <div>
-                <h3 className="font-bold text-white text-lg">{selectedItem.name}</h3>
-                <p className="text-sm text-gray-400 mt-1">{selectedItem.description}</p>
-              </div>
-              <div className="p-4 bg-gray-800/50 border border-gray-700 rounded-xl space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Item Cost</span>
-                  <span className="text-amber-400 font-bold flex items-center gap-1">
-                    <Star className="w-3.5 h-3.5" /> {selectedItem.pointsCost.toLocaleString()} pts
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Your Balance</span>
-                  <span className="text-white font-medium">{userPoints.toLocaleString()} pts</span>
-                </div>
-                <div className="border-t border-gray-700 pt-2 flex justify-between text-sm">
-                  <span className="text-gray-400">Remaining</span>
-                  <span className="text-emerald-400 font-bold">{(userPoints - selectedItem.pointsCost).toLocaleString()} pts</span>
-                </div>
-              </div>
-              <p className="text-xs text-gray-500">Item will be shipped to your registered address within 5-10 business days.</p>
-              <Button className="w-full" onClick={confirmOrder} data-testid="button-confirm-redeem">
-                <CheckCircle className="w-4 h-4 mr-2" />
-                Confirm Order
-              </Button>
+              {redeemStep === "review" && (
+                <>
+                  <div className={`h-32 bg-gradient-to-br ${imageGradients[selectedItem.image] || "from-gray-400 to-gray-600"} rounded-xl flex items-center justify-center`}>
+                    <ShoppingBag className="w-10 h-10 text-white/40" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-white text-lg" data-testid="text-redeem-item">{selectedItem.name}</h3>
+                    <p className="text-sm text-gray-400 mt-1">{selectedItem.description}</p>
+                  </div>
+                  <div className="p-4 bg-gray-800/50 border border-gray-700 rounded-xl space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-400">Item Cost</span>
+                      <span className="text-amber-400 font-bold flex items-center gap-1">
+                        <Star className="w-3.5 h-3.5" /> {selectedItem.pointsCost.toLocaleString()} pts
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-400">Your Balance</span>
+                      <span className="text-white font-medium">{userPoints.toLocaleString()} pts</span>
+                    </div>
+                    <div className="border-t border-gray-700 pt-2 flex justify-between text-sm">
+                      <span className="text-gray-400">Remaining</span>
+                      <span className="text-emerald-400 font-bold">{(userPoints - selectedItem.pointsCost).toLocaleString()} pts</span>
+                    </div>
+                  </div>
+                  <Button className="w-full" onClick={handleSendOtp} data-testid="button-send-otp">
+                    <Mail className="w-4 h-4 mr-2" />
+                    Send OTP to Email
+                  </Button>
+                </>
+              )}
+
+              {redeemStep === "otp" && (
+                <>
+                  <div className="p-4 bg-gray-800/50 border border-gray-700 rounded-xl">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-400">Redeeming</p>
+                        <p className="text-white font-semibold">{selectedItem.name}</p>
+                      </div>
+                      <span className="text-amber-400 font-bold text-sm flex items-center gap-1">
+                        <Star className="w-3.5 h-3.5" /> {selectedItem.pointsCost.toLocaleString()} pts
+                      </span>
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-gray-300 text-sm">Enter 6-digit OTP</Label>
+                    <Input
+                      value={otpCode}
+                      onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                      placeholder="000000"
+                      maxLength={6}
+                      className="mt-1 bg-gray-900 border-gray-700 text-white text-center text-2xl font-mono tracking-[0.5em]"
+                      data-testid="input-otp"
+                    />
+                    <p className="text-[11px] text-gray-500 mt-2">A verification code has been sent to your registered email address.</p>
+                  </div>
+                  <Button
+                    className="w-full"
+                    disabled={otpCode.length !== 6}
+                    onClick={handleVerifyOtp}
+                    data-testid="button-verify-otp"
+                  >
+                    <ShieldCheck className="w-4 h-4 mr-2" />
+                    Verify OTP
+                  </Button>
+                </>
+              )}
+
+              {redeemStep === "verified" && (
+                <>
+                  <div className="p-4 bg-emerald-900/20 border border-emerald-800/50 rounded-xl flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0" />
+                    <div>
+                      <p className="text-emerald-300 font-medium text-sm">Identity Verified</p>
+                      <p className="text-emerald-400/70 text-xs">Your email has been confirmed via OTP</p>
+                    </div>
+                  </div>
+                  <div className="p-4 bg-gray-800/50 border border-gray-700 rounded-xl space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-400">Item</span>
+                      <span className="text-white font-medium">{selectedItem.name}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-400">Points Deducted</span>
+                      <span className="text-amber-400 font-bold">{selectedItem.pointsCost.toLocaleString()} pts</span>
+                    </div>
+                    <div className="border-t border-gray-700 pt-2 flex justify-between text-sm">
+                      <span className="text-gray-400">Remaining Balance</span>
+                      <span className="text-emerald-400 font-bold">{(userPoints - selectedItem.pointsCost).toLocaleString()} pts</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500">Item will be shipped to your registered address within 5-10 business days.</p>
+                  <Button className="w-full" onClick={confirmOrder} data-testid="button-confirm-redeem">
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Confirm Order
+                  </Button>
+                </>
+              )}
             </div>
           )}
         </DialogContent>
